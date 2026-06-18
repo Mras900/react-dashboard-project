@@ -1,0 +1,42 @@
+import type { ChartConfig } from './chart-types';
+
+export const defaultCharts: ChartConfig[] = [
+  {
+    id: 'rm-reclamos-comuna',
+    title: 'Top comunas por reclamos',
+    type: 'bar',
+    scope: 'rm',
+    metric: 'visitas',
+    dimension: 'comuna',
+    aggregation: 'sum',
+    topN: 10,
+    sortBy: 'value-desc',
+    showLegend: false,
+    showLabels: true,
+  },
+  {
+    id: 'rm-facturacion-comuna',
+    title: 'Facturación por comuna',
+    type: 'horizontalBar',
+    scope: 'rm',
+    metric: 'facturacion',
+    dimension: 'comuna',
+    aggregation: 'sum',
+    topN: 10,
+    sortBy: 'value-desc',
+    showLegend: false,
+    showLabels: true,
+  },
+  {
+    id: 'rm-prioridad-donut',
+    title: 'Distribución por prioridad',
+    type: 'donut',
+    scope: 'rm',
+    metric: 'visitas',
+    dimension: 'prioridad',
+    aggregation: 'sum',
+    sortBy: 'value-desc',
+    showLegend: true,
+    showLabels: true,
+  },
+];

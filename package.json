@@ -1,0 +1,36 @@
+{
+  "name": "visor-facturacion-dashboard",
+  "private": true,
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/design.md": "^0.2.0",
+    "leaflet": "latest",
+    "lucide-react": "latest",
+    "papaparse": "^5.5.3",
+    "react": "latest",
+    "react-dom": "latest",
+    "react-grid-layout": "^2.2.3",
+    "react-leaflet": "latest",
+    "recharts": "^3.8.1",
+    "shpjs": "^6.2.0",
+    "xlsx": "^0.18.5"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "latest",
+    "@types/leaflet": "latest",
+    "@types/papaparse": "^5.5.2",
+    "@types/react": "latest",
+    "@types/react-dom": "latest",
+    "@types/react-grid-layout": "^1.3.6",
+    "@vitejs/plugin-react": "latest",
+    "tailwindcss": "latest",
+    "typescript": "latest",
+    "vite": "latest"
+  }
+}

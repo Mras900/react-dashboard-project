@@ -1,0 +1,285 @@
+@import "tailwindcss";
+
+:root {
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  color-scheme: light;
+  --bg-main: #f4f7fb;
+  --bg-sidebar: #ffffff;
+  --bg-card: #ffffff;
+  --bg-card-soft: #f9fafb;
+  --border-main: #e2e8f0;
+  --accent-main: #073b91;
+  --accent-hover: #0f5fcf;
+  --text-main: #071b4d;
+  --text-secondary: #466083;
+  --text-muted: #6b7d98;
+  --success: #10b981;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --cyan: #22d3ee;
+}
+
+html,
+body,
+#root {
+  height: 100%;
+}
+
+body {
+  margin: 0;
+  background: var(--bg-main);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+[data-theme="dark-premium"] {
+  color-scheme: dark;
+  --bg-main: #0d1117;
+  --bg-sidebar: #0a0f1a;
+  --bg-card: #111827;
+  --bg-card-soft: #0f172a;
+  --border-main: #1f2937;
+  --accent-main: #1b4fd8;
+  --accent-hover: #2563eb;
+  --accent-glow: rgba(27, 79, 216, 0.35);
+  --text-main: #eaf0f8;
+  --text-secondary: #7a90a8;
+  --text-muted: #4a607a;
+  --success: #22c55e;
+  --danger: #ef4444;
+  --warning: #f59e0b;
+  --cyan: #22d3ee;
+}
+
+[data-theme="dark-premium"] body {
+  background: var(--bg-main);
+}
+
+[data-theme="dark-premium"] .bg-white,
+[data-theme="dark-premium"] [class*="bg-white"],
+[data-theme="dark-premium"] [class*="bg-[#f6f8fc]"],
+[data-theme="dark-premium"] [class*="bg-[#f4f7fb]"] {
+  background-color: var(--bg-card) !important;
+}
+
+[data-theme="dark-premium"] aside[class*="bg-white"] {
+  background-color: var(--bg-sidebar) !important;
+}
+
+[data-theme="dark-premium"] main,
+[data-theme="dark-premium"] [class*="bg-[#f4f7fb]"],
+[data-theme="dark-premium"] [class*="bg-[#f6f8fc]"] {
+  background-color: var(--bg-main) !important;
+}
+
+[data-theme="dark-premium"] header,
+[data-theme="dark-premium"] section[class*="bg-white"],
+[data-theme="dark-premium"] .rounded-lg[class*="border"],
+[data-theme="dark-premium"] .rounded-xl[class*="border"] {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-main) !important;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
+}
+
+[data-theme="dark-premium"] [class*="bg-slate-50"],
+[data-theme="dark-premium"] [class*="bg-slate-100"],
+[data-theme="dark-premium"] [class*="bg-blue-50"],
+[data-theme="dark-premium"] [class*="bg-cyan-100"],
+[data-theme="dark-premium"] [class*="bg-violet-50"],
+[data-theme="dark-premium"] [class*="bg-orange-100"] {
+  background-color: var(--bg-card-soft) !important;
+}
+
+[data-theme="dark-premium"] [class*="bg-blue-100"] {
+  background-color: rgba(27, 79, 216, 0.22) !important;
+}
+
+[data-theme="dark-premium"] [class*="bg-red-100"] {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+}
+
+[data-theme="dark-premium"] [class*="bg-emerald-100"] {
+  background-color: rgba(34, 197, 94, 0.14) !important;
+}
+
+[data-theme="dark-premium"] [class*="border-slate-100"],
+[data-theme="dark-premium"] [class*="border-slate-200"],
+[data-theme="dark-premium"] [class*="divide-slate-100"] > :not([hidden]) ~ :not([hidden]) {
+  border-color: var(--border-main) !important;
+}
+
+[data-theme="dark-premium"] [class*="text-[#071b4d]"],
+[data-theme="dark-premium"] [class*="text-[#172448]"],
+[data-theme="dark-premium"] [class*="text-slate-900"],
+[data-theme="dark-premium"] [class*="text-blue-900"] {
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark-premium"] [class*="text-[#466083]"],
+[data-theme="dark-premium"] [class*="text-[#6b7d98]"],
+[data-theme="dark-premium"] [class*="text-[#8190ad]"],
+[data-theme="dark-premium"] [class*="text-slate-500"],
+[data-theme="dark-premium"] [class*="text-slate-600"],
+[data-theme="dark-premium"] [class*="text-slate-700"] {
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark-premium"] [class*="text-[#073B91]"],
+[data-theme="dark-premium"] [class*="text-blue-600"],
+[data-theme="dark-premium"] [class*="text-blue-700"] {
+  color: #8fb4ff !important;
+}
+
+[data-theme="dark-premium"] [class*="text-red-500"],
+[data-theme="dark-premium"] [class*="text-red-600"] {
+  color: var(--danger) !important;
+}
+
+[data-theme="dark-premium"] [class*="text-emerald-600"],
+[data-theme="dark-premium"] [class*="text-emerald-700"] {
+  color: var(--success) !important;
+}
+
+[data-theme="dark-premium"] [class*="bg-[#073B91]"],
+[data-theme="dark-premium"] [class*="bg-[#0757bd]"],
+[data-theme="dark-premium"] [aria-selected="true"] {
+  background-color: var(--accent-main) !important;
+  color: var(--text-main) !important;
+  border-color: var(--accent-hover) !important;
+  box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.2), 0 10px 24px var(--accent-glow) !important;
+}
+
+[data-theme="dark-premium"] button:not(:disabled):hover,
+[data-theme="dark-premium"] label:hover {
+  border-color: var(--accent-main) !important;
+}
+
+[data-theme="dark-premium"] button[class*="hover:bg-slate-50"]:hover,
+[data-theme="dark-premium"] button[class*="hover:bg-blue-50"]:hover,
+[data-theme="dark-premium"] label[class*="hover:bg-blue-50"]:hover {
+  background-color: var(--bg-card-soft) !important;
+}
+
+[data-theme="dark-premium"] input,
+[data-theme="dark-premium"] select,
+[data-theme="dark-premium"] .theme-toggle {
+  background-color: var(--bg-card) !important;
+  border-color: var(--border-main) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark-premium"] input:focus,
+[data-theme="dark-premium"] select:focus {
+  border-color: var(--accent-main) !important;
+  box-shadow: 0 0 0 2px var(--accent-glow) !important;
+}
+
+[data-theme="dark-premium"] table thead {
+  background-color: var(--bg-card-soft) !important;
+  color: var(--text-secondary) !important;
+}
+
+[data-theme="dark-premium"] table tbody tr:hover {
+  background-color: rgba(27, 79, 216, 0.12) !important;
+}
+
+[data-theme="dark-premium"] .leaflet-container {
+  background: var(--bg-card-soft);
+}
+
+[data-theme="dark-premium"] .leaflet-control,
+[data-theme="dark-premium"] .leaflet-control a,
+[data-theme="dark-premium"] .leaflet-popup-content-wrapper,
+[data-theme="dark-premium"] .leaflet-popup-tip {
+  background: var(--bg-card) !important;
+  border-color: var(--border-main) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark-premium"] .leaflet-popup-content p,
+[data-theme="dark-premium"] .leaflet-popup-content div {
+  color: var(--text-main) !important;
+  border-color: var(--border-main) !important;
+}
+
+[data-theme="dark-premium"] ::-webkit-scrollbar {
+  height: 10px;
+  width: 10px;
+}
+
+[data-theme="dark-premium"] ::-webkit-scrollbar-track {
+  background: var(--bg-main);
+}
+
+[data-theme="dark-premium"] ::-webkit-scrollbar-thumb {
+  background: var(--border-main);
+  border-radius: 999px;
+}
+
+[data-theme="dark-premium"] ::-webkit-scrollbar-thumb:hover {
+  background: var(--accent-main);
+}
+
+.leaflet-container {
+  height: 100%;
+  width: 100%;
+  background: transparent;
+}
+
+.leaflet-top.leaflet-left {
+  top: 12px;
+  left: 12px;
+}
+
+.leaflet-top.leaflet-right {
+  top: 12px;
+  right: 12px;
+}
+
+.leaflet-control-layers,
+.leaflet-control-zoom {
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 24px rgba(15, 23, 42, 0.18);
+}
+
+.leaflet-control-zoom a {
+  width: 34px;
+  height: 34px;
+  line-height: 34px;
+}
+
+.leaflet-popup-content-wrapper,
+.leaflet-popup-tip {
+  transition: background-color 0.25s ease, color 0.25s ease;
+}
+
+.react-grid-layout {
+  position: relative;
+}
+
+.react-grid-item {
+  transition: all 200ms ease;
+}
+
+.react-grid-item.react-draggable-dragging,
+.react-grid-item.resizing {
+  transition: none;
+}
+
+.react-grid-item.react-grid-placeholder {
+  background: rgba(37, 99, 235, 0.18);
+  border: 2px dashed rgba(37, 99, 235, 0.45);
+  border-radius: 8px;
+}
+
+.react-resizable-handle {
+  z-index: 60;
+}
+
+.react-resizable-handle::after {
+  border-right: 2px solid rgba(15, 23, 42, 0.55);
+  border-bottom: 2px solid rgba(15, 23, 42, 0.55);
+}
