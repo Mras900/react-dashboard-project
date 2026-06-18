@@ -30,4 +30,4 @@ services:
 
 networks:
   dashboard_net:
-    external: true
+    driver: bridge

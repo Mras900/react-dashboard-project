@@ -1,5 +1,5 @@
 fastapi
-uvicorn
+uvicorn[standard]
 python-dotenv
 requests
 geopy
@@ -7,3 +7,7 @@ geopandas
 shapely
 sqlalchemy
 psycopg2-binary
+python-multipart
+pydantic
+pandas
+openpyxl
