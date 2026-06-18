@@ -1,0 +1,30 @@
+services:
+  dashboard_backend:
+    container_name: dashboard_backend
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    env_file:
+      - ./backend/.env
+    restart: unless-stopped
+    networks:
+      - dashboard_net
+    expose:
+      - "8000"
+
+  dashboard_frontend:
+    container_name: dashboard_frontend
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    restart: unless-stopped
+    depends_on:
+      - dashboard_backend
+    networks:
+      - dashboard_net
+    ports:
+      - "8082:80"
+
+networks:
+  dashboard_net:
+    external: true

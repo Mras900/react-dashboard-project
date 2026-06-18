@@ -1,6 +1,6 @@
 import type { AddressSuggestion, RutaBackendVisit, RutaOptimizadaResponse, RutaStartPoint, SaveDailyVisitsPayload, SaveDailyVisitsResponse } from '../rutaTypes';
 
-const API_BASE = import.meta.env.VITE_API_BASE_URL ?? 'http://127.0.0.1:8000';
+const API_BASE = import.meta.env.VITE_API_BASE_URL || '';
 
 async function requestJson<T>(url: string, options?: RequestInit): Promise<T> {
   const response = await fetch(url, {
