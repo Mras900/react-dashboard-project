@@ -27,6 +27,8 @@ export type MetricKey =
   | 'average'
   | 'share';
 
+export type ChartMetric = MetricKey;
+
 export type DimensionKey =
   | 'comuna'
   | 'region'

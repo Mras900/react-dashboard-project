@@ -55,10 +55,10 @@ def check_database_health() -> tuple[bool, str]:
 
     try:
         with engine.connect() as connection:
-            database_name = connection.scalar(text("SELECT current_database()"))
-        return True, str(database_name or "")
+            connection.execute(text("SELECT 1"))
+        return True, engine.url.get_backend_name()
     except SQLAlchemyError:
-        return False, "No se pudo conectar a PostgreSQL. Revisa host, puerto, credenciales y disponibilidad."
+        return False, "No se pudo conectar a la base de datos configurada."
 
 
 def get_db() -> Generator[Session, None, None]:
@@ -74,7 +74,7 @@ def get_db() -> Generator[Session, None, None]:
     except SQLAlchemyError as error:
         session.rollback()
         raise DatabaseUnavailableError(
-            "No se pudo conectar a PostgreSQL. Revisa host, puerto, credenciales y disponibilidad."
+            "No se pudo conectar a la base de datos configurada."
         ) from error
     finally:
         session.close()

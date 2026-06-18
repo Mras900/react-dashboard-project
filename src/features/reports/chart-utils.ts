@@ -48,8 +48,8 @@ export function buildChartData(config: ChartConfig, rows: GenericRow[]): ChartDa
   return data;
 }
 
-export const formatChartValue = (value: number, metric: string) => {
-  if (metric === 'facturacion' || metric === 'average') {
+export const formatChartValue = (value: number, metric: string): string => {
+  if (metric === 'facturacion' || metric === 'ticketPromedio' || metric === 'average') {
     return value.toLocaleString('es-CL', {
       style: 'currency',
       currency: 'CLP',
@@ -57,7 +57,7 @@ export const formatChartValue = (value: number, metric: string) => {
     });
   }
 
-  if (metric === 'share') {
+  if (metric === 'ratio' || metric === 'share') {
     return `${value.toLocaleString('es-CL', { maximumFractionDigits: 1 })}%`;
   }
 

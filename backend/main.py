@@ -61,7 +61,7 @@ def sqlalchemy_error_handler(_: Request, __: SQLAlchemyError) -> JSONResponse:
     return JSONResponse(
         status_code=503,
         content={
-            "detail": "No se pudo conectar a PostgreSQL. Revisa host, puerto, credenciales y disponibilidad.",
+            "detail": "No se pudo conectar a la base de datos configurada.",
             "env_path_checked": str(ENV_PATH),
         },
     )

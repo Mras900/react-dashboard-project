@@ -14,6 +14,8 @@ services:
       - dashboard_net
     expose:
       - "8000"
+    volumes:
+      - dashboard_backend_data:/app/data
 
   dashboard_frontend:
     container_name: dashboard_frontend
@@ -27,6 +29,9 @@ services:
       - dashboard_net
     ports:
       - "8082:80"
+
+volumes:
+  dashboard_backend_data:
 
 networks:
   dashboard_net:
