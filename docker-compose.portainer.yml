@@ -35,4 +35,5 @@ volumes:
 
 networks:
   dashboard_net:
-    driver: bridge
+    external: true
+    name: dashboard_net
