@@ -668,8 +668,8 @@ export default function Dashboard() {
         <div className="min-w-0 flex-1">
           <header className="mb-5 flex flex-col gap-4 xl:flex-row xl:items-start xl:justify-between">
             <div className="min-w-[360px]">
-              <h1 className="text-3xl font-black tracking-tight text-[#071b4d]">Visor de Facturación y Reclamos</h1>
-              <p className="mt-1 text-sm font-semibold text-[#8190ad]">Inteligencia operativa para decisiones estratégicas</p>
+              <h1 className="text-3xl font-black tracking-tight text-[#071b4d]">Visor de Reclamos de Consumidores</h1>
+              <p className="mt-1 text-sm font-semibold text-[#8190ad]">Gestión, análisis y seguimiento operativo de reclamos</p>
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">

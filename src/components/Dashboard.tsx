@@ -46,6 +46,7 @@ import { ActiveRedZonesLayers } from '../features/red-zones/ActiveRedZonesLayers
 import { fetchRedZones } from '../features/red-zones/redZonesApi';
 import type { RedZone } from '../features/red-zones/redZoneTypes';
 import { fetchDashboardDailyVisits, type DashboardDailyResponse } from '../services/dashboardApi';
+import { fetchDashboardDatabase, type DashboardClaim, type DashboardDatabaseResponse } from '../services/dashboardDatabaseApi';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'alerts' | 'map' | 'settings' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
@@ -181,6 +182,40 @@ function loadImportedDashboardRows() {
   return {
     rm: loadRmImportedRows(),
     regiones: loadRegionImportedRows(),
+  };
+}
+
+function normalizeDatabasePriority(value: string | null): ImportedDashboardRow['prioridad'] {
+  const priority = normalizeName(value ?? '');
+  if (priority === 'alta' || priority === 'alto' || priority === 'high') return 'alta';
+  if (priority === 'media' || priority === 'medio' || priority === 'medium') return 'media';
+  if (priority === 'baja' || priority === 'bajo' || priority === 'low') return 'baja';
+  return 'sin_prioridad';
+}
+
+function isRmRegion(value: string | null) {
+  const region = normalizeName(value ?? '');
+  return region === 'rm' || region.includes('metropolitana');
+}
+
+function databaseClaimToImportedRow(claim: DashboardClaim, index: number): ImportedDashboardRow {
+  return {
+    importRowId: `postgresql-${claim.ticket ?? index}-${index}`,
+    ticket: claim.ticket ?? '',
+    mes: claim.mes ?? undefined,
+    fechaVisita: claim.fecha_visita ?? undefined,
+    fechaRecepcionTicket: claim.fecha_recepcion ?? undefined,
+    prioridad: normalizeDatabasePriority(claim.prioridad),
+    estadoVisita: claim.estado_visita ?? undefined,
+    regionOriginal: claim.region ?? undefined,
+    regionNormalizada: claim.region ?? undefined,
+    comuna: claim.comuna ?? undefined,
+    cliente: claim.cliente ?? undefined,
+    facturacionTotal: Number(claim.facturacion ?? 0),
+    observacion: claim.observacion ?? undefined,
+    scope: isRmRegion(claim.region) ? 'rm' : 'regiones',
+    sourceFileName: 'PostgreSQL',
+    validationStatus: 'valid',
   };
 }
 
@@ -1446,7 +1481,10 @@ export default function Dashboard() {
   const [regionalLayer, setRegionalLayer] = useState<GeoJsonObject | null>(null);
   const [regionalLayerError, setRegionalLayerError] = useState('');
   const [dailyDashboardData, setDailyDashboardData] = useState<DashboardDailyResponse | null>(null);
-  const [dailyDashboardError, setDailyDashboardError] = useState('');
+  const [, setDailyDashboardError] = useState('');
+  const [databaseDashboardData, setDatabaseDashboardData] = useState<DashboardDatabaseResponse | null>(null);
+  const [databaseDashboardLoading, setDatabaseDashboardLoading] = useState(true);
+  const [databaseDashboardError, setDatabaseDashboardError] = useState('');
   const [activeRedZones, setActiveRedZones] = useState<RedZone[]>([]);
   const [customKpis, setCustomKpis] = useState<CustomKpi[]>(() => {
     if (typeof window !== 'undefined') {
@@ -1587,6 +1625,28 @@ export default function Dashboard() {
 
   useEffect(() => {
     const controller = new AbortController();
+
+    setDatabaseDashboardLoading(true);
+    setDatabaseDashboardError('');
+
+    fetchDashboardDatabase(controller.signal)
+      .then((response) => {
+        if (!controller.signal.aborted) setDatabaseDashboardData(response);
+      })
+      .catch((error: unknown) => {
+        if (controller.signal.aborted) return;
+        setDatabaseDashboardData(null);
+        setDatabaseDashboardError(error instanceof Error ? error.message : 'No se pudieron cargar los reclamos');
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setDatabaseDashboardLoading(false);
+      });
+
+    return () => controller.abort();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
     const dateRange = getDashboardDateRange(filters.month);
 
     setDailyDashboardData(null);
@@ -1611,8 +1671,52 @@ export default function Dashboard() {
     setTablePage(0);
   }, [filters, viewMode]);
 
-  const rmData = useMemo(() => aggregateImportedRows(importedRows.rm), [importedRows.rm]);
-  const regionesData = useMemo(() => aggregateImportedRows(importedRows.regiones), [importedRows.regiones]);
+  const databaseRows = useMemo(
+    () => (databaseDashboardData?.reclamos ?? []).map(databaseClaimToImportedRow),
+    [databaseDashboardData],
+  );
+  const databaseMetrics = useMemo(() => {
+    const detailByScope = {
+      rm: aggregateImportedRows(databaseRows.filter((row) => row.scope === 'rm')),
+      regiones: aggregateImportedRows(databaseRows.filter((row) => row.scope === 'regiones')),
+    };
+    const scopeByComuna = new Map(
+      databaseRows.map((row) => [normalizeName(row.comuna ?? ''), row.scope] as const),
+    );
+    const details = {
+      rm: new Map(detailByScope.rm.map((item) => [normalizeName(item.comuna), item] as const)),
+      regiones: new Map(detailByScope.regiones.map((item) => [normalizeName(item.comuna), item] as const)),
+    };
+    const result: { rm: ComunaMetric[]; regiones: ComunaMetric[] } = { rm: [], regiones: [] };
+
+    (databaseDashboardData?.comunas ?? []).forEach((item) => {
+      const key = normalizeName(item.comuna);
+      const scope = item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? 'regiones');
+      const detail = details[scope].get(key);
+      result[scope].push({
+        comuna: item.comuna,
+        visitas: item.reclamos,
+        ticketsUnicos: detail?.ticketsUnicos ?? 0,
+        facturacion: item.facturacion,
+        alta: item.prioridad_alta,
+        media: detail?.media ?? 0,
+        baja: detail?.baja ?? 0,
+        reiteradas: detail?.reiteradas ?? 0,
+        lat: detail?.lat ?? 0,
+        lng: detail?.lng ?? 0,
+      });
+    });
+
+    return result;
+  }, [databaseDashboardData, databaseRows]);
+  const rmData = useMemo(
+    () => mergeComunaMetrics(aggregateImportedRows(importedRows.rm), databaseMetrics.rm),
+    [databaseMetrics.rm, importedRows.rm],
+  );
+  const regionesData = useMemo(
+    () => mergeComunaMetrics(aggregateImportedRows(importedRows.regiones), databaseMetrics.regiones),
+    [databaseMetrics.regiones, importedRows.regiones],
+  );
   const dailyComunaData = useMemo<ComunaMetric[]>(
     () =>
       (dailyDashboardData?.por_comuna ?? []).map((item) => ({
@@ -2259,8 +2363,8 @@ export default function Dashboard() {
         <div className="print-full min-w-0 flex-1 overflow-y-auto pr-1 print:overflow-visible">
           <header className="mb-4 flex min-h-[72px] flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-black tracking-tight text-slate-900 2xl:text-2xl">Visor de Facturación y Reclamos</h1>
-              <p className="mt-1 text-xs font-semibold text-[#8190ad] 2xl:text-sm">Inteligencia operativa para decisiones estratégicas</p>
+              <h1 className="truncate text-xl font-black tracking-tight text-slate-900 2xl:text-2xl">Visor de Reclamos de Consumidores</h1>
+              <p className="mt-1 text-xs font-semibold text-[#8190ad] 2xl:text-sm">Gestión, análisis y seguimiento operativo de reclamos</p>
             </div>
 
             <div className="flex flex-wrap items-center justify-end gap-2">
@@ -2348,13 +2452,18 @@ export default function Dashboard() {
                 <p className="mt-2 text-xs font-semibold text-slate-500">
                   Filtros activos: {selectedMonthLabel} · Prioridad {selectedPriorityLabel} · {selectedLocationLabel}
                 </p>
+                {databaseDashboardLoading ? (
+                  <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Cargando reclamos desde PostgreSQL...</p>
+                ) : databaseDashboardError ? (
+                  <p className="mt-1 text-xs font-semibold text-amber-700" role="alert">No se pudieron cargar los reclamos: {databaseDashboardError}</p>
+                ) : databaseDashboardData ? (
+                  <p className="mt-1 text-xs font-semibold text-emerald-700">
+                    PostgreSQL conectado: {formatInt(databaseDashboardData.resumen.reclamos_totales)} reclamos y {formatInt(databaseDashboardData.resumen.total_comunas)} comunas.
+                  </p>
+                ) : null}
                 {dailyDashboardData ? (
                   <p className="mt-1 text-xs font-semibold text-emerald-700">
                     Datos incluyen visitas diarias guardadas ({formatInt(dailyDashboardData.kpis.visitas)}).
-                  </p>
-                ) : dailyDashboardError ? (
-                  <p className="mt-1 text-xs font-semibold text-amber-700">
-                    Consolidado histórico activo. Visitas diarias no disponibles: {dailyDashboardError}
                   </p>
                 ) : null}
               </section>

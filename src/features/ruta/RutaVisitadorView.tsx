@@ -1079,7 +1079,6 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
         <RutaPanel className="overflow-hidden">
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-base font-bold text-[#071b4d]">Mapa de ruta</h3>
-            <p className="text-xs font-medium text-slate-500">Paradas desde backend, zonas rojas y geometría OSRM al optimizar.</p>
           </div>
           <div className="relative h-[460px] min-h-[360px] overflow-hidden rounded-xl">
             <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>

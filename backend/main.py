@@ -8,6 +8,7 @@ from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from database import DATABASE_URL, ENV_PATH, DatabaseUnavailableError, check_database_health, create_database_tables, get_db
+from dashboard_api import router as dashboard_router
 import models  # noqa: F401
 from schemas.dashboard_schema import DashboardVisitsResponse
 from schemas.red_zone_schema import HeatPointResponse, RedZoneCreate, RedZoneResponse, RedZoneUpdate, ValidatePointResponse
@@ -35,6 +36,7 @@ async def lifespan(_: FastAPI):
 
 
 app = FastAPI(title="Ruta Backend", lifespan=lifespan)
+app.include_router(dashboard_router)
 
 app.add_middleware(
     CORSMiddleware,
