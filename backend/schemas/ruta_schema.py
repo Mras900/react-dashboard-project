@@ -27,6 +27,8 @@ class OptimizeRouteVisit(BaseModel):
     lat: float | None = None
     lon: float | None = None
     peligro: bool = False
+    prioridad: str | None = None
+    cantidad_reclamos: int = 1
 
 
 class OptimizeRouteRequest(BaseModel):

@@ -9,7 +9,7 @@ class RouteOptimizationError(Exception):
         self.status_code = status_code
 
 
-def nearest_neighbor_route(durations: list[list[float | None]]) -> list[int]:
+def nearest_neighbor_route(durations: list[list[float | None]], priority_weights: list[float]) -> list[int]:
     n = len(durations)
     no_visitados = set(range(1, n))
     ruta = [0]
@@ -18,7 +18,7 @@ def nearest_neighbor_route(durations: list[list[float | None]]) -> list[int]:
     while no_visitados:
         siguiente = min(
             no_visitados,
-            key=lambda index: durations[actual][index] if durations[actual][index] is not None else float("inf"),
+            key=lambda index: (durations[actual][index] / max(priority_weights[index], 1)) if durations[actual][index] is not None else float("inf"),
         )
         ruta.append(siguiente)
         no_visitados.remove(siguiente)
@@ -27,7 +27,7 @@ def nearest_neighbor_route(durations: list[list[float | None]]) -> list[int]:
     return ruta
 
 
-def two_opt_duration(route: list[int], durations: list[list[float | None]]) -> float:
+def two_opt_duration(route: list[int], durations: list[list[float | None]], priority_weights: list[float]) -> float:
     total = 0.0
 
     for index in range(len(route) - 1):
@@ -40,12 +40,13 @@ def two_opt_duration(route: list[int], durations: list[list[float | None]]) -> f
 
         total += duration
 
-    return total
+    urgency_penalty = sum(position * priority_weights[node] * 180 for position, node in enumerate(route[1:], start=1))
+    return total + urgency_penalty
 
 
-def improve_route_2opt(route: list[int], durations: list[list[float | None]]) -> list[int]:
+def improve_route_2opt(route: list[int], durations: list[list[float | None]], priority_weights: list[float]) -> list[int]:
     mejor = route[:]
-    mejor_costo = two_opt_duration(mejor, durations)
+    mejor_costo = two_opt_duration(mejor, durations, priority_weights)
     mejorado = True
 
     while mejorado:
@@ -57,7 +58,7 @@ def improve_route_2opt(route: list[int], durations: list[list[float | None]]) ->
 
                 nueva = mejor[:]
                 nueva[i:j] = reversed(mejor[i:j])
-                nuevo_costo = two_opt_duration(nueva, durations)
+                nuevo_costo = two_opt_duration(nueva, durations, priority_weights)
 
                 if nuevo_costo < mejor_costo:
                     mejor = nueva
@@ -128,7 +129,14 @@ def build_optimized_route(
     if not durations:
         raise RouteOptimizationError("No se pudo obtener la matriz de tiempos de ruta.", 502)
 
-    route = improve_route_2opt(nearest_neighbor_route(durations), durations)
+    priority_map = {"alta": 4.0, "alto": 4.0, "high": 4.0, "media": 2.0, "medio": 2.0, "medium": 2.0}
+    priority_weights = [1.0]
+    for visit in visitas_validas:
+        explicit_priority = str(visit.get("prioridad") or "").strip().lower()
+        claims_weight = min(max(int(visit.get("cantidad_reclamos") or 1), 1), 4)
+        priority_weights.append(max(priority_map.get(explicit_priority, 1.0), float(claims_weight)))
+
+    route = improve_route_2opt(nearest_neighbor_route(durations, priority_weights), durations, priority_weights)
     ordered_points = [puntos[index].model_copy(update={"orden": order}) for order, index in enumerate(route)]
     ordered_coords = [{"lat": point.lat, "lon": point.lon} for point in ordered_points]
     route_data = osrm_route_geometry(ordered_coords)

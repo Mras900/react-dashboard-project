@@ -28,7 +28,7 @@ export function RedZoneEditorPanel({
       <div className="flex items-start justify-between gap-3">
         <div>
           <h3 className="text-sm font-bold text-[#071b4d]">{draft.id ? 'Editar zona roja' : 'Nueva zona roja'}</h3>
-          <p className="mt-1 text-xs text-slate-500">Configura el centro, radio y visualización.</p>
+          <p className="mt-1 text-xs text-slate-500">Configura centro y radio, o selecciona “Polígono” para dibujarlo en el mapa.</p>
         </div>
         <button aria-label="Cancelar edición" className="text-slate-500 hover:text-slate-900" onClick={onCancel} type="button">
           <X size={18} />
@@ -62,7 +62,7 @@ export function RedZoneEditorPanel({
           <select className={inputClass} onChange={(event) => onChange({ ...draft, display_mode: event.target.value as RedZoneDisplayMode })} value={draft.display_mode}>
             <option value="circle">Círculo</option>
             <option value="heatpoint">Punto de calor</option>
-            {draft.polygon_geojson ? <option value="polygon">Polígono</option> : null}
+            <option value="polygon">Polígono</option>
           </select>
         </div>
         <textarea className="min-h-16 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" onChange={(event) => onChange({ ...draft, notes: event.target.value })} placeholder="Notas" value={draft.notes ?? ''} />

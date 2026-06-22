@@ -7,6 +7,7 @@ type Props = {
 };
 
 export function TableChartWidget({ config, data }: Props) {
+  const safeData = Array.isArray(data) ? data : [];
   return (
     <div className="overflow-hidden rounded-lg border border-slate-200">
       <table className="w-full text-left text-xs">
@@ -17,7 +18,7 @@ export function TableChartWidget({ config, data }: Props) {
           </tr>
         </thead>
         <tbody className="divide-y divide-slate-100">
-          {data.map((item) => (
+          {safeData.map((item) => (
             <tr key={item.name}>
               <td className="px-3 py-2 font-bold">{item.name}</td>
               <td className="px-3 py-2 text-right font-black">{formatChartValue(item.value, config.metric)}</td>

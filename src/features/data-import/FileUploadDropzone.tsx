@@ -7,10 +7,10 @@ type FileUploadDropzoneProps = {
 
 export function FileUploadDropzone({ fileName, onFileSelect }: FileUploadDropzoneProps) {
   return (
-    <label className="flex min-h-[132px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 px-4 text-center transition hover:border-blue-300 hover:bg-blue-50/40">
-      <Upload className="mb-2 text-[#073B91]" size={28} />
-      <span className="text-sm font-black text-[#071b4d]">{fileName || 'Arrastra o selecciona un archivo'}</span>
-      <span className="mt-1 text-xs font-semibold text-[#6b7d98]">CSV, XLS, XLSX o XLSM</span>
+    <label className="cc-import-dropzone cc-focus-ring flex min-h-[148px] cursor-pointer flex-col items-center justify-center rounded-lg border border-dashed px-4 text-center transition" data-has-file={fileName ? 'true' : 'false'}>
+      <Upload className="cc-import-dropzone-icon mb-2" size={28} />
+      <span className="cc-import-dropzone-title text-sm font-black">{fileName || 'Arrastra o selecciona un archivo'}</span>
+      <span className="cc-import-dropzone-meta mt-1 text-xs font-semibold">CSV, XLS, XLSX o XLSM</span>
       <input
         accept=".csv,.xls,.xlsx,.xlsm"
         className="sr-only"

@@ -18,15 +18,16 @@ type Props = {
 };
 
 export function LineChartWidget({ config, data }: Props) {
+  const safeData = Array.isArray(data) ? data : [];
   if (config.type === 'area') {
     return (
       <ResponsiveContainer width="100%" height={280}>
-        <AreaChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-          <CartesianGrid strokeDasharray="3 3" />
+        <AreaChart data={safeData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+          <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" />
           <XAxis dataKey="name" />
           <YAxis tickFormatter={(value) => formatChartValue(Number(value), config.metric)} />
-          <Tooltip formatter={(value) => formatChartValue(Number(value), config.metric)} />
-          <Area type="monotone" dataKey="value" />
+          <Tooltip contentStyle={{ background: 'var(--bg-card)', borderColor: 'var(--border-main)', color: 'var(--text-main)' }} formatter={(value) => formatChartValue(Number(value), config.metric)} />
+          <Area type="monotone" dataKey="value" fill="var(--chart-primary-soft)" stroke="var(--chart-primary)" />
         </AreaChart>
       </ResponsiveContainer>
     );
@@ -34,12 +35,12 @@ export function LineChartWidget({ config, data }: Props) {
 
   return (
     <ResponsiveContainer width="100%" height={280}>
-      <LineChart data={data} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
-        <CartesianGrid strokeDasharray="3 3" />
+      <LineChart data={safeData} margin={{ top: 8, right: 16, left: 8, bottom: 8 }}>
+        <CartesianGrid stroke="var(--chart-grid)" strokeDasharray="3 3" />
         <XAxis dataKey="name" />
         <YAxis tickFormatter={(value) => formatChartValue(Number(value), config.metric)} />
-        <Tooltip formatter={(value) => formatChartValue(Number(value), config.metric)} />
-        <Line type="monotone" dataKey="value" strokeWidth={3} />
+        <Tooltip contentStyle={{ background: 'var(--bg-card)', borderColor: 'var(--border-main)', color: 'var(--text-main)' }} formatter={(value) => formatChartValue(Number(value), config.metric)} />
+        <Line type="monotone" dataKey="value" stroke="var(--chart-primary)" strokeWidth={3} />
       </LineChart>
     </ResponsiveContainer>
   );

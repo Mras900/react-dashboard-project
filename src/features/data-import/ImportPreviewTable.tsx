@@ -42,9 +42,9 @@ function getEditableValue(row: ImportedDashboardRow, field: EditableImportedFiel
 }
 
 function getRowClass(status?: ImportValidationStatus) {
-  if (status === 'error') return 'bg-red-50/70 ring-1 ring-inset ring-red-200';
-  if (status === 'warning') return 'bg-amber-50/70 ring-1 ring-inset ring-amber-200';
-  return '';
+  if (status === 'error') return 'cc-import-row-error';
+  if (status === 'warning') return 'cc-import-row-warning';
+  return 'cc-import-row-valid';
 }
 
 function getStatusLabel(status?: ImportValidationStatus) {
@@ -93,15 +93,14 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
   };
 
   return (
-    <div className="grid gap-3">
-      <div className="flex flex-wrap items-center justify-between gap-2">
+    <div className="cc-import-preview grid gap-3">
+      <div className="cc-import-toolbar flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           {filterOptions.map((option) => (
             <button
               key={option.value}
-              className={`rounded-lg border px-3 py-2 text-xs font-black transition ${
-                filter === option.value ? 'border-[#073B91] bg-[#073B91] text-white' : 'border-slate-200 bg-white text-[#172448] hover:bg-slate-50'
-              }`}
+              aria-pressed={filter === option.value}
+              className="cc-import-filter cc-focus-ring px-3 py-2 text-xs font-black transition"
               onClick={() => onFilterChange(option.value)}
               type="button"
             >
@@ -109,18 +108,18 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
             </button>
           ))}
         </div>
-        <p className="text-xs font-bold text-[#6b7d98]">{visibleRows.length} filas visibles</p>
+        <p className="cc-import-visible-count text-xs font-bold">{visibleRows.length} filas visibles</p>
       </div>
 
       {counts.error > 0 ? (
-        <p className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-xs font-bold text-red-700">
+        <p className="cc-import-notice cc-import-notice-error">
           Puedes editar las filas con error o eliminarlas antes de confirmar la carga.
         </p>
       ) : null}
 
-      <div className="overflow-x-auto rounded-lg border border-slate-200">
+      <div className="cc-import-table overflow-x-auto rounded-lg">
         <table className="w-full min-w-[1320px] text-left text-xs">
-          <thead className="bg-slate-50 text-[11px] uppercase text-[#466083]">
+          <thead className="cc-import-table-head sticky top-0 z-10 text-[11px] uppercase">
             <tr>
               {editableFields.map((field) => (
                 <th key={field.key} className="px-3 py-2 font-black">{field.label}</th>
@@ -131,19 +130,19 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
               <th className="px-3 py-2 font-black">Acciones</th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-100">
+          <tbody className="cc-import-table-body">
             {visibleRows.length > 0 ? (
               visibleRows.map((row) => {
                 const isEditing = editingRowId === row.importRowId;
 
                 return (
-                  <tr key={row.importRowId} className={getRowClass(row.validationStatus)} onDoubleClick={() => startEdit(row)}>
+                  <tr key={row.importRowId} className={`cc-import-row ${getRowClass(row.validationStatus)}`} onDoubleClick={() => startEdit(row)}>
                     {editableFields.map((field) => (
                       <td key={field.key} className="px-3 py-2 align-top">
                         {isEditing ? (
                           field.options ? (
                             <select
-                              className="h-9 w-full min-w-[120px] rounded-md border border-slate-200 bg-white px-2 text-xs font-bold text-[#172448] outline-none focus:border-blue-400"
+                              className="cc-input cc-import-input h-9 w-full min-w-[120px] rounded-md border px-2 text-xs font-bold"
                               onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.value }))}
                               value={draft[field.key] ?? ''}
                             >
@@ -153,8 +152,8 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
                             </select>
                           ) : (
                             <input
-                              className={`h-9 w-full min-w-[120px] rounded-md border bg-white px-2 text-xs font-bold text-[#172448] outline-none focus:border-blue-400 ${
-                                row.validationStatus === 'error' && !getEditableValue(row, field.key) ? 'border-red-300' : 'border-slate-200'
+                              className={`cc-input cc-import-input h-9 w-full min-w-[120px] rounded-md border px-2 text-xs font-bold ${
+                                row.validationStatus === 'error' && !getEditableValue(row, field.key) ? 'border-red-500/60' : ''
                               }`}
                               inputMode={field.numeric ? 'decimal' : 'text'}
                               onChange={(event) => setDraft((current) => ({ ...current, [field.key]: event.target.value }))}
@@ -162,31 +161,31 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
                             />
                           )
                         ) : (
-                          <span className={field.numeric ? 'font-black text-[#172448]' : 'font-semibold text-[#172448]'}>
+                          <span className={field.numeric ? 'font-black' : 'font-semibold'}>
                             {getEditableValue(row, field.key) || '-'}
                           </span>
                         )}
                       </td>
                     ))}
                     <td className="px-3 py-2 align-top font-black">{row.scope}</td>
-                    <td className="px-3 py-2 align-top font-black">{getStatusLabel(row.validationStatus)}</td>
-                    <td className="max-w-[260px] px-3 py-2 align-top font-semibold text-[#6b7d98]">{row.validationMessage || '-'}</td>
+                    <td className="cc-import-status px-3 py-2 align-top font-black" data-status={row.validationStatus ?? 'valid'}>{getStatusLabel(row.validationStatus)}</td>
+                    <td className="max-w-[260px] px-3 py-2 align-top font-semibold cc-text-secondary">{row.validationMessage || '-'}</td>
                     <td className="px-3 py-2 align-top">
                       {isEditing ? (
                         <div className="flex gap-1">
-                          <button className="flex h-8 w-8 items-center justify-center rounded-md bg-[#073B91] text-white" onClick={saveEdit} type="button" aria-label="Guardar cambios">
+                          <button className="cc-button-primary cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={saveEdit} type="button" aria-label="Guardar cambios">
                             <Check size={15} />
                           </button>
-                          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-[#172448]" onClick={cancelEdit} type="button" aria-label="Cancelar edición">
+                          <button className="cc-button-secondary cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={cancelEdit} type="button" aria-label="Cancelar edición">
                             <X size={15} />
                           </button>
                         </div>
                       ) : (
                         <div className="flex gap-1">
-                          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-slate-200 bg-white text-[#172448] hover:bg-slate-50" onClick={() => startEdit(row)} type="button" aria-label="Editar fila">
+                          <button className="cc-button-secondary cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={() => startEdit(row)} type="button" aria-label="Editar fila">
                             <Pencil size={15} />
                           </button>
-                          <button className="flex h-8 w-8 items-center justify-center rounded-md border border-red-200 bg-white text-red-600 hover:bg-red-50" onClick={() => onDeleteRow(row.importRowId)} type="button" aria-label="Eliminar fila">
+                          <button className="cc-danger-button cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={() => onDeleteRow(row.importRowId)} type="button" aria-label="Eliminar fila">
                             <Trash2 size={15} />
                           </button>
                         </div>
@@ -197,7 +196,7 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
               })
             ) : (
               <tr>
-                <td className="px-3 py-8 text-center font-bold text-slate-500" colSpan={17}>Sin filas para el filtro seleccionado.</td>
+                <td className="cc-import-empty px-3 py-8 text-center font-bold" colSpan={17}>Sin filas para el filtro seleccionado.</td>
               </tr>
             )}
           </tbody>
@@ -205,7 +204,7 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
       </div>
 
       {editingRowId ? (
-        <button className="inline-flex w-fit items-center gap-2 text-xs font-black text-[#073B91]" onClick={cancelEdit} type="button">
+        <button className="cc-import-cancel-edit cc-focus-ring inline-flex w-fit items-center gap-2 text-xs font-black" onClick={cancelEdit} type="button">
           <RotateCcw size={14} />
           Cancelar edición actual
         </button>

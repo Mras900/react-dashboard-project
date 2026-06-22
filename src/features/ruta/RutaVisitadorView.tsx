@@ -11,6 +11,10 @@ import type { RedZone, RedZoneDraft } from '../red-zones/redZoneTypes';
 import { isPointInActiveRedZone } from '../red-zones/redZoneUtils';
 import { buscarPorRut, buscarPorTicket, guardarVisitasDiarias, optimizarRuta, searchAddress } from './services/rutaApi';
 import { buildRutaCsv, buildRutaSummary, calculateStopValue, downloadCsv, findComunaRegionByPoint, getFareTable, getFeatureComunaName, getFeatureRegionName, isPointInRedZone, loadGenericGeoJson, loadRedZonesGeoJson, normalizeName, parseTicketIds } from './rutaUtils';
+import { upsertRouteDailyVisit, saveRouteDailyVisits, dispatchRouteDailyUpdate, getRouteDailyVisits } from './routeDailyStorage';
+import type { RouteDailyVisit } from './routeDailyStorage';
+import { fetchRouteWeather, getWeatherEmoji, KNOWN_COMUNAS } from './routeWeatherService';
+import type { RouteWeatherSummary } from './routeWeatherTypes';
 
 type SearchMode = 'ticket' | 'rut';
 
@@ -64,7 +68,7 @@ function RutaPanel({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={`rounded-lg border border-slate-200 bg-white shadow-sm ${className}`}>{children}</section>;
+  return <section className={`cc-route-card rounded-xl border ${className}`}>{children}</section>;
 }
 
 function RutaMetricCard({ label, value, tone = 'blue' }: { label: string; value: string; tone?: 'blue' | 'green' | 'red' | 'amber' | 'slate' }) {
@@ -269,6 +273,69 @@ const formatLiters = (liters: number) => `${liters.toLocaleString('es-CL', { min
 
 const formatClp = (value: number) => value.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
 
+
+const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
+const WEEKDAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
+
+function RouteMonthCalendar({ selectedDate, onSelectDate, visitsByDate }: {
+  selectedDate: string;
+  onSelectDate: (d: string) => void;
+  visitsByDate: Record<string, { total: number }>;
+}) {
+  const [monthDate, setMonthDate] = useState(() => new Date(selectedDate + 'T12:00:00'));
+
+  const year = monthDate.getFullYear();
+  const month = monthDate.getMonth();
+  const firstDay = new Date(year, month, 1).getDay();
+  const daysInMonth = new Date(year, month + 1, 0).getDate();
+  const today = new Date().toISOString().slice(0, 10);
+
+  const goPrev = () => setMonthDate(new Date(year, month - 1, 1));
+  const goNext = () => setMonthDate(new Date(year, month + 1, 1));
+
+  const days: ReactNode[] = [];
+  for (let i = 0; i < firstDay; i++) {
+    days.push(<div key={'e' + i} className="cc-route-calendar-day cc-route-calendar-day-other" />);
+  }
+  for (let d = 1; d <= daysInMonth; d++) {
+    const dateStr = year + '-' + String(month + 1).padStart(2, '0') + '-' + String(d).padStart(2, '0');
+    const isActive = dateStr === selectedDate;
+    const isToday = dateStr === today;
+    const dayVisits = visitsByDate[dateStr];
+    days.push(
+      <button key={dateStr}
+        className={'cc-route-calendar-day' + (isActive ? ' cc-route-calendar-day-active' : '') + (isToday ? ' cc-route-calendar-day-today' : '')}
+        onClick={() => onSelectDate(dateStr)}
+        type="button"
+      >
+        {d}
+        {dayVisits ? <span className="cc-route-calendar-badge">{dayVisits.total > 9 ? '9+' : dayVisits.total}</span> : null}
+      </button>
+    );
+  }
+  const remaining = 7 - (days.length % 7 || 7);
+  for (let i = 0; i < remaining; i++) {
+    days.push(<div key={'l' + i} className="cc-route-calendar-day cc-route-calendar-day-other" />);
+  }
+
+  return (
+    <div className="cc-route-calendar">
+      <div className="cc-route-calendar-header">
+        <h4>{MONTHS[month]} {year}</h4>
+        <div className="cc-route-calendar-nav">
+          <button onClick={goPrev} type="button">&lsaquo;</button>
+          <button onClick={() => { const n = new Date(); setMonthDate(new Date(n.getFullYear(), n.getMonth(), 1)); }} type="button">&bull;</button>
+          <button onClick={goNext} type="button">&rsaquo;</button>
+        </div>
+      </div>
+      <div className="cc-route-calendar-weekdays">
+        {WEEKDAYS.map((wd) => <span key={wd}>{wd}</span>)}
+      </div>
+      <div className="cc-route-calendar-grid">{days}</div>
+      <p className="cc-route-calendar-footer">Hoy destacado en verde. Días con badge tienen visitas guardadas.</p>
+    </div>
+  );
+}
 export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
   const today = new Date().toISOString().slice(0, 10);
   const [visitador, setVisitador] = useState('');
@@ -299,6 +366,11 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
   const [redZoneSaving, setRedZoneSaving] = useState(false);
   const [redZoneManageError, setRedZoneManageError] = useState('');
   const [redZoneDetectMessage, setRedZoneDetectMessage] = useState('');
+  const [calendarMonthDate, setCalendarMonthDate] = useState(() => new Date(fechaVisita + 'T12:00:00'));
+  const [weatherSummary, setWeatherSummary] = useState<RouteWeatherSummary | null>(null);
+  const [weatherLoading, setWeatherLoading] = useState(false);
+  const [weatherError, setWeatherError] = useState('');
+  const [weatherComuna, setWeatherComuna] = useState(KNOWN_COMUNAS[0].name);
   const [focusRedZoneSave, setFocusRedZoneSave] = useState(false);
   const [loading, setLoading] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
@@ -306,6 +378,19 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
   const [message, setMessage] = useState('');
   const redZoneFormRef = useRef<HTMLDivElement | null>(null);
   const redZoneSaveButtonRef = useRef<HTMLButtonElement | null>(null);
+
+  const weatherCoords = KNOWN_COMUNAS.find((k) => k.name === weatherComuna);
+
+  useEffect(() => {
+    if (!weatherCoords) return;
+    let mounted = true;
+    setWeatherLoading(true);
+    setWeatherError('');
+    fetchRouteWeather({ latitude: weatherCoords.lat, longitude: weatherCoords.lng, date: fechaVisita })
+      .then((data) => { if (mounted) { setWeatherSummary(data); setWeatherLoading(false); } })
+      .catch((err: unknown) => { if (mounted) { setWeatherError(err instanceof Error ? err.message : 'Error clima'); setWeatherLoading(false); } });
+    return () => { mounted = false; };
+  }, [fechaVisita, weatherComuna]);
 
   const refreshActiveRedZones = useCallback(() => {
     fetchRedZones('active')
@@ -372,6 +457,24 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
 
   const summary = useMemo(() => buildRutaSummary(stops), [stops]);
   const fares = useMemo(() => getFareTable(stops.length), [stops.length]);
+  const visitsByDate = useMemo(() => {
+    const grouped: Record<string, { total: number }> = {};
+    // From current stops
+    for (const s of stops) {
+      if (!grouped[fechaVisita]) grouped[fechaVisita] = { total: 0 };
+      grouped[fechaVisita].total++;
+      if (s.status === 'exitosa') grouped[fechaVisita].exitosas++;
+      else if (s.status === 'no_exitosa') grouped[fechaVisita].noExitosas++;
+      else grouped[fechaVisita].pendientes++;
+      }
+    // From localStorage
+    const stored = getRouteDailyVisits();
+    for (const v of stored) {
+      if (!grouped[v.fechaRuta]) grouped[v.fechaRuta] = { total: 0 };
+      grouped[v.fechaRuta].total++;
+    }
+    return grouped;
+  }, [stops, fechaVisita]);
   const stopPoints = useMemo<LatLngTuple[]>(
     () => stops.filter((stop) => Number.isFinite(stop.lat) && Number.isFinite(stop.lng)).map((stop) => [stop.lat as number, stop.lng as number]),
     [stops],
@@ -756,6 +859,33 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
     downloadCsv(`ruta-visitador-${new Date().toISOString().slice(0, 10)}.csv`, buildRutaCsv(stops, routeFuelSummary ?? undefined));
   };
 
+  const persistNewStops = (newStops: RutaStop[]) => {
+    const now = new Date().toISOString();
+    for (const stop of newStops) {
+      const visit: RouteDailyVisit = {
+        id: stop.id,
+        fechaRuta: fechaVisita,
+        ticket: stop.referencia,
+        rut: stop.rut,
+        idTicket: stop.id === stop.referencia ? undefined : stop.id,
+        direccion: stop.address,
+        comuna: stop.address?.split(',').pop()?.trim(),
+        lat: stop.lat,
+        lng: stop.lng,
+        estadoVisita: stop.status,
+        resultado: stop.status,
+        observacion: stop.observation,
+        zonaRoja: stop.isRedZone,
+        tarifaAplicada: 0,
+        valorVisita: 0,
+        createdAt: now,
+        updatedAt: now,
+      };
+      upsertRouteDailyVisit(visit);
+    }
+    dispatchRouteDailyUpdate(fechaVisita, 'ruta-visitador');
+  };
+
   const saveDailyVisits = async () => {
     if (!visitador.trim() || !fechaCarga || !fechaVisita || stops.length === 0) {
       setMessage('Completa visitador, fechas y al menos una visita antes de guardar.');
@@ -808,6 +938,30 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             : null,
       });
       setMessage(`Visitas guardadas: ${response.saved + response.updated} | RM: ${response.rm} | Regiones: ${response.regiones}`);
+      // Save to localStorage for dashboard integration
+      const now = new Date().toISOString();
+      const dailyVisits: RouteDailyVisit[] = stops.map((stop, idx) => ({
+        id: stop.id,
+        fechaRuta: fechaVisita,
+        ticket: stop.referencia,
+        rut: stop.rut,
+        idTicket: stop.id === stop.referencia ? undefined : stop.id,
+        direccion: stop.address,
+        comuna: stop.address?.split(',').pop()?.trim(),
+        lat: stop.lat,
+        lng: stop.lng,
+        estadoVisita: stop.status,
+        resultado: stop.status,
+        observacion: stop.observation,
+        zonaRoja: stop.isRedZone,
+        tarifaAplicada: calculateStopValue(stop.status, stops.length),
+        valorVisita: calculateStopValue(stop.status, stops.length),
+        ordenRuta: idx + 1,
+        createdAt: now,
+        updatedAt: now,
+      }));
+      saveRouteDailyVisits(fechaVisita, dailyVisits);
+      dispatchRouteDailyUpdate(fechaVisita, 'ruta-visitador');
     } catch (error) {
       setMessage(error instanceof Error ? error.message : 'No se pudieron guardar las visitas del día');
     } finally {
@@ -816,8 +970,18 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
   };
 
   return (
-    <div className="grid gap-4 xl:grid-cols-[320px_minmax(0,1fr)]">
-      <aside className="grid gap-4 self-start xl:sticky xl:top-0">
+    <div className="grid gap-4">
+      {/* TOP GRID */}
+      <div className="cc-route-top-grid">
+        <RutaPanel className="cc-route-calendar-zone rounded-xl border p-4">
+          <RouteMonthCalendar
+            selectedDate={fechaVisita}
+            onSelectDate={(d) => { setFechaVisita(d); }}
+            visitsByDate={visitsByDate}
+          />
+        </RutaPanel>
+
+        {/* Featured ticket loading zone */}
         <RutaPanel className="p-4">
           <div className="flex items-center gap-3">
             <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
@@ -959,6 +1123,36 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             </label>
           </div>
         </RutaPanel>
+        {/* Weather card */}
+        <RutaPanel className="cc-route-weather-card rounded-xl border p-3">
+          <div className="flex items-center justify-between gap-2">
+            <span className="cc-route-label text-xs">Clima de ruta</span>
+            <span className="cc-route-badge">{getWeatherEmoji(weatherSummary?.weatherCode)} {weatherSummary?.temperatureMax ?? '--'}°</span>
+          </div>
+          <div className="mt-2">
+            <select
+              className="cc-route-input h-8 w-full px-2 text-xs font-bold rounded-lg border"
+              value={weatherComuna}
+              onChange={(e) => setWeatherComuna(e.target.value)}
+            >
+              {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
+            </select>
+          </div>
+          {weatherLoading ? <p className="cc-route-stop-meta mt-2 text-xs"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando clima...</p> : null}
+          {weatherError ? <p className="cc-route-stop-meta mt-2 text-xs leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError.includes('Pronóstico') ? weatherError : 'No se pudo obtener el clima. Puedes continuar cargando la ruta.'}</p> : null}
+          {weatherSummary && !weatherLoading ? (
+            <div className="mt-2">
+              <span className={'cc-route-weather-risk ' + (
+                weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-risk-high' :
+                weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-risk-warning' :
+                'cc-route-weather-risk-normal'
+              )}>
+                {weatherSummary.riskLevel === 'alto' ? '⚠️' : weatherSummary.riskLevel === 'precaucion' ? '⚡' : '✅'} {weatherSummary.riskLevel === 'alto' ? 'Alto' : weatherSummary.riskLevel === 'precaucion' ? 'Precaución' : 'Normal'}
+              </span>
+              <p className="cc-route-stop-meta mt-1 text-[10px] leading-tight">{weatherSummary.riskLabel}</p>
+            </div>
+          ) : null}
+        </RutaPanel>
 
         <RutaPanel className="grid gap-3 p-4">
           <form
@@ -1028,7 +1222,10 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           </form>
         </RutaPanel>
 
-        <RutaPanel className="grid gap-2 p-4">
+        </div>{/* END top grid */}
+
+        {/* Actions */}
+        <RutaPanel className="cc-route-actions p-4">
           <button
             className="flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
             disabled={saving || stops.length === 0 || !visitador.trim()}
@@ -1051,10 +1248,10 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             Limpiar tickets
           </button>
         </RutaPanel>
-      </aside>
+      {/* END aside (removed in restructure) */}
 
-      <main className="grid min-w-0 gap-4">
-        <section className="grid grid-cols-2 gap-3 lg:grid-cols-4 2xl:grid-cols-7">
+      {/* BOTTOM: KPIs + Map + Stops + Valuation */}
+        <section className="cc-route-kpi-grid">
           <RutaMetricCard label="Tickets del día" value={summary.ticketsToday.toLocaleString('es-CL')} />
           <RutaMetricCard label="Exitosas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
           <RutaMetricCard label="No exitosas" value={summary.unsuccessful.toLocaleString('es-CL')} tone="red" />
@@ -1072,7 +1269,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                 Distancia total {formatDistance(optimizedRoute.distance_m)} · Tiempo conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} · Tiempo atención {formatDuration(getRouteServiceDuration(optimizedRoute))} · Tiempo total estimado {formatDuration(optimizedRoute.duration_s)}
               </p>
             ) : null}
-            {redZonesError ? <p className="mt-1 text-xs font-semibold text-amber-700">{redZonesError}. La vista sigue funcionando con el estado de zona roja informado por backend.</p> : null}
+            {redZonesError ? <p className="mt-1 text-xs font-semibold cc-orange">{redZonesError}. La vista sigue funcionando con el estado de zona roja informado por backend.</p> : null}
           </RutaPanel>
         ) : null}
 
@@ -1080,7 +1277,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-base font-bold text-[#071b4d]">Mapa de ruta</h3>
           </div>
-          <div className="relative h-[460px] min-h-[360px] overflow-hidden rounded-xl">
+          <div className="cc-route-map-compact relative overflow-hidden rounded-xl">
             <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>
               <ZoomControl position="topleft" />
               <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
@@ -1320,7 +1517,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                 </div>
               ) : (
                 stops.map((stop, index) => (
-                  <article key={stop.id} className="grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                  <article key={stop.id} className="cc-route-stop-card grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">#{index + 1}</span>
@@ -1329,11 +1526,11 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                         {stop.isRedZone ? <span className="rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Zona roja</span> : null}
                         {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">Sin coordenadas — dirección requiere corrección</span> : null}
                       </div>
-                      <p className="mt-2 text-xs font-semibold text-slate-500">
+                      <p className="cc-route-stop-meta mt-2 text-xs font-semibold">
                         {stop.referencia} · Reclamos {stop.claimsCount.toLocaleString('es-CL')}
                       </p>
-                      <p className="mt-1 text-sm font-medium text-slate-700">{stop.address || 'Sin dirección'}</p>
-                      <div className="mt-2 grid gap-1 text-xs font-medium text-slate-500 sm:grid-cols-3">
+                      <p className="cc-route-stop-name mt-1 text-sm font-medium">{stop.address || 'Sin dirección'}</p>
+                      <div className="cc-route-stop-meta mt-2 grid gap-1 text-xs font-medium sm:grid-cols-3">
                         <span>RUT: {stop.rut ?? 'No informado'}</span>
                         <span>Tel: {stop.phone ?? 'No informado'}</span>
                         <span>Correo: {stop.email ?? 'No informado'}</span>
@@ -1378,7 +1575,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                             ))}
                           </div>
                         ) : addressSearched[stop.id] && !addressLoading[stop.id] ? (
-                          <p className="mt-2 text-xs font-semibold text-slate-600">No se encontraron direcciones</p>
+                          <p className="cc-route-stop-meta mt-2 text-xs font-semibold">No se encontraron direcciones</p>
                         ) : null}
                       </div>
                     </div>
@@ -1401,10 +1598,10 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                         value={stop.observation}
                       />
                       <div className="flex items-center justify-between gap-2">
-                        <span className="text-xs font-bold text-slate-600">
+                        <span className="cc-route-stop-meta text-xs font-bold">
                           {calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}
                         </span>
-                        <button className="flex h-9 items-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100" onClick={() => removeStop(stop.id)} type="button">
+                        <button className="cc-danger-button flex h-9 items-center gap-2 px-3 text-xs font-bold" onClick={() => removeStop(stop.id)} type="button">
                           <Trash2 size={15} />
                           Eliminar
                         </button>
@@ -1421,7 +1618,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="font-medium text-slate-600">Tramo actual</span>
-                <span className="font-bold text-slate-900">{stops.length >= 13 ? '13 o más tickets' : 'Menos de 13 tickets'}</span>
+                <span className="font-bold cc-text">{stops.length >= 13 ? '13 o más tickets' : 'Menos de 13 tickets'}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="font-medium text-slate-600">Tarifa exitosa</span>
@@ -1432,7 +1629,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                 <span className="font-bold text-red-700">{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
               </div>
               {optimizedRoute ? (
-                <div className="border-t border-slate-200 pt-3">
+                <div className="cc-route-divider border-t pt-3">
                   <div className="flex justify-between gap-3">
                     <span className="font-medium text-slate-600">Kilómetros totales</span>
                     <span className="font-bold text-blue-700">{routeFuelSummary ? formatKilometers(routeFuelSummary.totalKm) : formatDistance(optimizedRoute.distance_m)}</span>
@@ -1466,13 +1663,13 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
               <div className="border-t border-slate-200 pt-3">
                 <div className="flex justify-between gap-3">
                   <span className="font-bold text-slate-700">Total valorizado</span>
-                  <span className="font-extrabold text-[#071b4d]">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
+                  <span className="cc-route-valuation-title font-extrabold">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
             </div>
           </RutaPanel>
         </section>
-      </main>
+      {/* END main (removed in restructure) */}
     </div>
   );
 }

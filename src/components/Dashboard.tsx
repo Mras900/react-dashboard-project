@@ -6,6 +6,7 @@ import {
   CalendarDays,
   Calculator,
   CheckCircle2,
+  ClipboardCheck,
   ChevronDown,
   ChevronUp,
   ChevronsLeft,
@@ -22,12 +23,14 @@ import {
   Navigation,
   Plus,
   Route,
+  Search,
   ShieldCheck,
   Siren,
   Sun,
   Trash2,
   Truck,
   Users,
+  UserCog,
 } from 'lucide-react';
 import type { Feature, FeatureCollection, GeoJsonObject } from 'geojson';
 import L from 'leaflet';
@@ -41,18 +44,30 @@ import type { DashboardWidget } from '../features/layout/types';
 import { MapView } from '../features/mapa/MapView';
 import { ReportsView } from '../features/reports/ReportsView';
 import { RutaVisitadorView } from '../features/ruta/RutaVisitadorView';
+import { ArqueoRutaView } from '../features/ruta/ArqueoRutaView';
 import { UserMenu } from '../features/user/UserMenu';
+import { ProtectedView } from '../features/auth/ProtectedView';
+import type { AppViewKey } from '../features/auth/authTypes';
+import { useAuth } from '../features/auth/useAuth';
+import { UserManagementView } from '../features/users/UserManagementView';
+import { loadRegionalGeoLayer } from '../features/maps/loadRegionalGeoLayer';
+import { getRegionalFeatureName, normalizeMapJoinKey } from '../features/maps/normalizeMapJoinKey';
+import { RegionClaimsLayer } from '../features/maps/RegionClaimsLayer';
 import { ActiveRedZonesLayers } from '../features/red-zones/ActiveRedZonesLayers';
 import { fetchRedZones } from '../features/red-zones/redZonesApi';
+import { getRouteDailyVisits, getRouteVisitsByDateRange } from '../features/ruta/routeDailyStorage';
+import { getRouteDateRange, calculateRouteDailyMetrics } from '../features/ruta/routeDailyMetrics';
+import type { RoutePeriod, RouteDailyMetrics } from '../features/ruta/routeDailyMetrics';
 import type { RedZone } from '../features/red-zones/redZoneTypes';
 import { fetchDashboardDailyVisits, type DashboardDailyResponse } from '../services/dashboardApi';
 import { fetchDashboardDatabase, type DashboardClaim, type DashboardDatabaseResponse } from '../services/dashboardDatabaseApi';
 
-type ActiveTab = 'dashboard' | 'ruta' | 'alerts' | 'map' | 'settings' | 'help';
+type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
 type MonthFilter = 'all' | string;
 type LocationFilter = 'all' | string;
 type DashboardTheme = 'default' | 'dark-premium';
+type DateFilterMode = 'month' | 'week' | 'day' | 'range';
 type DashboardFilters = {
   month: MonthFilter;
   priority: PriorityFilter;
@@ -73,6 +88,7 @@ type RegionalMapMetric = {
   facturacion: number;
   km: number;
   traslado: number;
+  valorEnvioBulto: number;
   alta: number;
   media: number;
   baja: number;
@@ -92,16 +108,19 @@ type CustomKpi = {
   format: KpiFormat;
 };
 
-const navItems = [
-  { id: 'dashboard' as const, label: 'Dashboard', icon: Grid2X2 },
-  { id: 'settings' as const, label: 'Configuraciones', icon: ShieldCheck },
-  { id: 'ruta' as const, label: 'Ruta visitador', icon: Route },
-  { id: 'alerts' as const, label: 'Alertas', icon: AlertTriangle, badge: true },
-  { id: 'map' as const, label: 'Mapa', icon: MapPin },
+const navItems: Array<{ id: ActiveTab; label: string; icon: typeof Grid2X2; permission: AppViewKey; badge?: boolean }> = [
+  { id: 'dashboard', label: 'Panel principal', icon: Grid2X2, permission: 'dashboard' },
+  { id: 'settings', label: 'Configuraciones', icon: ShieldCheck, permission: 'configuracion' },
+  { id: 'reports', label: 'Reportes', icon: FileBarChart, permission: 'reportes' },
+  { id: 'ruta', label: 'Ruta visitador', icon: Route, permission: 'ruta' },
+  { id: 'arqueo', label: 'Arqueo Ruta', icon: ClipboardCheck, permission: 'ruta' },
+  { id: 'alerts', label: 'Alertas', icon: AlertTriangle, permission: 'dashboard', badge: true },
+  { id: 'map', label: 'Mapa', icon: MapPin, permission: 'dashboard' },
+  { id: 'users', label: 'Usuarios', icon: UserCog, permission: 'usuarios' },
 ];
 
 const bottomNavItems = [
-  { id: 'help' as const, label: 'Ayuda', icon: HelpCircle },
+  { id: 'help' as const, label: 'Ayuda', icon: HelpCircle, permission: 'dashboard' as AppViewKey },
 ];
 
 const mapLayerSources: Array<{ key: MapLayerKey; url: string }> = [
@@ -111,13 +130,14 @@ const mapLayerSources: Array<{ key: MapLayerKey; url: string }> = [
   { key: 'cuadrantesSantiago', url: '/data/map-layers/cuadrantes-santiago.geojson' },
 ];
 
-const REGION_LAYER_PATH = '/data/map-layers/chile_comunas_simplified.geojson';
 const DEFAULT_FILTERS: DashboardFilters = {
   month: 'all',
   priority: 'todas',
   location: 'all',
 };
 const THEME_STORAGE_KEY = 'dashboard-theme';
+const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
+
 const MONTH_NUMBER_BY_LABEL: Record<string, number> = {
   Ene: 1,
   Feb: 2,
@@ -131,6 +151,33 @@ const MONTH_NUMBER_BY_LABEL: Record<string, number> = {
   Oct: 10,
   Nov: 11,
   Dic: 12,
+};
+
+const getIsoDate = (date: Date | null | undefined) => {
+  if (!(date instanceof Date) || Number.isNaN(date.getTime())) return undefined;
+  const offset = date.getTimezoneOffset();
+  const normalized = new Date(date.getTime() - offset * 60_000);
+  return Number.isNaN(normalized.getTime()) ? undefined : normalized.toISOString().slice(0, 10);
+};
+
+const formatWeekLabel = (weekValue: string) => {
+  const match = /^(\d{4})-W(\d{2})$/.exec(weekValue);
+  return match ? `Semana ${Number(match[2])} de ${match[1]}` : 'Semana sin seleccionar';
+};
+
+const getWeekDateRange = (weekValue: string) => {
+  const match = /^(\d{4})-W(\d{2})$/.exec(weekValue);
+  if (!match) return {};
+  const year = Number(match[1]);
+  const week = Number(match[2]);
+  const januaryFourth = new Date(year, 0, 4);
+  const januaryFourthDay = januaryFourth.getDay() || 7;
+  const monday = new Date(year, 0, 4 - januaryFourthDay + 1 + (week - 1) * 7);
+  const sunday = new Date(monday);
+  sunday.setDate(monday.getDate() + 6);
+  const fechaInicio = getIsoDate(monday);
+  const fechaFin = getIsoDate(sunday);
+  return fechaInicio && fechaFin ? { fechaInicio, fechaFin } : {};
 };
 
 const getDashboardDateRange = (month: string) => {
@@ -175,7 +222,7 @@ function getStoredDashboardTheme(): DashboardTheme {
   if (typeof window === 'undefined') return 'default';
 
   const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return storedTheme === 'dark-premium' ? 'dark-premium' : 'default';
+  return storedTheme === 'default' ? 'default' : 'dark-premium';
 }
 
 function loadImportedDashboardRows() {
@@ -375,6 +422,7 @@ const emptyRegionalMetric = (comuna: string): RegionalMapMetric => ({
   facturacion: 0,
   km: 0,
   traslado: 0,
+  valorEnvioBulto: 0,
   alta: 0,
   media: 0,
   baja: 0,
@@ -430,7 +478,7 @@ function BaseMapLayers({ children }: { children?: React.ReactNode }) {
 }
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <section className={`rounded-lg border border-slate-200 bg-white shadow-sm ${className}`}>{children}</section>;
+  return <section className={`cc-card rounded-lg border border-slate-200 bg-white ${className}`}>{children}</section>;
 }
 
 function SidebarIcon({
@@ -449,15 +497,16 @@ function SidebarIcon({
   return (
     <button
       aria-label={label}
-      className={`group relative flex h-10 w-10 items-center justify-center rounded-lg transition ${
+      data-active={active ? 'true' : 'false'}
+      className={`cc-nav-item group relative flex h-10 w-10 items-center justify-center rounded-lg transition ${
         active ? 'bg-[#073B91] text-white shadow-lg shadow-blue-900/20' : 'text-[#466083] hover:bg-blue-50 hover:text-[#073B91]'
       }`}
       onClick={onClick}
       type="button"
     >
       {children}
-      {badge ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" /> : null}
-      <span className="pointer-events-none absolute left-[115%] z-50 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100">
+      {badge ? <span className="cc-nav-alert absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500 ring-2 ring-white" /> : null}
+      <span className="cc-nav-tooltip pointer-events-none absolute left-[115%] z-50 whitespace-nowrap rounded-md bg-slate-950 px-2 py-1 text-xs font-semibold text-white opacity-0 shadow-lg transition-opacity group-hover:opacity-100 group-focus:opacity-100">
         {label}
       </span>
     </button>
@@ -478,7 +527,7 @@ function FilterControl({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="relative flex h-12 min-w-[190px] items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30 focus-within:border-blue-200 focus-within:ring-2 focus-within:ring-blue-600/25">
+    <label className="cc-filter relative flex h-12 min-w-[190px] items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30 focus-within:border-blue-200 focus-within:ring-2 focus-within:ring-blue-600/25">
       <span className="flex items-center gap-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-md text-[#23446f]">{icon}</span>
         <span className="min-w-0">
@@ -520,12 +569,12 @@ function PrimaryMetric({
   };
 
   return (
-    <Panel className="flex h-full min-h-[116px] items-center gap-3 p-3">
-      <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${colors[tone]}`}>{icon}</div>
+    <Panel className="cc-kpi-card cc-kpi flex h-full min-h-[116px] items-center gap-3 p-3">
+      <div data-tone={tone} className={`cc-kpi-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${colors[tone]}`}>{icon}</div>
       <div className="min-w-0">
-        <p className="text-xs font-black text-[#172448]">{title}</p>
-        <p className="mt-1 truncate text-lg font-black text-[#071b4d] 2xl:text-xl">{value}</p>
-        <p className={`mt-3 text-xs font-bold ${tone === 'red' ? 'text-red-500' : tone === 'cyan' ? 'text-slate-600' : 'text-emerald-600'}`}>{delta}</p>
+        <p className="cc-kpi-label text-xs font-black text-[#172448]">{title}</p>
+        <p className="cc-kpi-value mt-1 text-lg font-black text-[#071b4d] 2xl:text-xl">{value}</p>
+        <p data-tone={tone} className={`cc-metric-trend mt-3 text-xs font-bold ${tone === 'red' ? 'text-red-500' : tone === 'cyan' ? 'text-slate-600' : 'text-emerald-600'}`}>{delta}</p>
       </div>
     </Panel>
   );
@@ -547,26 +596,26 @@ function InsightCard({
   badge?: string;
 }) {
   return (
-    <Panel className="flex h-full min-h-[112px] flex-wrap items-start gap-3 p-3">
-      <div className={`flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconClass}`}>{icon}</div>
+    <Panel className="cc-insight-card cc-side-rank cc-card-elevated flex h-full min-h-[112px] flex-wrap items-start gap-3 p-3">
+      <div className={`cc-kpi-icon cc-insight-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconClass}`}>{icon}</div>
       <div className="min-w-[150px] flex-1">
-        <p className="text-xs font-bold text-[#466083]">{label}</p>
-        <p className="mt-1 break-words text-lg font-extrabold leading-tight text-[#071b4d]">{title}</p>
-        <p className="mt-2 text-xs font-bold text-[#172448]">{detail}</p>
+        <p className="cc-kpi-label text-xs font-bold text-[#466083]">{label}</p>
+        <p className="cc-insight-value mt-1 break-words text-lg font-extrabold leading-tight text-[#071b4d]">{title}</p>
+        <p className="cc-insight-detail mt-2 text-xs font-bold text-[#172448]">{detail}</p>
       </div>
-      {badge ? <span className="shrink-0 self-start whitespace-nowrap rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-500">{badge}</span> : null}
+      {badge ? <span className="cc-badge cc-badge-info shrink-0 self-start whitespace-nowrap rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-500">{badge}</span> : null}
     </Panel>
   );
 }
 
 function StatStripItem({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
   return (
-    <div className="flex h-full min-w-0 items-center gap-3 px-4 py-2">
-      <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">{icon}</div>
+    <div className="cc-stat-strip flex h-full min-w-0 items-center gap-3 px-4 py-2">
+      <div className="cc-kpi-icon cc-stat-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">{icon}</div>
       <div className="min-w-0">
-        <p className="truncate text-xs font-bold text-[#466083]">{label}</p>
-        <p className="text-lg font-black leading-tight text-[#071b4d]">{value}</p>
-        <p className="truncate text-xs font-semibold text-[#466083]">{detail}</p>
+        <p className="cc-kpi-label truncate text-xs font-bold text-[#466083]">{label}</p>
+        <p className="cc-kpi-value text-lg font-black leading-tight text-[#071b4d]">{value}</p>
+        <p className="cc-metric-detail truncate text-xs font-semibold text-[#466083]">{detail}</p>
       </div>
     </div>
   );
@@ -592,15 +641,15 @@ function CustomKpiCard({
   value: string;
 }) {
   return (
-    <Panel className="flex min-h-[112px] items-center justify-between gap-4 p-4">
+    <Panel className="cc-kpi-card cc-custom-kpi flex min-h-[112px] items-center justify-between gap-4 p-4">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
+        <div className="cc-kpi-icon cc-custom-kpi-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
           <Calculator size={24} />
         </div>
         <div className="min-w-0">
-          <p className="truncate text-xs font-black uppercase tracking-wide text-[#466083]">{title}</p>
-          <p className="mt-1 truncate text-2xl font-black text-[#071b4d]">{value}</p>
-          <p className="mt-1 truncate text-xs font-bold text-[#6b7d98]">{detail}</p>
+          <p className="cc-kpi-label truncate text-xs font-black uppercase tracking-wide text-[#466083]">{title}</p>
+          <p className="cc-kpi-value mt-1 text-2xl font-black text-[#071b4d]">{value}</p>
+          <p className="cc-metric-detail mt-1 truncate text-xs font-bold text-[#6b7d98]">{detail}</p>
         </div>
       </div>
       {onRemove ? (
@@ -613,18 +662,19 @@ function CustomKpiCard({
 }
 
 function VerticalBars({ items }: { items: Array<{ label: string; value: number; display: string }> }) {
-  const max = Math.max(...items.map((item) => item.value));
+  const safeItems = Array.isArray(items) ? items : [];
+  const max = Math.max(0, ...safeItems.map((item) => item.value));
 
   return (
-    <div className="flex h-44 items-end gap-4 border-l border-b border-slate-200 px-3 pt-4">
-      {items.map((item, index) => (
-        <div key={item.label} className="flex h-full flex-1 flex-col items-center justify-end gap-2">
-          <span className="text-[10px] font-black text-[#172448]">{item.display}</span>
+    <div className="cc-vertical-chart flex h-44 items-end gap-4 border-l border-b border-slate-200 px-3 pt-4">
+      {safeItems.map((item, index) => (
+        <div key={item.label} className="cc-vertical-item flex h-full flex-1 flex-col items-center justify-end gap-2">
+          <span className="cc-chart-value text-[10px] font-black text-[#172448]">{item.display}</span>
           <div
-            className={`w-full max-w-10 rounded-t-md ${index === items.length - 1 ? 'bg-[#0757bd]' : 'bg-[#9fd0fb]'}`}
+            className={`cc-chart-bar w-full max-w-10 rounded-t-md ${index === safeItems.length - 1 ? 'cc-chart-bar-accent bg-[#0757bd]' : 'cc-chart-bar-primary bg-[#9fd0fb]'}`}
             style={{ height: `${normalize(item.value, max)}%` }}
           />
-          <span className="whitespace-nowrap text-[10px] font-bold text-[#466083]">{item.label}</span>
+          <span className="cc-chart-label whitespace-nowrap text-[10px] font-bold text-[#466083]">{item.label}</span>
         </div>
       ))}
     </div>
@@ -640,21 +690,22 @@ function HorizontalBars({
   color: 'red' | 'blue';
   maxLabel?: string;
 }) {
-  const max = Math.max(...items.map((item) => item.value));
-  const bar = color === 'red' ? 'bg-red-500' : 'bg-blue-600';
+  const safeItems = Array.isArray(items) ? items : [];
+  const max = Math.max(0, ...safeItems.map((item) => item.value));
+  const bar = color === 'red' ? 'bg-[#D55E00]' : 'bg-[#0072B2]';
 
   return (
-    <div className="space-y-2">
-      {items.map((item) => (
-        <div key={item.name} className="grid grid-cols-[104px_1fr_52px] items-center gap-2 text-[11px]">
-          <span className="text-[10px] font-bold leading-tight text-[#172448]">{item.name}</span>
-          <div className="h-2.5 overflow-hidden rounded-full bg-slate-100">
-            <div className={`h-full rounded-full ${bar}`} style={{ width: `${normalize(item.value, max)}%` }} />
+    <div className="cc-horizontal-chart space-y-2">
+      {safeItems.map((item) => (
+        <div key={item.name} className="cc-chart-row grid grid-cols-[104px_1fr_52px] items-center gap-2 text-[11px]">
+          <span className="cc-chart-label text-[10px] font-bold leading-tight text-[#172448]">{item.name}</span>
+          <div className="cc-chart-track h-2.5 overflow-hidden rounded-full bg-slate-100">
+            <div aria-label={`${item.name}: ${item.label}`} className={`cc-chart-bar ${color === 'red' ? 'cc-chart-bar-danger' : 'cc-chart-bar-info'} h-full rounded-full ${bar}`} style={{ width: `${normalize(item.value, max)}%` }} title={`${item.name}: ${item.label}`} />
           </div>
-          <span className="text-right font-black text-[#172448]">{item.label}</span>
+          <span className="cc-chart-value text-right font-black text-[#172448]">{item.label}</span>
         </div>
       ))}
-      {maxLabel ? <div className="flex justify-between pt-1 text-[10px] font-bold text-[#6b7d98]"><span>0</span><span>{maxLabel}</span></div> : null}
+      {maxLabel ? <div className="cc-chart-axis flex justify-between pt-1 text-[10px] font-bold text-[#6b7d98]"><span>0</span><span>{maxLabel}</span></div> : null}
     </div>
   );
 }
@@ -668,22 +719,23 @@ function Donut({
   label: string;
   segments: Array<{ color: string; from: number; to: number; name: string; value: string }>;
 }) {
-  const background = `conic-gradient(${segments.map((segment) => `${segment.color} ${segment.from}% ${segment.to}%`).join(', ')})`;
+  const safeSegments = Array.isArray(segments) ? segments : [];
+  const background = `conic-gradient(${safeSegments.map((segment) => `${segment.color} ${segment.from}% ${segment.to}%`).join(', ')})`;
 
   return (
-    <div className="flex items-center gap-5">
-      <div className="relative h-36 w-36 shrink-0">
-        <div className="absolute inset-0 rounded-full" style={{ background }} />
-        <div className="absolute inset-8 flex flex-col items-center justify-center rounded-full bg-white shadow-inner">
-          <span className="text-xl font-black text-[#071b4d]">{center}</span>
-          <span className="text-xs font-bold text-[#466083]">{label}</span>
+    <div className="cc-donut-chart flex items-center gap-5">
+      <div className="cc-donut-ring relative h-36 w-36 shrink-0">
+        <div aria-label={safeSegments.map((segment) => `${segment.name}: ${segment.value}`).join(", ")} className="cc-donut-segment absolute inset-0 rounded-full" role="img" style={{ background }} title={safeSegments.map((segment) => `${segment.name}: ${segment.value}`).join(" | ")} />
+        <div className="cc-donut-center absolute inset-8 flex flex-col items-center justify-center rounded-full bg-white shadow-inner">
+          <span className="cc-donut-value text-xl font-black text-[#071b4d]">{center}</span>
+          <span className="cc-chart-label text-xs font-bold text-[#466083]">{label}</span>
         </div>
       </div>
-      <div className="flex-1 space-y-3">
-        {segments.map((segment) => (
-          <div key={segment.name} className="flex items-center justify-between gap-3 text-xs">
-            <span className="flex items-center gap-2 font-bold text-[#172448]"><span className="h-3 w-3 rounded" style={{ backgroundColor: segment.color }} />{segment.name}</span>
-            <span className="font-black text-[#172448]">{segment.value}</span>
+      <div className="cc-chart-legend flex-1 space-y-3">
+        {safeSegments.map((segment) => (
+          <div key={segment.name} className="cc-chart-legend-row flex items-center justify-between gap-3 text-xs">
+            <span className="cc-chart-label flex items-center gap-2 font-bold text-[#172448]"><span className="cc-chart-swatch h-3 w-3 rounded" style={{ backgroundColor: segment.color }} />{segment.name}</span>
+            <span className="cc-chart-value font-black text-[#172448]">{segment.value}</span>
           </div>
         ))}
       </div>
@@ -739,7 +791,7 @@ function RegionPreviewMap({
   recenterKey = 0,
   activeRedZones = [],
 }: {
-  data: GeoJsonObject | null;
+  data: FeatureCollection | null;
   hasRegionalData: boolean;
   layerError: string;
   metricsByComuna: Map<string, RegionalMapMetric>;
@@ -747,155 +799,139 @@ function RegionPreviewMap({
   recenterKey?: number;
   activeRedZones?: RedZone[];
 }) {
-  const { matchedComunas, unmatchedComunas } = useMemo(() => {
-    if (!data || data.type !== 'FeatureCollection') {
-      return { matchedComunas: null, unmatchedComunas: null };
-    }
-
-    const matched: Feature[] = [];
-    const unmatched: Feature[] = [];
-
-    (data as FeatureCollection).features.forEach((feature) => {
-      const target = metricsByComuna.has(normalizeName(getFeatureComunaName(feature))) ? matched : unmatched;
-      target.push(feature);
+  const featureJoinKeys = useMemo(() => {
+    const keys = new Set<string>();
+    data?.features.forEach((feature) => {
+      const key = normalizeMapJoinKey(getRegionalFeatureName(feature));
+      if (key) keys.add(key);
     });
-
-    return {
-      matchedComunas: matched.length > 0 ? ({ type: 'FeatureCollection', features: matched } as FeatureCollection) : null,
-      unmatchedComunas: unmatched.length > 0 ? ({ type: 'FeatureCollection', features: unmatched } as FeatureCollection) : null,
-    };
-  }, [data, metricsByComuna]);
-  const matchedFeatureCount = matchedComunas?.features.length ?? 0;
-  const totalRegionalClaims = useMemo(
-    () => [...metricsByComuna.values()].reduce((sum, metric) => sum + metric.visitas, 0),
+    return keys;
+  }, [data]);
+  const unmatchedMetricCount = useMemo(
+    () => [...metricsByComuna.keys()].filter((key) => !featureJoinKeys.has(key)).length,
+    [featureJoinKeys, metricsByComuna],
+  );
+  const getMetricForRegionalFeature = useCallback(
+    (feature?: Feature) => metricsByComuna.get(normalizeMapJoinKey(getRegionalFeatureName(feature))),
     [metricsByComuna],
   );
-  const unmatchedComunaStyle = useCallback(
-    () => ({
-      color: '#94a3b8',
-      weight: 0.5,
-      fillColor: '#94a3b8',
-      fillOpacity: 0.05,
-      opacity: 1,
-    }),
-    [],
+  const regionalFeatureStyle = useCallback(
+    (feature?: Feature) => {
+      const claims = getMetricForRegionalFeature(feature)?.visitas ?? 0;
+      if (claims === 0) return { fillColor: '#111827', color: '#334155', fillOpacity: 0.25, opacity: 0.9, weight: 0.8 };
+      if (claims <= 5) return { fillColor: '#1E3A8A', color: '#334155', fillOpacity: 0.65, opacity: 1, weight: 1 };
+      if (claims <= 10) return { fillColor: '#1B4FD8', color: '#334155', fillOpacity: 0.7, opacity: 1, weight: 1 };
+      if (claims <= 20) return { fillColor: '#22D3EE', color: '#334155', fillOpacity: 0.72, opacity: 1, weight: 1 };
+      return { fillColor: '#F97316', color: '#334155', fillOpacity: 0.76, opacity: 1, weight: 1 };
+    },
+    [getMetricForRegionalFeature],
   );
-  const matchedComunaStyle = useCallback(
-    () => ({
-      color: '#0f5fcf',
-      weight: 1.5,
-      fillColor: '#0f5fcf',
-      fillOpacity: 0.45,
-      opacity: 1,
-    }),
-    [],
-  );
-  const onEachMatchedComuna = useCallback(
+  const onEachRegionalFeature = useCallback(
     (feature: Feature, layer: L.Layer) => {
-      const featureName = getFeatureComunaName(feature) || 'Comuna sin nombre';
-      const metric = metricsByComuna.get(normalizeName(featureName));
-      if (!metric) return;
+      const featureName = getRegionalFeatureName(feature) || 'Comuna/ciudad sin nombre';
+      const metric = getMetricForRegionalFeature(feature);
+      layer.bindTooltip(featureName, { direction: 'top', sticky: true });
 
-      const popupTitle = escapePopupValue(metric.comuna || featureName);
-      const share = totalRegionalClaims > 0 ? (metric.visitas / totalRegionalClaims) * 100 : 0;
-      const popupBody = [
-        '<p>Reclamos: <strong>' + formatInt(metric.visitas) + '</strong></p>',
-        '<p style="margin-top:2px">Facturación: <strong>' + formatCurrency(metric.facturacion) + '</strong></p>',
-        '<p style="margin-top:2px">Prioridad alta: <strong>' + formatInt(metric.alta) + '</strong></p>',
-        '<p style="margin-top:2px">Tickets únicos: <strong>' + formatInt(metric.ticketsUnicos) + '</strong></p>',
-        '<p style="margin-top:2px">Porcentaje: <strong>' + asPercent(share) + '</strong></p>',
-      ].join('');
-
-      layer.bindPopup(
-        [
-          '<div style="min-width:170px">',
-          '<p style="font-weight:800;font-size:14px;border-bottom:1px solid #e2e8f0;padding-bottom:4px;margin-bottom:6px;color:#071b4d">' + popupTitle + '</p>',
-          '<div style="font-size:12px;color:#172448">',
-          popupBody,
+      if (metric) {
+        const popupTitle = escapePopupValue(metric.comuna || featureName);
+        layer.bindPopup([
+          '<div style="min-width:210px">',
+          '<p style="font-weight:800;font-size:14px;border-bottom:1px solid #22304D;padding-bottom:5px;margin-bottom:7px;color:#F1F5F9">' + popupTitle + '</p>',
+          '<div style="font-size:12px;line-height:1.55;color:#CBD5E1">',
+          '<p>Reclamos: <strong>' + formatInt(metric.visitas) + '</strong></p>',
+          '<p>Tickets únicos: <strong>' + formatInt(metric.ticketsUnicos) + '</strong></p>',
+          '<p>Facturación: <strong>' + formatCurrency(metric.facturacion) + '</strong></p>',
+          '<p>KM: <strong>' + formatInt(metric.km) + '</strong></p>',
+          '<p>Traslado: <strong>' + formatCurrency(metric.traslado) + '</strong></p>',
+          '<p>Envío bulto: <strong>' + formatCurrency(metric.valorEnvioBulto) + '</strong></p>',
+          '<p>Alta prioridad: <strong>' + formatInt(metric.alta) + '</strong></p>',
+          '<p>Media prioridad: <strong>' + formatInt(metric.media) + '</strong></p>',
+          '<p>Baja prioridad: <strong>' + formatInt(metric.baja) + '</strong></p>',
+          '<p>Completadas: <strong>' + formatInt(metric.completadas) + '</strong></p>',
+          '<p>Pendientes: <strong>' + formatInt(metric.pendientes) + '</strong></p>',
+          '<p>No realizadas: <strong>' + formatInt(metric.noRealizadas) + '</strong></p>',
           '</div></div>',
-        ].join(''),
-      );
+        ].join(''));
+      } else {
+        layer.bindPopup(`<strong>${escapePopupValue(featureName)}</strong><br/>Sin reclamos cargados para esta comuna`);
+      }
 
       const pathLayer = layer as L.Path;
-
       pathLayer.on({
         mouseover: () => {
-          pathLayer.setStyle({ weight: 2.2, fillOpacity: 0.62 });
+          pathLayer.setStyle({ color: '#EAF0F8', weight: 2, fillOpacity: 0.85 });
           pathLayer.bringToFront();
         },
-        mouseout: () => {
-          pathLayer.setStyle({ weight: 1.5, fillOpacity: 0.45 });
-        },
+        mouseout: () => pathLayer.setStyle(regionalFeatureStyle(feature)),
       });
     },
-    [metricsByComuna, totalRegionalClaims],
+    [getMetricForRegionalFeature, regionalFeatureStyle],
   );
 
   return (
-    <div className="relative h-full w-full overflow-hidden rounded-xl">
+    <div className="cc-map-surface relative h-full w-full overflow-hidden rounded-xl">
       <MapContainer
         center={[-35.6751, -71.543]}
         zoom={4}
         minZoom={3}
         className="h-full w-full"
         zoomControl={false}
-        doubleClickZoom={true}
-        scrollWheelZoom={true}
-        dragging={true}
+        doubleClickZoom
+        scrollWheelZoom
+        dragging
         attributionControl={false}
         preferCanvas
       >
         <ZoomControl position="topleft" />
-        <RegionMapBounds data={matchedComunas} recenterKey={recenterKey} />
+        <RegionMapBounds data={data} recenterKey={recenterKey} />
         <BaseMapLayers>
           {data ? (
-            <LayersControl.Overlay checked name="Comunas Chile">
-              <LayerGroup>
-                {unmatchedComunas ? (
-                  <GeoJSON data={unmatchedComunas} interactive={false} style={unmatchedComunaStyle} />
-                ) : null}
-                {matchedComunas ? (
-                  <GeoJSON
-                    key={`chile-comunas-matched-${metricsByComuna.size}-${maxVisitas}`}
-                    data={matchedComunas}
-                    onEachFeature={onEachMatchedComuna}
-                    style={matchedComunaStyle}
-                  />
-                ) : null}
-              </LayerGroup>
+            <LayersControl.Overlay checked name="Comunas / ciudades Regiones">
+              <GeoJSON
+                key={`regiones-claims-${metricsByComuna.size}-${maxVisitas}-${data.features.length}`}
+                data={data}
+                onEachFeature={onEachRegionalFeature}
+                style={regionalFeatureStyle}
+              />
             </LayersControl.Overlay>
           ) : null}
           <ActiveRedZonesLayers redZoneMode="readonly" zones={activeRedZones} />
         </BaseMapLayers>
       </MapContainer>
+
+      <div className="cc-map-legend pointer-events-none absolute bottom-4 left-4 z-[500] w-[220px] rounded-lg border border-[#22304D] bg-[#0D1324]/95 p-3 text-[#CBD5E1] shadow-lg">
+        <p className="mb-2 text-[10px] font-black uppercase">Reclamos por comuna</p>
+        <div className="grid grid-cols-5 gap-1 text-center text-[9px] font-bold">
+          {[
+            ['#111827', '0'],
+            ['#1E3A8A', '1-5'],
+            ['#1B4FD8', '6-10'],
+            ['#22D3EE', '11-20'],
+            ['#F97316', '20+'],
+          ].map(([color, label]) => (
+            <span key={label}><i className="mb-1 block h-2 rounded-sm" style={{ backgroundColor: color }} />{label}</span>
+          ))}
+        </div>
+      </div>
+
       {!hasRegionalData ? (
-        <div className="pointer-events-none absolute bottom-4 left-4 rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-xs font-black text-[#466083] shadow-lg">
+        <div className="cc-map-warning cc-map-warning-info pointer-events-none absolute left-14 top-4 z-[500] rounded-lg border border-[#22304D] bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-[#94A3B8] shadow-lg">
           Sin datos de regiones cargados
         </div>
       ) : null}
       {layerError ? (
-        <div
-          className="pointer-events-none absolute bottom-4 right-4 z-[500] max-w-[260px] border text-xs font-black shadow-lg"
-          style={{
-            background: 'rgba(17, 24, 39, 0.92)',
-            borderColor: '#1F2937',
-            borderRadius: 10,
-            color: '#7A90A8',
-            padding: '8px 10px',
-          }}
-        >
+        <div className="cc-map-warning cc-map-warning-danger pointer-events-none absolute bottom-4 right-4 z-[500] max-w-[280px] rounded-lg border border-[#22304D] bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-[#94A3B8] shadow-lg">
           {layerError}
         </div>
       ) : null}
-      {data && hasRegionalData && matchedFeatureCount === 0 && !layerError ? (
-        <div className="pointer-events-none absolute bottom-4 right-4 z-[500] max-w-[300px] rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-bold text-amber-900 shadow-sm">
-          Capa cargada, pero no hay coincidencias de comuna con los datos cargados.
+      {data && unmatchedMetricCount > 0 && !layerError ? (
+        <div className="cc-map-warning cc-map-warning-warning pointer-events-none absolute right-4 top-4 z-[500] max-w-[280px] rounded-lg border border-orange-500/40 bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-orange-300 shadow-lg">
+          {formatInt(unmatchedMetricCount)} comunas no coinciden con la capa geográfica
         </div>
       ) : null}
     </div>
   );
 }
-
 /** Modal exclusivo de regiones de Chile. NO hereda capas RM ni del mapa principal. */
 function ModalMap({
   data,
@@ -905,7 +941,7 @@ function ModalMap({
   maxVisitas,
   onClose,
 }: {
-  data: GeoJsonObject | null;
+  data: FeatureCollection | null;
   hasRegionalData: boolean;
   layerError: string;
   metricsByComuna: Map<string, RegionalMapMetric>;
@@ -930,7 +966,7 @@ function ModalMap({
 
   return (
     <div
-      className="fixed inset-0 z-[9999] isolate flex items-center justify-center bg-black/50 p-4"
+      className="cc-modal-backdrop fixed inset-0 z-[9999] isolate flex items-center justify-center bg-black/50 p-4"
       onClick={(e) => {
         if (e.target === e.currentTarget) onClose();
       }}
@@ -938,9 +974,9 @@ function ModalMap({
       aria-modal="true"
       aria-labelledby="region-modal-title"
     >
-      <div className="relative z-[10000] flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-6 py-4">
-          <h2 id="region-modal-title" className="text-lg font-black text-[#071b4d]">Vista ampliada: Regiones de Chile</h2>
+      <div className="cc-modal cc-map-modal relative z-[10000] flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-white">
+        <div className="cc-map-header flex items-center justify-between border-b border-slate-200 px-6 py-4">
+          <h2 id="region-modal-title" className="cc-section-title text-lg font-black text-[#071b4d]">Vista ampliada: Regiones de Chile</h2>
           <div className="flex items-center gap-2">
             <button
               className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
@@ -980,12 +1016,14 @@ const MapLayers = React.memo(function MapLayers({
   comunaMetrics,
   maxVisitas,
   activeRedZones,
+  onSelectComuna,
 }: {
   mapLayers: MapLayers;
   zonasRojasGeoJson: GeoJsonObject | null;
   comunaMetrics: ComunaMetric[];
   maxVisitas: number;
   activeRedZones: RedZone[];
+  onSelectComuna?: (comuna: string) => void;
 }) {
   const metricByComuna = useMemo(() => {
     const entries = comunaMetrics.map((item) => [normalizeComunaName(item.comuna), item] as const);
@@ -1018,6 +1056,7 @@ const MapLayers = React.memo(function MapLayers({
       const displayName = metric?.comuna || name || 'Comuna sin nombre';
       const share = metric && totalVisitas > 0 ? (metric.visitas / totalVisitas) * 100 : 0;
 
+      layer.bindTooltip(displayName, { direction: 'top', sticky: true });
       layer.bindPopup(
         metric
           ? [
@@ -1045,9 +1084,12 @@ const MapLayers = React.memo(function MapLayers({
         mouseout: () => {
           pathLayer.setStyle({ color: '#ffffff', fillColor: baseColor, fillOpacity: metric ? 0.58 : 0.12, weight: 1.2 });
         },
+        click: () => {
+          if (metric) onSelectComuna?.(metric.comuna);
+        },
       });
     },
-    [getMetricForFeature, maxVisitas, totalVisitas],
+    [getMetricForFeature, maxVisitas, onSelectComuna, totalVisitas],
   );
   const onEachCuadranteFeature = useCallback((feature: Feature, layer: L.Layer) => {
     const properties = feature.properties as { description?: string; name?: string } | null;
@@ -1268,6 +1310,7 @@ function SettingsView({
   setCustomKpis,
   tableRows,
   totals,
+  canViewReports,
 }: {
   kpiDraft: Omit<CustomKpi, 'id'>;
   setKpiDraft: React.Dispatch<React.SetStateAction<Omit<CustomKpi, 'id'>>>;
@@ -1276,13 +1319,14 @@ function SettingsView({
   setCustomKpis: React.Dispatch<React.SetStateAction<CustomKpi[]>>;
   tableRows: TableRow[];
   totals: { visitas: number; facturacion: number };
+  canViewReports: boolean;
 }) {
   return (
     <div className="grid gap-4">
       <Panel className="p-4">
         <h2 className="text-xl font-bold text-[#071b4d]">Configuraciones</h2>
         <p className="mt-1 text-sm font-medium text-slate-600">
-          Administra indicadores personalizados, reportes y vistas guardadas sin alterar el dashboard principal.
+          Administra indicadores personalizados y vistas guardadas sin alterar el dashboard principal.
         </p>
       </Panel>
 
@@ -1296,7 +1340,7 @@ function SettingsView({
         totals={totals}
       />
 
-      <ReportsView rmRows={tableRows} />
+      {canViewReports ? <ReportsView rmRows={tableRows} /> : null}
     </div>
   );
 }
@@ -1312,7 +1356,7 @@ function RegionSidebar({
   successfulVisits,
   successfulPct,
 }: {
-  regionalLayer: GeoJsonObject | null;
+  regionalLayer: FeatureCollection | null;
   hasRegionalData: boolean;
   regionalLayerError: string;
   regionalMapMetrics: Map<string, RegionalMapMetric>;
@@ -1323,19 +1367,19 @@ function RegionSidebar({
   successfulPct: number;
 }) {
   return (
-    <aside className="hidden w-[300px] shrink-0 2xl:block">
-      <Panel className="sticky top-4 h-[calc(100vh-32px)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-3 shadow-sm">
-        <div className="mb-3 flex items-center justify-between">
-          <h2 className="text-base font-black text-[#071b4d]">Vista previa: Regiones</h2>
+    <aside className="cc-side-panel hidden w-[286px] shrink-0 2xl:block">
+      <Panel className="cc-side-shell sticky top-3 h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
+        <div className="cc-side-header mb-3 flex items-center justify-between gap-2">
+          <h2 className="cc-side-title flex min-w-0 items-center gap-2 text-base font-black text-[#071b4d]"><MapPin size={16} />Vista previa: Regiones</h2>
           <button
-            className="flex h-7 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
+            className="cc-side-expand cc-button-secondary flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-black text-[#073B91] transition hover:bg-blue-50"
             onClick={() => setShowRegionModal(true)}
             type="button"
           >
             Ampliar
           </button>
         </div>
-        <div className="h-[280px] min-h-[260px] w-full overflow-hidden rounded-md bg-blue-50">
+        <div className="cc-preview-card cc-preview-map cc-side-map h-[250px] min-h-[240px] w-full overflow-hidden rounded-lg bg-blue-50">
           <RegionPreviewMap
             data={regionalLayer}
             hasRegionalData={hasRegionalData}
@@ -1345,29 +1389,29 @@ function RegionSidebar({
           />
         </div>
 
-        <div className="mt-3 grid gap-3">
-          <Panel className="flex items-center gap-3 p-4 shadow-sm">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-700"><Navigation size={22} /></div>
+        <div className="cc-side-section mt-3 grid gap-2.5">
+          <Panel className="cc-side-card cc-kpi-card cc-region-metric flex items-center gap-3 p-3">
+            <div className="cc-kpi-icon cc-region-km flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-700"><Navigation size={22} /></div>
             <div>
-              <p className="text-xs font-black uppercase text-[#466083]">KM</p>
-              <p className="text-xl font-black text-[#071b4d]">{hasRegionalData ? '125.430' : '0'}</p>
-              <p className="text-[11px] font-bold text-emerald-600">{hasRegionalData ? '+9,3% vs. mes anterior' : 'Sin datos de regiones'}</p>
+              <p className="cc-side-label text-xs font-black uppercase text-[#466083]">KM</p>
+              <p className="cc-side-value text-xl font-black text-[#071b4d]">{hasRegionalData ? '125.430' : '0'}</p>
+              <p className="cc-side-meta text-[11px] font-bold text-emerald-600">{hasRegionalData ? '+9,3% vs. mes anterior' : 'Sin datos de regiones'}</p>
             </div>
           </Panel>
 
-          <Panel className="flex items-center gap-3 p-4 shadow-sm">
-            <div className="flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#466083]"><Truck size={22} /></div>
+          <Panel className="cc-side-card cc-kpi-card cc-region-metric flex items-center gap-3 p-3">
+            <div className="cc-kpi-icon cc-region-transfer flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#466083]"><Truck size={22} /></div>
             <div>
-              <p className="text-xs font-black uppercase text-[#466083]">Traslado</p>
-              <p className="text-xl font-black text-[#071b4d]">{hasRegionalData ? '4.612' : '0'}</p>
-              <p className="text-[11px] font-bold text-slate-500">{hasRegionalData ? '-4,2% vs. mes anterior' : 'Sin datos de regiones'}</p>
+              <p className="cc-side-label text-xs font-black uppercase text-[#466083]">Traslado</p>
+              <p className="cc-side-value text-xl font-black text-[#071b4d]">{hasRegionalData ? '4.612' : '0'}</p>
+              <p className="cc-side-meta text-[11px] font-bold text-slate-500">{hasRegionalData ? '-4,2% vs. mes anterior' : 'Sin datos de regiones'}</p>
             </div>
           </Panel>
 
-          <Panel className="p-4 shadow-sm">
-            <div className="mb-3 flex items-center gap-3">
-              <CheckCircle2 className="text-[#466083]" size={24} />
-              <h3 className="text-sm font-black text-[#071b4d]">Estado visita</h3>
+          <Panel className="cc-side-card cc-kpi-card cc-status-card p-3">
+            <div className="cc-status-heading mb-3 flex items-center gap-2">
+              <CheckCircle2 className="cc-status-icon text-[#466083]" size={20} />
+              <h3 className="cc-side-title text-sm font-black text-[#071b4d]">Estado visita</h3>
             </div>
             <Donut
               center={hasRegionalData ? `${successfulPct}%` : '0%'}
@@ -1378,10 +1422,10 @@ function RegionSidebar({
                 { color: '#ef4444', from: hasRegionalData ? 94 : 0, to: hasRegionalData ? 100 : 0, name: 'No realizadas', value: formatInt(hasRegionalData ? operationalSummary.unsuccessfulVisits : 0) },
               ]}
             />
-            <p className="mt-3 text-xs font-bold text-[#466083]">Total: {formatInt(hasRegionalData ? operationalSummary.validVisits : 0)}</p>
+            <p className="cc-status-total mt-3 text-xs font-bold text-[#466083]">Total: <strong>{formatInt(hasRegionalData ? operationalSummary.validVisits : 0)}</strong></p>
           </Panel>
 
-          <button className="mt-1 flex h-16 items-center justify-between rounded-lg border border-slate-200 bg-white px-5 text-sm font-black text-[#071b4d] shadow-sm" type="button">
+          <button className="cc-side-action cc-button-secondary mt-1 flex h-12 items-center justify-between rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-[#071b4d]" type="button">
             Ir a vista Regiones
             <span className="text-2xl">-&gt;</span>
           </button>
@@ -1412,9 +1456,9 @@ function ExecutiveDashboardLayout({ widgets }: { widgets: DashboardWidget[] }) {
   const customWidgets = widgets.filter((widget) => widget.id.startsWith('customKpi:') && widget.visible);
 
   return (
-    <div className="space-y-4">
-      <section className="grid grid-cols-1 gap-4 2xl:grid-cols-[230px_minmax(0,1fr)_270px]">
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 2xl:grid-cols-1">
+    <div className="cc-dashboard-layout space-y-3">
+      <section className="cc-dashboard-grid grid grid-cols-1 gap-3 2xl:grid-cols-[218px_minmax(0,1fr)_250px]">
+        <div className="cc-kpi-rail grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-1">
           <DashboardSlot widgets={widgets} id="kpiFacturacion" />
           <DashboardSlot widgets={widgets} id="kpiReclamos" />
           <DashboardSlot widgets={widgets} id="kpiPromedio" />
@@ -1423,34 +1467,34 @@ function ExecutiveDashboardLayout({ widgets }: { widgets: DashboardWidget[] }) {
         <DashboardSlot
           widgets={widgets}
           id="mapaReclamos"
-          className="h-[400px] lg:h-[430px] xl:h-[460px] 2xl:h-[500px]"
+          className="cc-main-map-frame h-[430px] lg:h-[470px] xl:h-[500px] 2xl:h-[530px]"
         />
 
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-3 2xl:grid-cols-1">
+        <div className="cc-insight-rail grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-1">
           <DashboardSlot widgets={widgets} id="kpiComunaTop" />
           <DashboardSlot widgets={widgets} id="kpiFacturacionTop" />
           <DashboardSlot widgets={widgets} id="kpiCoberturaComunas" />
         </div>
       </section>
 
-      <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <section className="cc-stat-grid grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
         <DashboardSlot widgets={widgets} id="statTotalComunas" />
         <DashboardSlot widgets={widgets} id="statAltaPrioridad" />
         <DashboardSlot widgets={widgets} id="statVariacionMensual" />
         <DashboardSlot widgets={widgets} id="statTicketsUnicos" />
       </section>
 
-      <section className="grid grid-cols-1 gap-4 lg:grid-cols-2 2xl:grid-cols-4">
-        <DashboardSlot widgets={widgets} id="graficoFacturacionMensual" className="min-h-[280px]" />
-        <DashboardSlot widgets={widgets} id="topComunasReclamos" className="min-h-[280px]" />
-        <DashboardSlot widgets={widgets} id="topComunasFacturacion" className="min-h-[280px]" />
-        <DashboardSlot widgets={widgets} id="distribucionPrioridad" className="min-h-[280px]" />
+      <section className="cc-chart-grid grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-4">
+        <DashboardSlot widgets={widgets} id="graficoFacturacionMensual" className="min-h-[268px]" />
+        <DashboardSlot widgets={widgets} id="topComunasReclamos" className="min-h-[268px]" />
+        <DashboardSlot widgets={widgets} id="topComunasFacturacion" className="min-h-[268px]" />
+        <DashboardSlot widgets={widgets} id="distribucionPrioridad" className="min-h-[268px]" />
       </section>
 
       <DashboardSlot widgets={widgets} id="tablaComunas" />
 
       {customWidgets.length > 0 ? (
-        <section className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-3">
+        <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
           {customWidgets.map((widget) => (
             <div key={widget.id}>{widget.content}</div>
           ))}
@@ -1461,6 +1505,7 @@ function ExecutiveDashboardLayout({ widgets }: { widgets: DashboardWidget[] }) {
 }
 
 export default function Dashboard() {
+  const { hasPermission } = useAuth();
   const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>(getStoredDashboardTheme);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importedRows, setImportedRows] = useState<{ rm: ImportedDashboardRow[]; regiones: ImportedDashboardRow[] }>(loadImportedDashboardRows);
@@ -1468,6 +1513,13 @@ export default function Dashboard() {
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [viewMode, setViewMode] = useState<'rm' | 'regiones'>('rm');
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
+  const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>('month');
+  const [selectedWeek, setSelectedWeek] = useState('2026-W23');
+  const [selectedDay, setSelectedDay] = useState('');
+  const [rangeStart, setRangeStart] = useState('');
+  const [rangeEnd, setRangeEnd] = useState('');
+  const [evidenceSearch, setEvidenceSearch] = useState('');
+  const [evidenceRegion, setEvidenceRegion] = useState('all');
   const [tablePage, setTablePage] = useState(0);
   const PAGE_SIZE = 10;
   const [showEvidenceTable, setShowEvidenceTable] = useState(false);
@@ -1478,14 +1530,19 @@ export default function Dashboard() {
     cuadrantesSantiago: null,
   });
   const [zonasRojasGeoJson, setZonasRojasGeoJson] = useState<GeoJsonObject | null>(null);
-  const [regionalLayer, setRegionalLayer] = useState<GeoJsonObject | null>(null);
+  const [regionalLayer, setRegionalLayer] = useState<FeatureCollection | null>(null);
   const [regionalLayerError, setRegionalLayerError] = useState('');
   const [dailyDashboardData, setDailyDashboardData] = useState<DashboardDailyResponse | null>(null);
   const [, setDailyDashboardError] = useState('');
   const [databaseDashboardData, setDatabaseDashboardData] = useState<DashboardDatabaseResponse | null>(null);
   const [databaseDashboardLoading, setDatabaseDashboardLoading] = useState(true);
   const [databaseDashboardError, setDatabaseDashboardError] = useState('');
+  const [databaseReloadKey, setDatabaseReloadKey] = useState(0);
   const [activeRedZones, setActiveRedZones] = useState<RedZone[]>([]);
+  const [routePeriod, setRoutePeriod] = useState<RoutePeriod>('dia');
+  const [routeDateBase, setRouteDateBase] = useState(() => new Date().toISOString().slice(0, 10));
+  const [routeDailyVisits, setRouteDailyVisits] = useState(() => getRouteDailyVisits());
+  const [routeRefreshKey, setRouteRefreshKey] = useState(0);
   const [customKpis, setCustomKpis] = useState<CustomKpi[]>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -1505,7 +1562,7 @@ export default function Dashboard() {
     aggregation: 'sum',
     format: 'number',
   });
-  const shouldShowRegionsPreview = activeTab === 'dashboard' && viewMode === 'rm';
+  const shouldShowRegionsPreview = activeTab === 'dashboard' && viewMode === 'rm' && hasPermission('regiones');
   const refreshImportedRows = useCallback(() => {
     setImportedRows(loadImportedDashboardRows());
   }, []);
@@ -1520,6 +1577,11 @@ export default function Dashboard() {
   useEffect(() => {
     refreshActiveRedZones();
   }, [refreshActiveRedZones]);
+
+  useEffect(() => {
+    if (viewMode === 'rm' && !hasPermission('rm') && hasPermission('regiones')) setViewMode('regiones');
+    if (viewMode === 'regiones' && !hasPermission('regiones') && hasPermission('rm')) setViewMode('rm');
+  }, [hasPermission, viewMode]);
 
   useEffect(() => {
     document.documentElement.dataset.theme = dashboardTheme;
@@ -1590,24 +1652,18 @@ export default function Dashboard() {
 
     setRegionalLayerError('');
 
-    fetch(REGION_LAYER_PATH, { signal: controller.signal })
-      .then(async (response) => {
-        if (!response.ok) {
-          throw new Error(`No se pudo cargar ${REGION_LAYER_PATH}. Status: ${response.status}`);
-        }
-
-        return response.json() as Promise<GeoJsonObject>;
-      })
+    loadRegionalGeoLayer(controller.signal)
       .then((data) => {
         if (!mounted) return;
         setRegionalLayer(data);
+        setRegionalLayerError('');
       })
       .catch((error: unknown) => {
         if (error instanceof DOMException && error.name === 'AbortError') return;
         if (!mounted) return;
-        console.warn('[Comunas Chile GeoJSON] No se pudo cargar la capa:', error);
+        console.warn('[Regiones GeoJSON] No se pudo cargar la capa:', error);
         setRegionalLayer(null);
-        setRegionalLayerError('Capa geográfica de comunas no disponible');
+        setRegionalLayerError('Capa geográfica de regiones no disponible');
       });
 
     return () => {
@@ -1624,14 +1680,56 @@ export default function Dashboard() {
   }, [customKpis]);
 
   useEffect(() => {
+    const handler = () => {
+      setRouteDailyVisits(getRouteDailyVisits());
+      setRouteRefreshKey((k) => k + 1);
+    };
+    window.addEventListener('dashboard-route-daily-updated', handler);
+    return () => window.removeEventListener('dashboard-route-daily-updated', handler);
+  }, []);
+
+const dateFilterError = useMemo(() => {
+    if (dateFilterMode === 'range' && rangeStart && rangeEnd && rangeStart > rangeEnd) {
+      return 'La fecha de inicio no puede ser posterior a la fecha de fin.';
+    }
+    if (dateFilterMode === 'day' && selectedDay && !/^\d{4}-\d{2}-\d{2}$/.test(selectedDay)) return 'Selecciona un día válido.';
+    if (dateFilterMode === 'week' && selectedWeek && !/^\d{4}-W\d{2}$/.test(selectedWeek)) return 'Selecciona una semana válida.';
+    return '';
+  }, [dateFilterMode, rangeEnd, rangeStart, selectedDay, selectedWeek]);
+
+  const databaseRequestFilters = useMemo(() => {
+    const monthRange = getDashboardDateRange(filters.month);
+    const dateRange =
+      dateFilterMode === 'month' && filters.month !== 'all'
+        ? { fechaInicio: monthRange.fechaDesde, fechaFin: monthRange.fechaHasta }
+        : dateFilterMode === 'week'
+          ? getWeekDateRange(selectedWeek)
+          : dateFilterMode === 'day'
+            ? { fechaInicio: selectedDay || undefined, fechaFin: selectedDay || undefined }
+            : dateFilterMode === 'range'
+              ? { fechaInicio: rangeStart || undefined, fechaFin: rangeEnd || undefined }
+              : {};
+
+    return dateRange;
+  }, [dateFilterMode, filters.month, rangeEnd, rangeStart, selectedDay, selectedWeek]);
+
+  useEffect(() => {
     const controller = new AbortController();
+
+    if (dateFilterError) {
+      setDatabaseDashboardLoading(false);
+      setDatabaseDashboardError(dateFilterError);
+      return () => controller.abort();
+    }
 
     setDatabaseDashboardLoading(true);
     setDatabaseDashboardError('');
 
-    fetchDashboardDatabase(controller.signal)
+    fetchDashboardDatabase(databaseRequestFilters, controller.signal)
       .then((response) => {
-        if (!controller.signal.aborted) setDatabaseDashboardData(response);
+        if (controller.signal.aborted) return;
+        setDatabaseDashboardData(response.available ? response : null);
+        setDatabaseDashboardError(response.errors.join(' · '));
       })
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
@@ -1643,7 +1741,7 @@ export default function Dashboard() {
       });
 
     return () => controller.abort();
-  }, []);
+  }, [databaseReloadKey, databaseRequestFilters, dateFilterError]);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -1669,7 +1767,7 @@ export default function Dashboard() {
 
   useEffect(() => {
     setTablePage(0);
-  }, [filters, viewMode]);
+  }, [evidenceRegion, evidenceSearch, filters, viewMode]);
 
   const databaseRows = useMemo(
     () => (databaseDashboardData?.reclamos ?? []).map(databaseClaimToImportedRow),
@@ -1710,12 +1808,12 @@ export default function Dashboard() {
     return result;
   }, [databaseDashboardData, databaseRows]);
   const rmData = useMemo(
-    () => mergeComunaMetrics(aggregateImportedRows(importedRows.rm), databaseMetrics.rm),
-    [databaseMetrics.rm, importedRows.rm],
+    () => (databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(importedRows.rm)),
+    [databaseDashboardData, databaseMetrics.rm, importedRows.rm],
   );
   const regionesData = useMemo(
-    () => mergeComunaMetrics(aggregateImportedRows(importedRows.regiones), databaseMetrics.regiones),
-    [databaseMetrics.regiones, importedRows.regiones],
+    () => (databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(importedRows.regiones)),
+    [databaseDashboardData, databaseMetrics.regiones, importedRows.regiones],
   );
   const dailyComunaData = useMemo<ComunaMetric[]>(
     () =>
@@ -1735,8 +1833,8 @@ export default function Dashboard() {
   );
   const historicalCurrentData = viewMode === 'regiones' ? regionesData : rmData;
   const currentData = useMemo(
-    () => mergeComunaMetrics(historicalCurrentData, dailyComunaData),
-    [dailyComunaData, historicalCurrentData],
+    () => (databaseDashboardData ? historicalCurrentData : mergeComunaMetrics(historicalCurrentData, dailyComunaData)),
+    [dailyComunaData, databaseDashboardData, historicalCurrentData],
   );
   const hasRegionalData = viewMode === 'regiones' ? currentData.length > 0 : regionesData.length > 0;
   const hasRmData = viewMode === 'rm' ? currentData.length > 0 : rmData.length > 0;
@@ -1749,7 +1847,7 @@ export default function Dashboard() {
     const grouped = new Map<string, RegionalMapMetric>();
     const ticketsByComuna = new Map<string, Set<string>>();
     const addRowToComuna = (row: ImportedDashboardRow, comuna: string) => {
-      const key = normalizeName(comuna);
+      const key = normalizeMapJoinKey(comuna);
       if (!key) return;
 
       const current = grouped.get(key) ?? emptyRegionalMetric(comuna);
@@ -1759,6 +1857,7 @@ export default function Dashboard() {
       current.facturacion += row.facturacionTotal ?? 0;
       current.km += row.km ?? 0;
       current.traslado += row.traslado ?? 0;
+      current.valorEnvioBulto += row.valorEnvioBulto ?? 0;
       if (row.ticket) tickets.add(row.ticket);
       current.ticketsUnicos = tickets.size;
 
@@ -1779,7 +1878,7 @@ export default function Dashboard() {
         if (row.scope !== 'regiones' || row.validationStatus === 'error') return false;
 
         const comuna = row.ciudad || row.comuna || row.regionNormalizada || row.regionOriginal || 'Sin comuna';
-        const matchesLocation = filters.location === 'all' || normalizeName(comuna) === normalizeName(filters.location);
+        const matchesLocation = filters.location === 'all' || normalizeMapJoinKey(comuna) === normalizeMapJoinKey(filters.location);
         const matchesPriority = filters.priority === 'todas' || row.prioridad === filters.priority;
 
         return matchesLocation && matchesPriority;
@@ -1793,7 +1892,7 @@ export default function Dashboard() {
       (dailyDashboardData?.por_comuna ?? []).forEach((item) => {
         if (filters.location !== 'all' && normalizeName(item.nombre) !== normalizeName(filters.location)) return;
 
-        const key = normalizeName(item.nombre);
+        const key = normalizeMapJoinKey(item.nombre);
         const current = grouped.get(key) ?? emptyRegionalMetric(item.nombre);
         current.visitas += item.visitas;
         current.ticketsUnicos += item.tickets;
@@ -1809,15 +1908,21 @@ export default function Dashboard() {
     return grouped;
   }, [dailyDashboardData, filters.location, filters.priority, importedRows.regiones, viewMode]);
   const regionalMaxVisitas = useMemo(() => Math.max(0, ...[...regionalMapMetrics.values()].map((item) => item.visitas)), [regionalMapMetrics]);
+  const routeDateRange = useMemo(() => getRouteDateRange(routePeriod, routeDateBase), [routePeriod, routeDateBase, routeRefreshKey]);
+  const filteredRouteVisits = useMemo(
+    () => getRouteVisitsByDateRange(routeDateRange.startDate, routeDateRange.endDate),
+    [routeDateRange.startDate, routeDateRange.endDate, routeDailyVisits, routeRefreshKey],
+  );
+  const routeMetrics = useMemo(() => calculateRouteDailyMetrics(filteredRouteVisits), [filteredRouteVisits]);
   const availableMonths = useMemo(
     () =>
-      viewMode === 'regiones' || !hasCurrentData
+      !hasCurrentData
         ? [{ label: emptyViewMessage, value: 'all' }]
         : [
-            { label: sourceSummary.periodLabel, value: 'all' },
-            ...monthlyFacturacion.map((item) => ({ label: item.label, value: item.label })),
+            { label: databaseDashboardData ? 'Todo 2026' : sourceSummary.periodLabel, value: 'all' },
+            ...(databaseDashboardData ? MONTH_LABELS : monthlyFacturacion.map((item) => item.label)).map((label) => ({ label, value: label })),
           ],
-    [emptyViewMessage, hasCurrentData, viewMode],
+    [databaseDashboardData, emptyViewMessage, hasCurrentData, viewMode],
   );
 
   const availablePriorities = useMemo(
@@ -1853,14 +1958,28 @@ export default function Dashboard() {
   const selectedPriorityLabel = availablePriorities.find((option) => option.value === filters.priority)?.label ?? 'Todas';
   const selectedLocationLabel = locationOptions.find((option) => option.value === filters.location)?.label ?? 'Todas';
   const baseTotals = useMemo(() => sumComunaMetrics(currentData), [currentData]);
-  const currentMonthlyFacturacion = useMemo<Array<{ label: string; value: number }>>(() => (viewMode === 'regiones' || !hasCurrentData ? [] : monthlyFacturacion), [hasCurrentData, viewMode]);
+  const databaseMonthlyFacturacion = useMemo(() => {
+    const grouped = new Map<string, number>();
+    databaseRows.forEach((row) => {
+      const rawDate = row.fechaVisita || row.fechaRecepcionTicket;
+      const parsedMonth = rawDate ? MONTH_LABELS[new Date(`${rawDate}T12:00:00`).getMonth()] : undefined;
+      const label = row.mes || parsedMonth;
+      if (!label) return;
+      grouped.set(label, (grouped.get(label) ?? 0) + (row.facturacionTotal ?? 0));
+    });
+    return [...grouped.entries()].map(([label, value]) => ({ label, value }));
+  }, [databaseRows]);
+  const currentMonthlyFacturacion = useMemo<Array<{ label: string; value: number }>>(
+    () => databaseDashboardData ? databaseMonthlyFacturacion : (viewMode === 'regiones' || !hasCurrentData ? [] : monthlyFacturacion),
+    [databaseDashboardData, databaseMonthlyFacturacion, hasCurrentData, viewMode],
+  );
   const monthTotalFacturacion = useMemo(() => currentMonthlyFacturacion.reduce((sum, item) => sum + item.value, 0), [currentMonthlyFacturacion]);
   const monthFactor = useMemo(() => {
-    if (filters.month === 'all') return 1;
+    if (databaseDashboardData || filters.month === 'all') return 1;
 
     const month = currentMonthlyFacturacion.find((item) => item.label === filters.month);
     return month && monthTotalFacturacion > 0 ? month.value / monthTotalFacturacion : 0;
-  }, [currentMonthlyFacturacion, filters.month, monthTotalFacturacion]);
+  }, [currentMonthlyFacturacion, databaseDashboardData, filters.month, monthTotalFacturacion]);
 
   const filteredData = useMemo<ComunaMetric[]>(() => {
     const locationFiltered = currentData.filter((item) => {
@@ -1927,10 +2046,26 @@ export default function Dashboard() {
     },
     [filteredData, totals.visitas],
   );
-  const tableRows = filteredEvidenceRows;
+  const regionByComuna = useMemo(
+    () => new Map((databaseDashboardData?.comunas ?? []).map((item) => [normalizeName(item.comuna), item.region ?? 'Sin región'] as const)),
+    [databaseDashboardData],
+  );
+  const evidenceRegionOptions = useMemo(
+    () => ['all', ...new Set([...regionByComuna.values()].filter(Boolean))],
+    [regionByComuna],
+  );
+  const tableRows = useMemo(() => {
+    const search = normalizeName(evidenceSearch);
+    return filteredEvidenceRows.filter((row) => {
+      const region = regionByComuna.get(normalizeName(row.comuna)) ?? (viewMode === 'rm' ? 'Región Metropolitana' : 'Sin región');
+      const matchesSearch = !search || normalizeName(row.comuna).includes(search) || normalizeName(region).includes(search);
+      const matchesRegion = evidenceRegion === 'all' || region === evidenceRegion;
+      return matchesSearch && matchesRegion;
+    });
+  }, [evidenceRegion, evidenceSearch, filteredEvidenceRows, regionByComuna, viewMode]);
   const visibleEvidenceRows = useMemo(
-    () => (showEvidenceTable ? filteredEvidenceRows.slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE) : []),
-    [filteredEvidenceRows, showEvidenceTable, tablePage],
+    () => (showEvidenceTable ? tableRows.slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE) : []),
+    [showEvidenceTable, tablePage, tableRows],
   );
 
   const topClaims = useMemo(
@@ -2010,6 +2145,26 @@ export default function Dashboard() {
 
     downloadCsv(`evidencia-dashboard-${today}.csv`, rows);
   }, [selectedMonthLabel, tableRows, viewMode]);
+  const exportEvidenceExcel = useCallback(async () => {
+    const XLSX = await import('xlsx');
+    const rows = tableRows.map((row) => ({
+      Periodo: selectedMonthLabel,
+      Comuna: row.comuna,
+      Región: regionByComuna.get(normalizeName(row.comuna)) ?? (viewMode === 'rm' ? 'Región Metropolitana' : 'Sin región'),
+      Reclamos: row.visitas,
+      Facturación: row.facturacion,
+      Promedio: Math.round(row.average),
+      'Prioridad alta': row.alta,
+      'Prioridad media': row.media,
+      'Prioridad baja': row.baja,
+      'Participación (%)': Number(row.share.toFixed(1)),
+    }));
+    const workbook = XLSX.utils.book_new();
+    const worksheet = XLSX.utils.json_to_sheet(rows);
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'Evidencia');
+    XLSX.writeFile(workbook, `evidencia-dashboard-${new Date().toISOString().slice(0, 10)}.xlsx`);
+  }, [regionByComuna, selectedMonthLabel, tableRows, viewMode]);
+
   const printDashboardView = useCallback(() => {
     if (isEmptyCurrentView) return;
     window.print();
@@ -2035,19 +2190,19 @@ export default function Dashboard() {
       id: 'kpiFacturacion',
       title: 'Facturación total',
       visible: true,
-      content: <PrimaryMetric icon={<FileBarChart size={29} />} tone="blue" title="Facturación total" value={formatCurrency(totals.facturacion)} delta={isEmptyCurrentView ? emptyViewMessage : '+12,6% vs. mes anterior'} />,
+      content: <PrimaryMetric icon={<FileBarChart size={29} />} tone="blue" title="Facturación total" value={formatCurrency(totals.facturacion)} delta={isEmptyCurrentView ? emptyViewMessage : 'Periodo seleccionado'} />,
     },
     {
       id: 'kpiReclamos',
       title: 'Reclamos totales',
       visible: true,
-      content: <PrimaryMetric icon={<AlertTriangle size={30} />} tone="red" title="Reclamos totales" value={formatInt(totals.visitas)} delta={isEmptyCurrentView ? emptyViewMessage : '+8,4% vs. mes anterior'} />,
+      content: <PrimaryMetric icon={<AlertTriangle size={30} />} tone="red" title="Reclamos totales" value={formatInt(totals.visitas)} delta={isEmptyCurrentView ? emptyViewMessage : 'Datos actualizados'} />,
     },
     {
       id: 'kpiPromedio',
       title: 'Promedio por reclamo',
       visible: true,
-      content: <PrimaryMetric icon={<Users size={30} />} tone="cyan" title="Promedio por reclamo" value={formatCurrency(averageBilling)} delta={isEmptyCurrentView ? emptyViewMessage : '-3,1% vs. mes anterior'} />,
+      content: <PrimaryMetric icon={<Users size={30} />} tone="cyan" title="Promedio por reclamo" value={formatCurrency(averageBilling)} delta={isEmptyCurrentView ? emptyViewMessage : 'Promedio del periodo'} />,
     },
     {
       id: 'kpiComunaTop',
@@ -2072,12 +2227,12 @@ export default function Dashboard() {
       title: 'Mapa de reclamos',
       visible: true,
       content: (
-        <Panel className="flex h-full min-h-[400px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-sm">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <h2 className="text-lg font-black text-blue-900">Mapa de reclamos</h2>
-            <p className="mt-1 text-xs font-semibold text-slate-600">Distribución geográfica y capas disponibles para revisión territorial.</p>
+        <Panel className="cc-map-panel flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="cc-map-header border-b border-slate-200 px-4 py-3">
+            <h2 className="cc-section-title text-lg font-black text-blue-900">Mapa de reclamos</h2>
+            <p className="cc-muted mt-1 text-xs font-semibold text-slate-600">Distribución geográfica y capas disponibles para revisión territorial.</p>
           </div>
-          <div className="relative min-h-[320px] flex-1 overflow-hidden rounded-xl lg:min-h-[360px]">
+          <div className="cc-map-surface relative min-h-[350px] flex-1 overflow-hidden rounded-xl lg:min-h-[390px]">
             {viewMode === 'rm' ? (
               <MapContainer center={[-33.49, -70.67]} className="absolute inset-0 z-0" preferCanvas zoom={10} zoomControl={false}>
                 <ZoomControl position="topleft" />
@@ -2088,30 +2243,54 @@ export default function Dashboard() {
                     zonasRojasGeoJson={zonasRojasGeoJson}
                     comunaMetrics={filteredMapData}
                     maxVisitas={maxVisitas}
+                    onSelectComuna={(comuna) => {
+                      setFilters((current) => ({ ...current, location: comuna }));
+                      setEvidenceSearch(comuna);
+                      setShowEvidenceTable(true);
+                    }}
                   />
                 </BaseMapLayers>
               </MapContainer>
             ) : (
-              <div className="absolute inset-0 z-0">
-                <RegionPreviewMap
-                  activeRedZones={activeRedZones}
-                  data={regionalLayer}
-                  hasRegionalData={hasRegionalData}
-                  layerError={regionalLayerError}
-                  metricsByComuna={regionalMapMetrics}
-                  maxVisitas={regionalMaxVisitas}
-                />
-              </div>
+              <MapContainer center={[-35.6751, -71.543]} zoom={4} minZoom={3} className="absolute inset-0 z-0" preferCanvas zoomControl={false}>
+                <ZoomControl position="topleft" />
+                <BaseMapLayers>
+                  <RegionClaimsLayer geoJson={regionalLayer} rows={importedRows.regiones} />
+                  <ActiveRedZonesLayers redZoneMode="readonly" zones={activeRedZones} />
+                </BaseMapLayers>
+                {regionalLayerError ? (
+                  <div className="cc-map-warning cc-map-warning-danger pointer-events-none absolute bottom-4 right-4 z-[500] max-w-[280px] rounded-lg border border-[#22304D] bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-[#94A3B8] shadow-lg">
+                    {regionalLayerError}
+                  </div>
+                ) : null}
+              </MapContainer>
             )}
 
-            <div className="absolute bottom-4 left-4 z-[500] w-[230px] rounded-lg border border-slate-200 bg-white/95 p-3 shadow-lg">
-              <div className="mb-2 text-[10px] font-black uppercase text-[#466083]">Reclamos por comuna</div>
-              <div className="flex items-center gap-2 text-[10px] font-bold text-[#172448]">
-                <span>Menor</span>
-                <div className="h-2 flex-1 rounded-full bg-gradient-to-r from-[#d8ebfb] via-[#78b9ef] to-[#0757bd]" />
-                <span>Mayor</span>
+            {viewMode === 'regiones' ? (
+              <div className="cc-map-legend pointer-events-none absolute bottom-4 left-4 z-[500] w-[220px] rounded-lg border border-[#22304D] bg-[#0D1324]/95 p-3 text-[#CBD5E1] shadow-lg">
+                <p className="mb-2 text-[10px] font-black uppercase">Reclamos por comuna</p>
+                <div className="grid grid-cols-5 gap-1 text-center text-[9px] font-bold">
+                  {[
+                    ['#16213A', '0'],
+                    ['#2563EB', '1-5'],
+                    ['#0B5CFF', '6-10'],
+                    ['#22D3EE', '11-20'],
+                    ['#F97316', '20+'],
+                  ].map(([color, label]) => (
+                    <span key={label}><i className="mb-1 block h-2 rounded-sm" style={{ backgroundColor: color }} />{label}</span>
+                  ))}
+                </div>
               </div>
-            </div>
+            ) : (
+              <div className="cc-map-legend absolute bottom-4 left-4 z-[500] w-[230px] rounded-lg border border-slate-200 bg-white/95 p-3 shadow-lg">
+                <div className="mb-2 text-[10px] font-black uppercase text-[#466083]">Reclamos por comuna</div>
+                <div className="flex items-center gap-2 text-[10px] font-bold text-[#172448]">
+                  <span>Menor</span>
+                  <div className="h-2 flex-1 rounded-full bg-gradient-to-r from-[#d8ebfb] via-[#78b9ef] to-[#0757bd]" />
+                  <span>Mayor</span>
+                </div>
+              </div>
+            )}
           </div>
         </Panel>
       ),
@@ -2142,7 +2321,7 @@ export default function Dashboard() {
       visible: true,
       content: (
         <Panel className="h-full">
-          <StatStripItem icon={<TrendingUpIcon />} label="Variación mensual" value="+12,6%" detail="vs. mes anterior" />
+          <StatStripItem icon={<TrendingUpIcon />} label="Periodo analizado" value={dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día' : 'Rango'} detail="Filtro aplicado a todos los datos" />
         </Panel>
       ),
     },
@@ -2161,8 +2340,8 @@ export default function Dashboard() {
       title: 'Facturación mensual',
       visible: true,
       content: (
-        <Panel className="h-full p-4">
-          <h3 className="mb-3 text-sm font-black text-[#071b4d]">{viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM'}</h3>
+        <Panel className="cc-chart-card h-full p-4">
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM'}</h3>
           {filteredCharts.monthlyBars.length > 0 ? <VerticalBars items={filteredCharts.monthlyBars} /> : <EmptyState />}
         </Panel>
       ),
@@ -2172,8 +2351,8 @@ export default function Dashboard() {
       title: 'Top comunas reclamos',
       visible: true,
       content: (
-        <Panel className="h-full p-4">
-          <h3 className="mb-3 text-sm font-black text-[#071b4d]">Top 10 comunas con más reclamos</h3>
+        <Panel className="cc-chart-card h-full p-4">
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Top 10 comunas con más reclamos</h3>
           {filteredCharts.topClaims.length > 0 ? <HorizontalBars color="red" items={filteredCharts.topClaims} maxLabel={formatInt(filteredCharts.topClaims[0]?.value ?? 0)} /> : <EmptyState />}
         </Panel>
       ),
@@ -2183,8 +2362,8 @@ export default function Dashboard() {
       title: 'Top comunas facturación',
       visible: true,
       content: (
-        <Panel className="h-full p-4">
-          <h3 className="mb-3 text-sm font-black text-[#071b4d]">Top 10 comunas con mayor facturación</h3>
+        <Panel className="cc-chart-card h-full p-4">
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Top 10 comunas con mayor facturación</h3>
           {filteredCharts.topBilling.length > 0 ? <HorizontalBars color="blue" items={filteredCharts.topBilling} maxLabel={formatCurrencyShort(filteredCharts.topBilling[0]?.value ?? 0)} /> : <EmptyState />}
         </Panel>
       ),
@@ -2194,15 +2373,15 @@ export default function Dashboard() {
       title: 'Distribución por prioridad',
       visible: true,
       content: (
-        <Panel className="h-full p-4">
-          <h3 className="mb-3 text-sm font-black text-[#071b4d]">Distribución por prioridad</h3>
+        <Panel className="cc-chart-card h-full p-4">
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Distribución por prioridad</h3>
           <Donut
             center={formatInt(totals.visitas)}
             label="Total"
             segments={[
-              { color: '#ef4444', from: 0, to: altaPct, name: 'Alta', value: `${formatInt(totals.alta)} (${asPercent(altaPct)})` },
-              { color: '#f59e0b', from: altaPct, to: altaPct + mediaPct, name: 'Media', value: `${formatInt(totals.media)} (${asPercent(mediaPct)})` },
-              { color: '#1d8ff0', from: altaPct + mediaPct, to: 100, name: 'Baja', value: `${formatInt(totals.baja)} (${asPercent(bajaPct)})` },
+              { color: '#EF4444', from: 0, to: altaPct, name: 'Alta', value: `${formatInt(totals.alta)} (${asPercent(altaPct)})` },
+              { color: '#F97316', from: altaPct, to: altaPct + mediaPct, name: 'Media', value: `${formatInt(totals.media)} (${asPercent(mediaPct)})` },
+              { color: '#00F5A0', from: altaPct + mediaPct, to: 100, name: 'Baja', value: `${formatInt(totals.baja)} (${asPercent(bajaPct)})` },
             ]}
           />
         </Panel>
@@ -2247,11 +2426,41 @@ export default function Dashboard() {
           </div>
           {showEvidenceTable ? (
             <>
+              <div className="flex flex-col gap-2 border-b border-slate-200 bg-slate-50/70 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+                <div className="flex flex-1 flex-col gap-2 sm:flex-row">
+                  <label className="relative min-w-0 flex-1 sm:max-w-sm">
+                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <input
+                      aria-label="Buscar en evidencia"
+                      className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-[#172448] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      onChange={(event) => setEvidenceSearch(event.target.value)}
+                      placeholder="Buscar comuna o región"
+                      value={evidenceSearch}
+                    />
+                  </label>
+                  <select
+                    aria-label="Filtrar evidencia por región"
+                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-[#172448] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    onChange={(event) => setEvidenceRegion(event.target.value)}
+                    value={evidenceRegion}
+                  >
+                    {evidenceRegionOptions.map((region) => <option key={region} value={region}>{region === 'all' ? 'Todas las regiones' : region}</option>)}
+                  </select>
+                </div>
+                <div className="flex gap-2">
+                  <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-[#172448] hover:bg-slate-50" onClick={exportEvidenceCsv} type="button">
+                    <Download size={15} /> CSV
+                  </button>
+                  <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-bold text-white hover:bg-blue-800" onClick={() => void exportEvidenceExcel()} type="button">
+                    <FileBarChart size={15} /> Excel
+                  </button>
+                </div>
+              </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[980px] text-left text-xs">
                   <thead className="bg-slate-50 text-[11px] uppercase text-[#466083]">
                     <tr>
-                      {['Mes', 'Comuna', 'Reclamos', 'Facturación', 'Promedio', 'Prioridad Alta', '% del total reclamos', 'Ver detalle'].map((head) => (
+                      {['Periodo', 'Comuna', 'Región', 'Reclamos', 'Facturación', 'Promedio', 'Prioridad alta', '% del total', 'Ver detalle'].map((head) => (
                         <th key={head} className="px-4 py-2 font-black">{head}</th>
                       ))}
                     </tr>
@@ -2262,6 +2471,7 @@ export default function Dashboard() {
                         <tr key={row.comuna} className="hover:bg-blue-50/40">
                           <td className="px-4 py-2 font-semibold text-[#466083]">{selectedMonthLabel}</td>
                           <td className="px-4 py-2 font-black text-[#172448]">{row.comuna}</td>
+                          <td className="px-4 py-2 font-semibold text-[#466083]">{regionByComuna.get(normalizeName(row.comuna)) ?? (viewMode === 'rm' ? 'Región Metropolitana' : 'Sin región')}</td>
                           <td className="px-4 py-2 font-bold">{formatInt(row.visitas)}</td>
                           <td className="px-4 py-2 font-bold">{formatCurrency(row.facturacion)}</td>
                           <td className="px-4 py-2 font-bold">{formatCurrency(row.average)}</td>
@@ -2272,7 +2482,7 @@ export default function Dashboard() {
                       ))
                     ) : (
                       <tr>
-                        <td className="px-4 py-8 text-center text-sm font-bold text-slate-500" colSpan={8}>
+                        <td className="px-4 py-8 text-center text-sm font-bold text-slate-500" colSpan={9}>
                           {isEmptyCurrentView ? emptyViewMessage : 'Sin datos para los filtros seleccionados.'}
                         </td>
                       </tr>
@@ -2310,9 +2520,9 @@ export default function Dashboard() {
   ];
 
   return (
-    <div className="flex min-h-screen bg-[#f6f8fc] font-sans text-[#172448]">
+    <div className="cc-shell flex min-h-screen font-sans text-[#172448]">
       <style>{`
-        .leaflet-control-attribution { display: none; }
+        .leaflet-control-attribution { font-size: 9px; }
         .leaflet-popup-content-wrapper {
           border-radius: 10px;
           box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
@@ -2326,13 +2536,13 @@ export default function Dashboard() {
         }
       `}</style>
 
-      <aside className="no-print fixed inset-y-0 left-0 z-30 flex w-14 flex-col items-center border-r border-slate-200 bg-white py-3">
-        <div className="mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#0757bd] text-white shadow-lg shadow-blue-900/20">
+      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-14 flex-col items-center border-r border-slate-200 bg-white py-3">
+        <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#0757bd] text-white shadow-lg shadow-blue-900/20">
           <Navigation size={22} />
         </div>
 
         <nav className="flex flex-col items-center gap-3">
-          {navItems.map((item) => {
+          {navItems.filter((item) => hasPermission(item.permission)).map((item) => {
             const Icon = item.icon;
 
             return (
@@ -2344,7 +2554,7 @@ export default function Dashboard() {
         </nav>
 
         <div className="mt-auto flex flex-col items-center gap-3">
-          {bottomNavItems.map((item) => {
+          {bottomNavItems.filter((item) => hasPermission(item.permission)).map((item) => {
             const Icon = item.icon;
 
             return (
@@ -2353,29 +2563,29 @@ export default function Dashboard() {
               </SidebarIcon>
             );
           })}
-          <button className="mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#073B91] text-white shadow-lg shadow-blue-900/25" type="button" title="Collapse sidebar">
+          <button className="cc-sidebar-action mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#073B91] text-white shadow-lg shadow-blue-900/25" type="button" title="Contraer menú lateral" aria-label="Contraer menú lateral">
             <ChevronsLeft size={19} />
           </button>
         </div>
       </aside>
 
-      <main className="print-full ml-14 flex h-screen min-w-0 flex-1 gap-4 overflow-hidden bg-[#f4f7fb] p-4 print:ml-0 print:h-auto print:overflow-visible">
-        <div className="print-full min-w-0 flex-1 overflow-y-auto pr-1 print:overflow-visible">
-          <header className="mb-4 flex min-h-[72px] flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+      <main className="cc-main cc-page print-full ml-14 flex h-screen min-w-0 flex-1 gap-3 overflow-hidden bg-[#f4f7fb] p-3 print:ml-0 print:h-auto print:overflow-visible">
+        <div className="cc-page-content print-full min-w-0 flex-1 overflow-y-auto pr-0.5 print:overflow-visible">
+          <header className="cc-header mb-3 flex min-h-[72px] flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
             <div className="min-w-0">
-              <h1 className="truncate text-xl font-black tracking-tight text-slate-900 2xl:text-2xl">Visor de Reclamos de Consumidores</h1>
-              <p className="mt-1 text-xs font-semibold text-[#8190ad] 2xl:text-sm">Gestión, análisis y seguimiento operativo de reclamos</p>
+              <h1 className="cc-header-title truncate text-xl font-black tracking-tight text-slate-900 2xl:text-2xl">Visor de Facturación y Reclamos</h1>
+              <p className="cc-header-subtitle mt-1 text-xs font-semibold text-[#8190ad] 2xl:text-sm">Inteligencia operativa para decisiones estratégicas</p>
             </div>
 
-            <div className="flex flex-wrap items-center justify-end gap-2">
+            <div className="cc-header-actions flex flex-wrap items-center justify-end gap-2">
               {viewMode === 'rm' ? (
-                <button className="flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white shadow-lg shadow-blue-900/15 2xl:px-4" onClick={printDashboardView} type="button">
+                <button className="cc-button-primary flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white shadow-lg shadow-blue-900/15 2xl:px-4" onClick={printDashboardView} type="button">
                   <CloudDownload size={17} />
                   Descargar RM
                 </button>
               ) : (
                 <button
-                  className="flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white shadow-lg shadow-blue-900/15 disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
+                  className="cc-button-primary flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white shadow-lg shadow-blue-900/15 disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
                   disabled={isEmptyCurrentView}
                   onClick={printDashboardView}
                   title={isEmptyCurrentView ? emptyViewMessage : 'Descargar Regiones'}
@@ -2386,7 +2596,7 @@ export default function Dashboard() {
                 </button>
               )}
               <button
-                className="flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
+                className="cc-button-secondary flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
                 disabled={isEmptyCurrentView}
                 onClick={exportEvidenceCsv}
                 title={isEmptyCurrentView ? emptyViewMessage : 'Exportar evidencia'}
@@ -2397,7 +2607,7 @@ export default function Dashboard() {
               </button>
               <button
                 aria-label={dashboardTheme === 'dark-premium' ? 'Cambiar a tema claro' : 'Cambiar a modo oscuro'}
-                className="theme-toggle flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 2xl:px-4"
+                className="cc-button-secondary theme-toggle flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 2xl:px-4"
                 onClick={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
                 title={dashboardTheme === 'dark-premium' ? 'Tema claro' : 'Modo oscuro'}
                 type="button"
@@ -2405,90 +2615,191 @@ export default function Dashboard() {
                 {dashboardTheme === 'dark-premium' ? <Sun size={17} /> : <Moon size={17} />}
                 <span className="hidden sm:inline">{dashboardTheme === 'dark-premium' ? 'Tema claro' : 'Modo oscuro'}</span>
               </button>
-              <button className="relative flex h-10 w-10 items-center justify-center rounded-full text-[#172448]" type="button">
+              <button className="cc-header-action relative flex h-10 w-10 items-center justify-center rounded-full text-[#172448]" type="button">
                 <Bell size={20} />
-                <span className="absolute right-2 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">3</span>
+                <span className="cc-notification-badge absolute right-2 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">3</span>
               </button>
               <UserMenu
                 isDarkPremium={dashboardTheme === 'dark-premium'}
                 onOpenImport={() => setShowImportModal(true)}
                 onOpenSettings={() => setActiveTab('settings')}
+                onOpenUsers={() => setActiveTab('users')}
                 onToggleTheme={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
               />
             </div>
           </header>
 
           {activeTab === 'dashboard' ? (
-            <>
-              <section className="mb-4" aria-label="Filtros operativos">
-                <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
-                  <div className="flex flex-wrap gap-3">
-                    <FilterControl icon={<CalendarDays size={20} />} label="Mes" onChange={(value) => setFilters((current) => ({ ...current, month: value }))} options={availableMonths} value={filters.month} />
-                    <FilterControl icon={<Siren size={20} />} label="Prioridad" onChange={(value) => setFilters((current) => ({ ...current, priority: value as PriorityFilter }))} options={availablePriorities} value={filters.priority} />
-                    <FilterControl icon={<MapPin size={20} />} label="Comuna/Región" onChange={(value) => setFilters((current) => ({ ...current, location: value }))} options={locationOptions} value={filters.location} />
-                  </div>
+            <ProtectedView viewKey="dashboard">
+              <ProtectedView viewKey={viewMode}>
+                <>
+                <section className="mb-4" aria-label="Filtros operativos">
+                  <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
+                    <div className="flex flex-wrap gap-3">
+                      <FilterControl
+                        icon={<CalendarDays size={20} />}
+                        label="Periodo"
+                        onChange={(value) => setDateFilterMode(value as DateFilterMode)}
+                        options={[
+                          { label: 'Mes', value: 'month' },
+                          { label: 'Semana', value: 'week' },
+                          { label: 'Día', value: 'day' },
+                          { label: 'Rango', value: 'range' },
+                        ]}
+                        value={dateFilterMode}
+                      />
+                      {dateFilterMode === 'month' ? (
+                        <FilterControl icon={<CalendarDays size={20} />} label="Mes" onChange={(value) => setFilters((current) => ({ ...current, month: value }))} options={availableMonths} value={filters.month} />
+                      ) : dateFilterMode === 'week' ? (
+                        <label className="cc-filter grid h-12 min-w-[190px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                          Semana
+                          <input aria-label="Semana" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setSelectedWeek(event.target.value)} type="week" value={selectedWeek} />
+                        </label>
+                      ) : dateFilterMode === 'day' ? (
+                        <label className="cc-filter grid h-12 min-w-[190px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                          Día
+                          <input aria-label="Día" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setSelectedDay(event.target.value)} type="date" value={selectedDay} />
+                        </label>
+                      ) : (
+                        <div className="flex flex-wrap gap-2" aria-label="Rango de fechas">
+                          <label className="cc-filter grid h-12 min-w-[160px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                            Desde
+                            <input aria-label="Fecha de inicio" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setRangeStart(event.target.value)} type="date" value={rangeStart} />
+                          </label>
+                          <label className="cc-filter grid h-12 min-w-[160px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                            Hasta
+                            <input aria-label="Fecha de fin" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" min={rangeStart || undefined} onChange={(event) => setRangeEnd(event.target.value)} type="date" value={rangeEnd} />
+                          </label>
+                        </div>
+                      )}
+                      <FilterControl icon={<Siren size={20} />} label="Prioridad" onChange={(value) => setFilters((current) => ({ ...current, priority: value as PriorityFilter }))} options={availablePriorities} value={filters.priority} />
+                      <FilterControl icon={<MapPin size={20} />} label="Comuna/Región" onChange={(value) => setFilters((current) => ({ ...current, location: value }))} options={locationOptions} value={filters.location} />
+                    </div>
 
-                  <div className="grid h-12 min-w-[260px] grid-cols-2 overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm" role="tablist" aria-label="Selector de vista">
-                    <button
-                      aria-selected={viewMode === 'rm' ? 'true' : 'false'}
-                      className={`text-sm font-black transition ${viewMode === 'rm' ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`}
-                      onClick={() => setViewMode('rm')}
-                      role="tab"
-                      type="button"
-                    >
-                      RM
-                    </button>
-                    <button
-                      aria-selected={viewMode === 'regiones' ? 'true' : 'false'}
-                      className={`text-sm font-black transition ${viewMode === 'regiones' ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`}
-                      onClick={() => setViewMode('regiones')}
-                      role="tab"
-                      type="button"
-                    >
-                      Regiones
-                    </button>
+                    <div className={`cc-segmented grid h-12 min-w-[260px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${hasPermission('rm') && hasPermission('regiones') ? 'grid-cols-2' : 'grid-cols-1'}`} role="tablist" aria-label="Selector de vista">
+                      {hasPermission('rm') ? (
+                        <button aria-selected={viewMode === 'rm' ? 'true' : 'false'} className={`text-sm font-black transition ${viewMode === 'rm' ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`} onClick={() => setViewMode('rm')} role="tab" type="button">
+                          RM
+                        </button>
+                      ) : null}
+                      {hasPermission('regiones') ? (
+                        <button aria-selected={viewMode === 'regiones' ? 'true' : 'false'} className={`text-sm font-black transition ${viewMode === 'regiones' ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`} onClick={() => setViewMode('regiones')} role="tab" type="button">
+                          Regiones
+                        </button>
+                      ) : null}
+                    </div>
                   </div>
-                </div>
-                <p className="mt-2 text-xs font-semibold text-slate-500">
-                  Filtros activos: {selectedMonthLabel} · Prioridad {selectedPriorityLabel} · {selectedLocationLabel}
-                </p>
-                {databaseDashboardLoading ? (
-                  <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Cargando reclamos desde PostgreSQL...</p>
-                ) : databaseDashboardError ? (
-                  <p className="mt-1 text-xs font-semibold text-amber-700" role="alert">No se pudieron cargar los reclamos: {databaseDashboardError}</p>
-                ) : databaseDashboardData ? (
-                  <p className="mt-1 text-xs font-semibold text-emerald-700">
-                    PostgreSQL conectado: {formatInt(databaseDashboardData.resumen.reclamos_totales)} reclamos y {formatInt(databaseDashboardData.resumen.total_comunas)} comunas.
+                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                    Filtros activos: {dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día sin seleccionar' : (rangeStart || 'Inicio') + ' — ' + (rangeEnd || 'Fin')} · Prioridad {selectedPriorityLabel} · {selectedLocationLabel}
                   </p>
-                ) : null}
-                {dailyDashboardData ? (
-                  <p className="mt-1 text-xs font-semibold text-emerald-700">
-                    Datos incluyen visitas diarias guardadas ({formatInt(dailyDashboardData.kpis.visitas)}).
-                  </p>
-                ) : null}
-              </section>
-              <ExecutiveDashboardLayout widgets={dashboardWidgets} />
-            </>
+                  {databaseDashboardLoading ? (
+                    <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Cargando reclamos desde PostgreSQL...</p>
+                  ) : databaseDashboardError ? (
+                    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
+                      <span>No se pudo conectar con toda la API local. El dashboard continúa con datos disponibles o valores en cero.</span>
+                      <button className="rounded-md border border-amber-300 bg-white px-2 py-1 font-bold hover:bg-amber-100" onClick={() => setDatabaseReloadKey((key) => key + 1)} type="button">Reintentar</button>
+                    </div>
+                  ) : null}
+
+                  {dailyDashboardData ? (
+                    <p className="mt-1 text-xs font-semibold text-emerald-700">
+                      Datos incluyen visitas diarias guardadas ({formatInt(dailyDashboardData.kpis.visitas)}).
+                    </p>
+                  ) : null}
+                </section>
+                <ExecutiveDashboardLayout widgets={dashboardWidgets} />
+
+                <section className="cc-card rounded-xl border p-4">
+                  <div className="flex flex-wrap items-center justify-between gap-3">
+                    <div>
+                      <h2 className="cc-section-title text-lg font-black">Ruta Visitador</h2>
+                      <p className="cc-muted mt-1 text-xs font-semibold">Resumen operativo seg&uacute;n el periodo seleccionado.</p>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <div className="cc-segmented flex rounded-lg border">
+                        {(['dia', 'semana', 'mes'] as const).map((p) => (
+                          <button
+                            key={p}
+                            aria-selected={routePeriod === p}
+                            className={`px-3 py-1.5 text-xs font-black transition ${routePeriod === p ? '' : 'cc-text-secondary hover:cc-text'}`}
+                            onClick={() => setRoutePeriod(p)}
+                            type="button"
+                          >
+                            {p === 'dia' ? 'Día' : p === 'semana' ? 'Semana' : 'Mes'}
+                          </button>
+                        ))}
+                      </div>
+                      <input
+                        className="cc-input h-9 rounded-lg border px-3 text-xs font-bold"
+                        onChange={(e) => setRouteDateBase(e.target.value)}
+                        type="date"
+                        value={routeDateBase}
+                      />
+                    </div>
+                  </div>
+                  <div className="cc-stat-grid mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">Tickets ruta</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black">{routeMetrics.ticketsRuta.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">Exitosas</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.exitosas.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">No exitosas</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.noExitosas.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">Pendientes</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-orange, #f97316)' }}>{routeMetrics.pendientes.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">Zonas rojas</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.zonasRojas.toLocaleString('es-CL')}</p>
+                    </div>
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">Total valorizado</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.totalValorizado.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
+                    </div>
+                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
+                      <p className="cc-kpi-label text-xs font-bold">Proyectado m&aacute;ximo</p>
+                      <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-blue, #2563eb)' }}>{routeMetrics.proyectadoMaximo.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
+                    </div>
+                  </div>
+                </section>
+                </>
+              </ProtectedView>
+            </ProtectedView>
           ) : activeTab === 'map' ? (
-            <MapView
-              activeRedZones={activeRedZones}
-              comunaMetrics={filteredMapData}
-              historicalRedZones={zonasRojasGeoJson}
-              maxVisitas={maxVisitas}
-              rmComunasLayer={mapLayers.comunasKml}
-            />
+            <ProtectedView viewKey="dashboard">
+              <MapView
+                activeRedZones={activeRedZones}
+                comunaMetrics={filteredMapData}
+                historicalRedZones={zonasRojasGeoJson}
+                maxVisitas={maxVisitas}
+                rmComunasLayer={mapLayers.comunasKml}
+              />
+            </ProtectedView>
           ) : activeTab === 'ruta' ? (
-            <RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" />
+            <ProtectedView viewKey="ruta"><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" /></ProtectedView>
           ) : activeTab === 'settings' ? (
-            <SettingsView
-              kpiDraft={kpiDraft}
-              setKpiDraft={setKpiDraft}
-              customKpis={customKpis}
-              addCustomKpi={addCustomKpi}
-              setCustomKpis={setCustomKpis}
-              tableRows={tableRows}
-              totals={totals}
-            />
+            <ProtectedView viewKey="configuracion">
+              <SettingsView
+                kpiDraft={kpiDraft}
+                setKpiDraft={setKpiDraft}
+                customKpis={customKpis}
+                addCustomKpi={addCustomKpi}
+                setCustomKpis={setCustomKpis}
+                tableRows={tableRows}
+                totals={totals}
+                canViewReports={hasPermission('reportes')}
+              />
+            </ProtectedView>
+          ) : activeTab === 'reports' ? (
+            <ProtectedView viewKey="reportes"><ReportsView rmRows={tableRows} /></ProtectedView>
+          ) : activeTab === 'users' ? (
+            <ProtectedView viewKey="usuarios"><UserManagementView /></ProtectedView>
           ) : (
             <Panel className="flex min-h-[620px] flex-col items-center justify-center p-10 text-center">
               <AlertTriangle className="mb-4 text-blue-600" size={44} />
@@ -2523,7 +2834,7 @@ export default function Dashboard() {
             onClose={() => setShowRegionModal(false)}
           />
         )}
-        {showImportModal ? <DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /> : null}
+        {showImportModal && hasPermission('importaciones') ? <DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /> : null}
       </main>
     </div>
   );

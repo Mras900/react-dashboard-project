@@ -4,6 +4,7 @@ import 'leaflet/dist/leaflet.css';
 import 'react-grid-layout/css/styles.css';
 import 'react-resizable/css/styles.css';
 import './index.css';
+import './command-center.css';
 import App from './App';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(

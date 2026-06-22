@@ -27,16 +27,19 @@ from services.route_optimizer import RouteOptimizationError, build_optimized_rou
 from services.red_zones_crud_service import create_red_zone, delete_red_zone, list_heat_points, list_red_zones, update_red_zone, validate_red_zone_point
 from services.ruta_optimizaciones_service import list_optimizations, save_optimization_request
 from services.ruta_visitas_service import list_daily_visits, save_daily_visits
+from auth.routes import ensure_initial_admin, router as auth_router
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     create_database_tables()
+    ensure_initial_admin()
     yield
 
 
 app = FastAPI(title="Ruta Backend", lifespan=lifespan)
 app.include_router(dashboard_router)
+app.include_router(auth_router)
 
 app.add_middleware(
     CORSMiddleware,

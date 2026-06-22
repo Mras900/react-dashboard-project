@@ -1,12 +1,14 @@
-import { AlertTriangle, CheckCircle2, Layers3, Loader2, Search } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Layers3, Loader2, MapPin, Plus, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Feature, GeoJsonObject } from 'geojson';
 import L from 'leaflet';
-import { CircleMarker, GeoJSON, LayerGroup, LayersControl, MapContainer, Polyline, Popup, TileLayer, useMap, ZoomControl } from 'react-leaflet';
+import { CircleMarker, GeoJSON, LayerGroup, LayersControl, MapContainer, Polyline, Popup, TileLayer, Tooltip, useMap, useMapEvents, ZoomControl } from 'react-leaflet';
 import type { ComunaMetric } from '../../data/dashboardData';
 import { ActiveRedZonesLayers } from '../red-zones/ActiveRedZonesLayers';
-import type { RedZone } from '../red-zones/redZoneTypes';
+import { RedZoneEditorPanel } from '../red-zones/RedZoneEditorPanel';
+import { createRedZone, deleteRedZone, updateRedZone } from '../red-zones/redZonesApi';
+import type { RedZone, RedZoneDraft } from '../red-zones/redZoneTypes';
 import { searchAddress, type AddressSuggestion, validateRedZonePoint, type MapValidationResponse } from './mapApi';
 import { loadGenericGeoJson } from '../ruta/rutaUtils';
 
@@ -106,6 +108,36 @@ function SearchResultFocus({
   return null;
 }
 
+function RedZoneMapPicker({
+  enabled,
+  onPick,
+}: {
+  enabled: boolean;
+  onPick: (lat: number, lon: number) => void;
+}) {
+  useMapEvents({
+    click: (event) => {
+      if (enabled) onPick(event.latlng.lat, event.latlng.lng);
+    },
+  });
+  return null;
+}
+
+const createEmptyRedZoneDraft = (): RedZoneDraft => ({
+  name: '',
+  comuna: '',
+  region: '',
+  lat: null,
+  lon: null,
+  radius_m: 350,
+  severity: 'alta',
+  source: 'manual',
+  status: 'active',
+  display_mode: 'circle',
+  polygon_geojson: null,
+  notes: '',
+});
+
 function BaseMapLayers({ children }: { children?: ReactNode }) {
   return (
     <LayersControl position="topright">
@@ -146,6 +178,16 @@ export function MapView({
   const [validation, setValidation] = useState<MapValidationResponse | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const [managedRedZones, setManagedRedZones] = useState(activeRedZones);
+  const [redZoneDraft, setRedZoneDraft] = useState<RedZoneDraft | null>(null);
+  const [redZonePicking, setRedZonePicking] = useState(false);
+  const [polygonPoints, setPolygonPoints] = useState<Array<[number, number]>>([]);
+  const [redZoneSaving, setRedZoneSaving] = useState(false);
+  const [redZoneError, setRedZoneError] = useState('');
+
+  useEffect(() => {
+    setManagedRedZones(Array.isArray(activeRedZones) ? activeRedZones : []);
+  }, [activeRedZones]);
 
   useEffect(() => {
     let mounted = true;
@@ -159,9 +201,82 @@ export function MapView({
   }, []);
 
   const metricByComuna = useMemo(
-    () => new Map(comunaMetrics.map((item) => [normalizeName(item.comuna), item] as const)),
+    () => new Map((Array.isArray(comunaMetrics) ? comunaMetrics : []).map((item) => [normalizeName(item.comuna), item] as const)),
     [comunaMetrics],
   );
+
+  const selectRedZone = useCallback((zone: RedZone) => {
+    setRedZoneDraft({ ...zone });
+    setPolygonPoints([]);
+    setRedZonePicking(false);
+    setRedZoneError('');
+  }, []);
+
+  const pickRedZonePoint = useCallback((lat: number, lon: number) => {
+    if (!redZoneDraft) return;
+    if (redZoneDraft.display_mode === 'polygon') {
+      setPolygonPoints((current) => {
+        const next = [...current, [lat, lon] as [number, number]];
+        if (next.length >= 3) {
+          const coordinates = [...next.map(([pointLat, pointLon]) => [pointLon, pointLat]), [next[0][1], next[0][0]]];
+          setRedZoneDraft((draft) => draft ? {
+            ...draft,
+            lat: next.reduce((sum, point) => sum + point[0], 0) / next.length,
+            lon: next.reduce((sum, point) => sum + point[1], 0) / next.length,
+            polygon_geojson: { type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: [coordinates] } },
+          } : draft);
+        }
+        return next;
+      });
+      return;
+    }
+    setRedZoneDraft((draft) => draft ? { ...draft, lat, lon } : draft);
+    setRedZonePicking(false);
+  }, [redZoneDraft]);
+
+  const saveManagedRedZone = useCallback(async () => {
+    if (!redZoneDraft?.name.trim()) {
+      setRedZoneError('Ingresa un nombre para la zona roja.');
+      return;
+    }
+    if (redZoneDraft.display_mode === 'polygon' && !redZoneDraft.polygon_geojson) {
+      setRedZoneError('Marca al menos tres puntos para cerrar el polígono.');
+      return;
+    }
+    if (redZoneDraft.display_mode !== 'polygon' && (redZoneDraft.lat === null || redZoneDraft.lon === null)) {
+      setRedZoneError('Selecciona el centro en el mapa.');
+      return;
+    }
+    setRedZoneSaving(true);
+    setRedZoneError('');
+    try {
+      const { id, ...payload } = redZoneDraft;
+      const saved = id ? await updateRedZone(id, payload) : await createRedZone(payload);
+      setManagedRedZones((current) => id ? current.map((zone) => zone.id === id ? saved : zone) : [...current, saved]);
+      setRedZoneDraft({ ...saved });
+      setRedZonePicking(false);
+      setPolygonPoints([]);
+    } catch (nextError) {
+      setRedZoneError(nextError instanceof Error ? nextError.message : 'No se pudo guardar la zona roja');
+    } finally {
+      setRedZoneSaving(false);
+    }
+  }, [redZoneDraft]);
+
+  const removeManagedRedZone = useCallback(async () => {
+    if (!redZoneDraft?.id) return;
+    setRedZoneSaving(true);
+    try {
+      await deleteRedZone(redZoneDraft.id);
+      setManagedRedZones((current) => current.filter((zone) => zone.id !== redZoneDraft.id));
+      setRedZoneDraft(null);
+      setPolygonPoints([]);
+    } catch (nextError) {
+      setRedZoneError(nextError instanceof Error ? nextError.message : 'No se pudo eliminar la zona roja');
+    } finally {
+      setRedZoneSaving(false);
+    }
+  }, [redZoneDraft]);
 
   const handleSelectSuggestion = useCallback(async (suggestion: AddressSuggestion) => {
     setSelectedSuggestion(suggestion);
@@ -214,6 +329,7 @@ export function MapView({
       const metric = metricByComuna.get(normalizeName(getFeatureComunaName(feature)));
       if (!metric) return;
 
+      layer.bindTooltip(`${metric.comuna}: ${metric.visitas.toLocaleString('es-CL')} reclamos`, { direction: 'top', sticky: true });
       layer.bindPopup(
         `<strong>${metric.comuna}</strong><br/>Reclamos: ${metric.visitas.toLocaleString('es-CL')}<br/>Facturación: ${metric.facturacion.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}`,
       );
@@ -238,6 +354,7 @@ export function MapView({
   const onEachHistoricalFeature = useCallback((feature: Feature, layer: L.Layer) => {
     const comuna = getFeatureComunaName(feature) || 'Sin comuna';
     const nombre = getFeatureZoneName(feature);
+    layer.bindTooltip(nombre, { direction: 'top', sticky: true });
     layer.bindPopup(`<strong>${nombre}</strong><br/><small>${comuna}</small>`);
   }, []);
 
@@ -256,9 +373,23 @@ export function MapView({
             <h2 className="text-xl font-black text-[#071b4d]">Mapa operativo</h2>
             <p className="mt-1 text-sm font-medium text-slate-500">Análisis geográfico general con validación automática de zonas rojas.</p>
           </div>
-          <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
-            <Layers3 size={15} />
-            Capas base, comunas, zonas rojas, puntos de calor y marcador de validación
+          <div className="flex flex-wrap items-center gap-2">
+            <div className="inline-flex items-center gap-2 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-600">
+              <Layers3 size={15} />
+              Capas base, comunas, zonas rojas y validación
+            </div>
+            <button
+              className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white hover:bg-blue-800"
+              onClick={() => {
+                setRedZoneDraft(createEmptyRedZoneDraft());
+                setPolygonPoints([]);
+                setRedZonePicking(true);
+                setRedZoneError('');
+              }}
+              type="button"
+            >
+              <Plus size={15} /> Nueva zona roja
+            </button>
           </div>
         </div>
 
@@ -327,6 +458,7 @@ export function MapView({
         <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas zoom={11} zoomControl={false}>
           <ZoomControl position="topleft" />
           <SearchResultFocus selectedSuggestion={selectedSuggestion} validation={validation} />
+          <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZonePoint} />
           <BaseMapLayers>
             {rmComunasLayer ? (
               <LayersControl.Overlay name="Comunas RM">
@@ -348,15 +480,19 @@ export function MapView({
                 <GeoJSON data={historicalRedZones} onEachFeature={onEachHistoricalFeature} style={historicalRedZonesStyle} />
               </LayersControl.Overlay>
             ) : null}
-            <ActiveRedZonesLayers redZoneMode="readonly" zones={activeRedZones} />
+            <ActiveRedZonesLayers onSelect={selectRedZone} redZoneMode="manage" selectedZoneId={redZoneDraft?.id ?? null} zones={managedRedZones} />
+            {redZoneDraft?.polygon_geojson ? <GeoJSON data={redZoneDraft.polygon_geojson} style={{ color: '#D55E00', fillColor: '#E69F00', fillOpacity: 0.2, weight: 3 }} /> : null}
             {selectedSuggestion ? (
               <LayersControl.Overlay checked name="Marcador dirección buscada">
                 <LayerGroup>
                   <CircleMarker
                     center={[selectedSuggestion.lat, selectedSuggestion.lon]}
-                    pathOptions={{ color: '#ffffff', fillColor: '#0f5fcf', fillOpacity: 0.95, weight: 3 }}
+                    pathOptions={{ color: '#ffffff', fillColor: validation?.status === 'inside' ? '#D55E00' : validation?.status === 'nearby' ? '#E69F00' : '#009E73', fillOpacity: 0.95, weight: 3 }}
                     radius={10}
                   >
+                    <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
+                      {validation?.status === 'inside' ? 'Dentro de zona roja' : validation?.status === 'nearby' ? 'Cerca de zona roja' : 'Fuera de zonas rojas'}
+                    </Tooltip>
                     <Popup>
                       <strong>Dirección validada</strong>
                       <br />
@@ -372,8 +508,30 @@ export function MapView({
           </BaseMapLayers>
         </MapContainer>
         <div className="pointer-events-none absolute bottom-4 left-4 z-[500] rounded-lg border border-slate-200 bg-white/95 px-3 py-2 text-xs font-bold text-slate-600 shadow-sm">
-          Vista general de análisis geográfico. La edición de zonas rojas sigue estando en Ruta Visitador.
+          {redZonePicking ? (redZoneDraft?.display_mode === 'polygon' ? `Marca puntos del polígono (${polygonPoints.length}; mínimo 3)` : 'Selecciona el centro de la zona en el mapa') : 'Haz clic en una zona roja activa para editarla.'}
         </div>
+        {redZoneDraft ? (
+          <RedZoneEditorPanel
+            draft={redZoneDraft}
+            error={redZoneError}
+            onCancel={() => {
+              setRedZoneDraft(null);
+              setRedZonePicking(false);
+              setPolygonPoints([]);
+            }}
+            onChange={(draft) => {
+              setRedZoneDraft(draft);
+              if (draft.display_mode === 'polygon' && !draft.polygon_geojson) setRedZonePicking(true);
+            }}
+            onDelete={redZoneDraft.id ? () => void removeManagedRedZone() : undefined}
+            onPickCenter={() => {
+              setPolygonPoints([]);
+              setRedZonePicking(true);
+            }}
+            onSave={() => void saveManagedRedZone()}
+            saving={redZoneSaving}
+          />
+        ) : null}
       </div>
     </section>
   );

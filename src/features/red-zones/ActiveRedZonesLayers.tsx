@@ -1,5 +1,5 @@
 import type { GeoJsonObject } from 'geojson';
-import { Circle, CircleMarker, GeoJSON, LayerGroup, LayersControl, Popup } from 'react-leaflet';
+import { Circle, CircleMarker, GeoJSON, LayerGroup, LayersControl, Popup, Tooltip } from 'react-leaflet';
 import type { Layer } from 'leaflet';
 import type { RedZone } from './redZoneTypes';
 import { severityColor, severityWeight } from './redZoneUtils';
@@ -17,14 +17,19 @@ export function ActiveRedZonesLayers({
   redZoneMode?: RedZoneMode;
   selectedZoneId?: number | null;
 }) {
-  const activeZones = zones.filter((zone) => zone.status === 'active');
+  const safeZones = Array.isArray(zones) ? zones : [];
+  const activeZones = safeZones.filter((zone) => zone.status === 'active');
   const shapeZones = activeZones.filter((zone) => zone.display_mode !== 'heatpoint');
   const heatZones = activeZones.filter((zone) => zone.lat !== null && zone.lon !== null);
   const handleSelect = (zone: RedZone) => {
     if (redZoneMode === 'manage') onSelect?.(zone);
   };
   const renderZonePopup = (zone: RedZone) => (
-    <Popup>
+    <>
+      <Tooltip direction="top" sticky>
+        {zone.name} · {zone.comuna || 'Sin comuna'}
+      </Tooltip>
+      <Popup>
       <strong>{zone.name}</strong>
       <br />
       Comuna: {zone.comuna || 'Sin comuna'}
@@ -34,7 +39,10 @@ export function ActiveRedZonesLayers({
       Severidad: {zone.severity}
       <br />
       Tipo: {zone.display_mode}
-    </Popup>
+      <br />
+      Creada: {new Date(zone.created_at).toLocaleDateString('es-CL')}
+      </Popup>
+    </>
   );
   const bindZonePopup = (zone: RedZone) => (_feature: unknown, layer: Layer) => {
     layer.bindPopup(`

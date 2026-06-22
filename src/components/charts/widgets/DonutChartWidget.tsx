@@ -13,18 +13,19 @@ type Props = {
   data: ChartDataPoint[];
 };
 
-const palette = ['#10b981', '#f59e0b', '#ef4444', '#2563eb', '#8b5cf6', '#0ea5e9'];
+const palette = ['#0072B2', '#E69F00', '#009E73', '#D55E00', '#CC79A7', '#56B4E9'];
 
 export function DonutChartWidget({ config, data }: Props) {
+  const safeData = Array.isArray(data) ? data : [];
   return (
     <ResponsiveContainer width="100%" height={280}>
       <PieChart>
-        <Pie data={data} dataKey="value" nameKey="name" innerRadius={62} outerRadius={95} label={config.showLabels}>
-          {data.map((item, index) => (
+        <Pie data={safeData} dataKey="value" nameKey="name" innerRadius={62} outerRadius={95} label={config.showLabels}>
+          {safeData.map((item, index) => (
             <Cell key={item.name} fill={palette[index % palette.length]} />
           ))}
         </Pie>
-        <Tooltip formatter={(value) => formatChartValue(Number(value), config.metric)} />
+        <Tooltip contentStyle={{ background: 'var(--bg-card)', borderColor: 'var(--border-main)', color: 'var(--text-main)' }} formatter={(value) => formatChartValue(Number(value), config.metric)} />
       </PieChart>
     </ResponsiveContainer>
   );

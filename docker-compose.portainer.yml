@@ -9,6 +9,11 @@ services:
       CRM_BASE_URL: ${CRM_BASE_URL}
       CRM_USERNAME: ${CRM_USERNAME}
       CRM_PASSWORD: ${CRM_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      ADMIN_USERNAME: ${ADMIN_USERNAME}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
+      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME}
+      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-480}
     restart: unless-stopped
     networks:
       - dashboard_net

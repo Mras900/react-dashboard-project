@@ -64,6 +64,37 @@ def _clean_date(value: Any) -> date | datetime | str | None:
     return str(value).strip() or None
 
 
+
+def _build_claim_filters(
+    *,
+    mes: str | None = None,
+    fecha_inicio: date | None = None,
+    fecha_fin: date | None = None,
+    region: str | None = None,
+    comuna: str | None = None,
+    prioridad: str | None = None,
+) -> tuple[str, list[Any]]:
+    filters: list[str] = []
+    values: list[Any] = []
+
+    for column, value in (("region", region), ("comuna", comuna), ("mes", mes), ("prioridad", prioridad)):
+        cleaned = _clean_text(value)
+        if cleaned:
+            filters.append(f"LOWER(BTRIM({column})) = LOWER(%s)")
+            values.append(cleaned)
+
+    claim_date = "COALESCE(fecha_visita::date, fecha_recepcion::date, created_at::date)"
+    if fecha_inicio:
+        filters.append(f"{claim_date} >= %s")
+        values.append(fecha_inicio)
+    if fecha_fin:
+        filters.append(f"{claim_date} <= %s")
+        values.append(fecha_fin)
+    if fecha_inicio and fecha_fin and fecha_inicio > fecha_fin:
+        raise HTTPException(status_code=422, detail="fecha_inicio no puede ser posterior a fecha_fin.")
+
+    return (f"WHERE {' AND '.join(filters)}" if filters else "", values)
+
 def _database_error() -> HTTPException:
     return HTTPException(
         status_code=503,
@@ -89,7 +120,14 @@ def database_health() -> dict[str, bool | str]:
 
 
 @router.get("/api/dashboard/resumen")
-def dashboard_summary() -> dict[str, float | int]:
+def dashboard_summary(
+    mes: str | None = Query(default=None),
+    fecha_inicio: date | None = Query(default=None),
+    fecha_fin: date | None = Query(default=None),
+    region: str | None = Query(default=None),
+    comuna: str | None = Query(default=None),
+    prioridad: str | None = Query(default=None),
+) -> dict[str, float | int]:
     query = """
         SELECT
             COALESCE(SUM(facturacion), 0) AS facturacion_total,
@@ -101,11 +139,21 @@ def dashboard_summary() -> dict[str, float | int]:
             ) AS alta_prioridad,
             COUNT(DISTINCT NULLIF(BTRIM(ticket), '')) AS tickets_unicos
         FROM reclamos
+        {where_clause}
     """
+    where_clause, values = _build_claim_filters(
+        mes=mes,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        region=region,
+        comuna=comuna,
+        prioridad=prioridad,
+    )
+    query = query.format(where_clause=where_clause)
     try:
         with _database_connection() as connection:
             with connection.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query)
+                cursor.execute(query, values)
                 row = cursor.fetchone()
     except (DatabaseError, RuntimeError) as error:
         raise _database_error() from error
@@ -121,7 +169,14 @@ def dashboard_summary() -> dict[str, float | int]:
 
 
 @router.get("/api/dashboard/comunas")
-def dashboard_communes() -> list[dict[str, str | float | int | None]]:
+def dashboard_communes(
+    mes: str | None = Query(default=None),
+    fecha_inicio: date | None = Query(default=None),
+    fecha_fin: date | None = Query(default=None),
+    region: str | None = Query(default=None),
+    comuna: str | None = Query(default=None),
+    prioridad: str | None = Query(default=None),
+) -> list[dict[str, str | float | int | None]]:
     query = """
         SELECT
             COALESCE(NULLIF(BTRIM(comuna), ''), 'Sin comuna') AS comuna,
@@ -133,15 +188,25 @@ def dashboard_communes() -> list[dict[str, str | float | int | None]]:
                 WHERE LOWER(BTRIM(COALESCE(prioridad, ''))) IN ('alta', 'alto', 'high')
             ) AS prioridad_alta
         FROM reclamos
+        {where_clause}
         GROUP BY
             COALESCE(NULLIF(BTRIM(comuna), ''), 'Sin comuna'),
             NULLIF(BTRIM(region), '')
         ORDER BY reclamos DESC, facturacion DESC
     """
+    where_clause, values = _build_claim_filters(
+        mes=mes,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        region=region,
+        comuna=comuna,
+        prioridad=prioridad,
+    )
+    query = query.format(where_clause=where_clause)
     try:
         with _database_connection() as connection:
             with connection.cursor(cursor_factory=RealDictCursor) as cursor:
-                cursor.execute(query)
+                cursor.execute(query, values)
                 rows = cursor.fetchall()
     except (DatabaseError, RuntimeError) as error:
         raise _database_error() from error
@@ -165,22 +230,17 @@ def dashboard_claims(
     comuna: str | None = Query(default=None),
     mes: str | None = Query(default=None),
     prioridad: str | None = Query(default=None),
+    fecha_inicio: date | None = Query(default=None),
+    fecha_fin: date | None = Query(default=None),
 ) -> list[dict[str, Any]]:
-    filters: list[str] = []
-    values: list[str] = []
-
-    for column, value in (
-        ("region", region),
-        ("comuna", comuna),
-        ("mes", mes),
-        ("prioridad", prioridad),
-    ):
-        cleaned = _clean_text(value)
-        if cleaned:
-            filters.append(f"LOWER(BTRIM({column})) = LOWER(%s)")
-            values.append(cleaned)
-
-    where_clause = f"WHERE {' AND '.join(filters)}" if filters else ""
+    where_clause, values = _build_claim_filters(
+        mes=mes,
+        fecha_inicio=fecha_inicio,
+        fecha_fin=fecha_fin,
+        region=region,
+        comuna=comuna,
+        prioridad=prioridad,
+    )
     query = f"""
         SELECT *
         FROM reclamos

@@ -30,6 +30,7 @@ export type RutaBackendVisit = {
   lat: number | null;
   lon: number | null;
   peligro: boolean;
+  prioridad?: 'alta' | 'media' | 'baja' | null;
   customer_id: string | null;
   geocode_query_used?: string | null;
 };

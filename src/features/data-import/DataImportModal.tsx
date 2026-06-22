@@ -154,28 +154,30 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
   };
 
   return (
-    <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="import-title">
-      <div className="flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl border border-slate-200 bg-white shadow-2xl">
-        <div className="flex items-center justify-between border-b border-slate-200 px-5 py-4">
+    <div className="cc-modal-backdrop fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="import-title">
+      <div className="cc-modal cc-import-modal cc-polish-shadow flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl">
+        <div className="cc-import-header flex items-center justify-between px-5 py-4">
           <div>
-            <h2 id="import-title" className="text-lg font-black text-[#071b4d]">Importar datos</h2>
-            <p className="mt-1 text-xs font-semibold text-[#6b7d98]">Carga separada para RM, Regiones o archivo mixto.</p>
+            <h2 id="import-title" className="cc-import-title text-lg font-black">Importar datos</h2>
+            <p className="cc-import-subtitle mt-1 text-xs font-semibold">Carga separada para RM, Regiones o archivo mixto.</p>
           </div>
-          <button className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100" onClick={onClose} type="button" aria-label="Cerrar importación">
+          <button className="cc-import-close cc-focus-ring flex h-10 w-10 items-center justify-center rounded-lg transition" onClick={onClose} type="button" aria-label="Cerrar importación">
             <X size={18} />
           </button>
         </div>
 
-        <div className="grid gap-4 overflow-y-auto p-5">
-          <div className="grid gap-3 md:grid-cols-[280px_minmax(0,1fr)]">
+        <div className="cc-import-body grid gap-4 overflow-y-auto p-5">
+          <div className="grid gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
             <div className="grid gap-3">
               <div className="grid gap-2">
-                <span className="text-xs font-black uppercase text-[#466083]">Tipo de carga</span>
-                <div className="grid overflow-hidden rounded-lg border border-slate-200 bg-white">
+                <span className="cc-import-label text-xs font-black uppercase">Tipo de carga</span>
+                <div className="cc-import-modes grid overflow-hidden rounded-lg">
                   {modeOptions.map((option) => (
                     <button
                       key={option.value}
-                      className={`px-3 py-3 text-left text-xs font-black transition ${mode === option.value ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`}
+                      aria-pressed={mode === option.value}
+                      className="cc-import-mode cc-focus-ring px-3 py-3 text-left text-xs font-black transition"
+                      data-active={mode === option.value ? 'true' : 'false'}
                       onClick={() => {
                         setMode(option.value);
                         setPreview(null);
@@ -190,8 +192,8 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
                 </div>
               </div>
               <FileUploadDropzone fileName={preview?.fileName} onFileSelect={handleFile} />
-              {isReading ? <p className="text-xs font-bold text-[#466083]">Leyendo archivo...</p> : null}
-              {errorMessage ? <p className="rounded-lg bg-red-50 p-3 text-xs font-bold text-red-600">{errorMessage}</p> : null}
+              {isReading ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">Leyendo archivo...</p> : null}
+              {errorMessage ? <p className="cc-import-notice cc-import-notice-error">{errorMessage}</p> : null}
             </div>
 
             <div className="grid gap-3">
@@ -207,26 +209,26 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
           </div>
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-2 border-t border-slate-200 px-5 py-4">
+        <div className="cc-import-footer flex flex-wrap items-center justify-between gap-2 px-5 py-4">
           <div className="flex flex-wrap gap-2">
-            <button className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#172448] hover:bg-slate-50" onClick={() => clearScope('rm')} type="button">Limpiar datos RM</button>
-            <button className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#172448] hover:bg-slate-50" onClick={() => clearScope('regiones')} type="button">Limpiar datos Regiones</button>
-            <button className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-red-600 hover:bg-red-50" onClick={() => clearScope()} type="button">Limpiar todo</button>
+            <button className="cc-danger-button cc-focus-ring" onClick={() => clearScope('rm')} type="button">Limpiar datos RM</button>
+            <button className="cc-danger-button cc-focus-ring" onClick={() => clearScope('regiones')} type="button">Limpiar datos Regiones</button>
+            <button className="cc-danger-button cc-danger-button-strong cc-focus-ring" onClick={() => clearScope()} type="button">Limpiar todo</button>
           </div>
           <div className="flex flex-wrap gap-2">
             {preview ? (
-              <button className="rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#172448] hover:bg-slate-50" onClick={restoreOriginalRows} type="button">
+              <button className="cc-button-secondary cc-focus-ring" onClick={restoreOriginalRows} type="button">
                 Restaurar datos originales
               </button>
             ) : null}
             {errorRows.length > 0 ? (
-              <button className="flex items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-xs font-black text-[#172448] hover:bg-slate-50" onClick={() => downloadErrors(errorRows)} type="button">
+              <button className="cc-warning-button cc-focus-ring flex items-center gap-2" onClick={() => downloadErrors(errorRows)} type="button">
                 <Download size={15} />
                 Descargar errores CSV
               </button>
             ) : null}
-            <button className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black text-[#172448] hover:bg-slate-50" onClick={onClose} type="button">Cancelar</button>
-            <button className="rounded-lg bg-[#073B91] px-4 py-2 text-xs font-black text-white disabled:cursor-not-allowed disabled:opacity-50" disabled={!canConfirm} onClick={confirmImport} type="button">
+            <button className="cc-button-secondary cc-focus-ring" onClick={onClose} type="button">Cancelar</button>
+            <button className="cc-button-primary cc-focus-ring disabled:cursor-not-allowed disabled:opacity-50" disabled={!canConfirm} onClick={confirmImport} type="button">
               {errorRows.length > 0 ? `Confirmar ${rowsToSave.length} filas válidas` : 'Confirmar carga'}
             </button>
           </div>

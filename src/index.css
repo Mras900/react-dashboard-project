@@ -17,6 +17,9 @@
   --danger: #ef4444;
   --warning: #f59e0b;
   --cyan: #22d3ee;
+  --chart-primary: #0072b2;
+  --chart-primary-soft: rgba(0, 114, 178, 0.24);
+  --chart-grid: #cbd5e1;
 }
 
 html,
@@ -51,6 +54,9 @@ body {
   --danger: #ef4444;
   --warning: #f59e0b;
   --cyan: #22d3ee;
+  --chart-primary: #56b4e9;
+  --chart-primary-soft: rgba(86, 180, 233, 0.2);
+  --chart-grid: #334155;
 }
 
 [data-theme="dark-premium"] body {
@@ -282,4 +288,21 @@ body {
 .react-resizable-handle::after {
   border-right: 2px solid rgba(15, 23, 42, 0.55);
   border-bottom: 2px solid rgba(15, 23, 42, 0.55);
+}
+
+[data-theme="dark-premium"] .recharts-text {
+  fill: var(--text-secondary);
+}
+
+[data-theme="dark-premium"] .recharts-default-tooltip {
+  background: var(--bg-card) !important;
+  border-color: var(--border-main) !important;
+  color: var(--text-main) !important;
+}
+
+[data-theme="dark-premium"] .leaflet-control-layers-expanded,
+[data-theme="dark-premium"] .leaflet-tooltip {
+  background: var(--bg-card) !important;
+  border-color: var(--border-main) !important;
+  color: var(--text-main) !important;
 }

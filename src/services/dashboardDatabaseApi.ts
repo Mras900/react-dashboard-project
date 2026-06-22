@@ -44,6 +44,17 @@ export type DashboardDatabaseResponse = {
   resumen: DashboardSummary;
   comunas: DashboardCommune[];
   reclamos: DashboardClaim[];
+  errors: string[];
+  available: boolean;
+};
+
+export const EMPTY_DASHBOARD_SUMMARY: DashboardSummary = {
+  facturacion_total: 0,
+  reclamos_totales: 0,
+  promedio_por_reclamo: 0,
+  total_comunas: 0,
+  alta_prioridad: 0,
+  tickets_unicos: 0,
 };
 
 async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
@@ -55,14 +66,48 @@ async function fetchJson<T>(path: string, signal?: AbortSignal): Promise<T> {
   return (await response.json()) as T;
 }
 
+export type DashboardDatabaseFilters = {
+  mes?: string;
+  fechaInicio?: string;
+  fechaFin?: string;
+  region?: string;
+  comuna?: string;
+  prioridad?: string;
+};
+
 export async function fetchDashboardDatabase(
+  filters: DashboardDatabaseFilters = {},
   signal?: AbortSignal,
 ): Promise<DashboardDatabaseResponse> {
-  const [resumen, comunas, reclamos] = await Promise.all([
-    fetchJson<DashboardSummary>('/dashboard/resumen', signal),
-    fetchJson<DashboardCommune[]>('/dashboard/comunas', signal),
-    fetchJson<DashboardClaim[]>('/dashboard/reclamos', signal),
-  ]);
+  const query = new URLSearchParams();
+  if (filters.mes) query.set('mes', filters.mes);
+  if (filters.fechaInicio) query.set('fecha_inicio', filters.fechaInicio);
+  if (filters.fechaFin) query.set('fecha_fin', filters.fechaFin);
+  if (filters.region) query.set('region', filters.region);
+  if (filters.comuna) query.set('comuna', filters.comuna);
+  if (filters.prioridad) query.set('prioridad', filters.prioridad);
+  const suffix = query.size > 0 ? `?${query.toString()}` : '';
 
-  return { resumen, comunas, reclamos };
+  const results = await Promise.allSettled([
+    fetchJson<DashboardSummary>(`/dashboard/resumen${suffix}`, signal),
+    fetchJson<DashboardCommune[]>(`/dashboard/comunas${suffix}`, signal),
+    fetchJson<DashboardClaim[]>(`/dashboard/reclamos${suffix}`, signal),
+  ]);
+  const [summaryResult, communesResult, claimsResult] = results;
+  const errors = results.flatMap((result, index) => {
+    if (result.status === 'fulfilled') return [];
+    const endpoint = ['resumen', 'comunas', 'reclamos'][index];
+    const message = result.reason instanceof Error ? result.reason.message : 'Error de conexión';
+    return [`${endpoint}: ${message}`];
+  });
+
+  return {
+    resumen: summaryResult.status === 'fulfilled' && summaryResult.value && typeof summaryResult.value === 'object'
+      ? { ...EMPTY_DASHBOARD_SUMMARY, ...summaryResult.value }
+      : EMPTY_DASHBOARD_SUMMARY,
+    comunas: communesResult.status === 'fulfilled' && Array.isArray(communesResult.value) ? communesResult.value : [],
+    reclamos: claimsResult.status === 'fulfilled' && Array.isArray(claimsResult.value) ? claimsResult.value : [],
+    errors,
+    available: results.some((result) => result.status === 'fulfilled'),
+  };
 }

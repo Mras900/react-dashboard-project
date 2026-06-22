@@ -12,11 +12,11 @@ const items: Array<{ key: keyof ImportSummary; label: string }> = [
 
 export function ImportSummaryCards({ summary }: { summary: ImportSummary }) {
   return (
-    <div className="grid grid-cols-2 gap-2 md:grid-cols-4">
+    <div className="cc-import-summary grid grid-cols-2 gap-2 md:grid-cols-4">
       {items.map((item) => (
-        <div key={item.key} className="rounded-lg border border-slate-200 bg-white p-3">
-          <p className="text-[10px] font-black uppercase text-[#466083]">{item.label}</p>
-          <p className="mt-1 text-lg font-black text-[#071b4d]">{Number(summary[item.key]).toLocaleString('es-CL')}</p>
+        <div key={item.key} className={`cc-import-summary-card cc-import-summary-${item.key} p-3 rounded-lg`}>
+          <p className="cc-import-summary-label">{item.label}</p>
+          <p className="cc-import-summary-value mt-1 text-lg font-black">{Number(summary[item.key]).toLocaleString('es-CL')}</p>
         </div>
       ))}
     </div>
