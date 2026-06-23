@@ -5,18 +5,19 @@ services:
       context: .
       dockerfile: Dockerfile.backend
     environment:
-      DATABASE_URL: ${DATABASE_URL}
+      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL requerida}
       CRM_BASE_URL: ${CRM_BASE_URL}
       CRM_USERNAME: ${CRM_USERNAME}
       CRM_PASSWORD: ${CRM_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET}
-      ADMIN_USERNAME: ${ADMIN_USERNAME}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD}
-      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME}
+      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET requerido}
+      ADMIN_USERNAME: ${ADMIN_USERNAME:?ADMIN_USERNAME requerido}
+      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD requerido}
+      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-Administrador}
       ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-480}
     restart: unless-stopped
     networks:
       - dashboard_net
+      - boletas_db_net
     expose:
       - "8000"
     volumes:
@@ -42,3 +43,6 @@ networks:
   dashboard_net:
     external: true
     name: dashboard_net
+  boletas_db_net:
+    external: true
+    name: boletas-app_default

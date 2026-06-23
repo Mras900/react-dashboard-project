@@ -1,3 +1,4 @@
+import os
 from contextlib import asynccontextmanager
 from datetime import date
 
@@ -32,6 +33,13 @@ from auth.routes import ensure_initial_admin, router as auth_router
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
+    required = ['DATABASE_URL', 'JWT_SECRET', 'ADMIN_USERNAME', 'ADMIN_PASSWORD']
+    print('[startup] Verificando variables de entorno requeridas...')
+    for var in required:
+        val = os.getenv(var, '')
+        print(f'[startup] {var}={ "OK" if val else "FALTA" }')
+        if not val:
+            print(f'[startup] ADVERTENCIA: La variable {var} no esta configurada. Revisa backend/.env')
     create_database_tables()
     ensure_initial_admin()
     yield
