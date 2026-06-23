@@ -1,23 +1,43 @@
 services:
+  dashboard_postgres:
+    image: postgres:16
+    container_name: dashboard_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: "${DASHBOARD_DB_NAME:?DASHBOARD_DB_NAME requerida}"
+      POSTGRES_USER: "${DASHBOARD_DB_USER:?DASHBOARD_DB_USER requerido}"
+      POSTGRES_PASSWORD: "${DASHBOARD_DB_PASSWORD:?DASHBOARD_DB_PASSWORD requerida}"
+    volumes:
+      - dashboard_postgres_data:/var/lib/postgresql/data
+    networks:
+      - dashboard_net
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DASHBOARD_DB_USER} -d ${DASHBOARD_DB_NAME}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
   dashboard_backend:
     container_name: dashboard_backend
     build:
       context: .
       dockerfile: Dockerfile.backend
+    depends_on:
+      dashboard_postgres:
+        condition: service_healthy
     environment:
-      DATABASE_URL: ${DATABASE_URL:?DATABASE_URL requerida}
-      CRM_BASE_URL: ${CRM_BASE_URL}
-      CRM_USERNAME: ${CRM_USERNAME}
-      CRM_PASSWORD: ${CRM_PASSWORD}
-      JWT_SECRET: ${JWT_SECRET:?JWT_SECRET requerido}
-      ADMIN_USERNAME: ${ADMIN_USERNAME:?ADMIN_USERNAME requerido}
-      ADMIN_PASSWORD: ${ADMIN_PASSWORD:?ADMIN_PASSWORD requerido}
-      ADMIN_DISPLAY_NAME: ${ADMIN_DISPLAY_NAME:-Administrador}
-      ACCESS_TOKEN_MINUTES: ${ACCESS_TOKEN_MINUTES:-480}
+      DATABASE_URL: "${DATABASE_URL:?DATABASE_URL requerida}"
+      CRM_BASE_URL: "${CRM_BASE_URL:-}"
+      CRM_USERNAME: "${CRM_USERNAME:-}"
+      CRM_PASSWORD: "${CRM_PASSWORD:-}"
+      JWT_SECRET: "${JWT_SECRET:?JWT_SECRET requerido}"
+      ADMIN_USERNAME: "${ADMIN_USERNAME:?ADMIN_USERNAME requerido}"
+      ADMIN_PASSWORD: "${ADMIN_PASSWORD:?ADMIN_PASSWORD requerido}"
+      ADMIN_DISPLAY_NAME: "${ADMIN_DISPLAY_NAME:-Administrador}"
+      ACCESS_TOKEN_MINUTES: "${ACCESS_TOKEN_MINUTES:-480}"
     restart: unless-stopped
     networks:
       - dashboard_net
-      - boletas_db_net
     expose:
       - "8000"
     volumes:
@@ -38,11 +58,9 @@ services:
 
 volumes:
   dashboard_backend_data:
+  dashboard_postgres_data:
 
 networks:
   dashboard_net:
     external: true
     name: dashboard_net
-  boletas_db_net:
-    external: true
-    name: boletas-app_default
