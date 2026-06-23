@@ -1260,7 +1260,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
       {/* END aside (removed in restructure) */}
 
       {/* BOTTOM: KPIs + Map + Stops + Valuation */}
-        <section className="cc-route-kpi-grid">
+        <section className="cc-route-kpi-grid" style={{marginTop:"0"}}>
           <RutaMetricCard label="Tickets del día" value={summary.ticketsToday.toLocaleString('es-CL')} />
           <RutaMetricCard label="Exitosas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
           <RutaMetricCard label="No exitosas" value={summary.unsuccessful.toLocaleString('es-CL')} tone="red" />
@@ -1526,13 +1526,13 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                 </div>
               ) : (
                 stops.map((stop, index) => (
-                  <article key={stop.id} className="cc-route-stop-card grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                  <article key={stop.id} className="cc-list-card-pro grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">#{index + 1}</span>
                         <h4 className="break-words text-sm font-bold text-[#071b4d]">{stop.clientName}</h4>
                         <span className={`rounded-md border px-2 py-1 text-xs font-bold ${STATUS_CLASSES[stop.status]}`}>{STATUS_LABELS[stop.status]}</span>
-                        {stop.isRedZone ? <span className="rounded-md bg-red-100 px-2 py-1 text-xs font-bold text-red-700">Zona roja</span> : null}
+                        {stop.isRedZone ? <span className="cc-badge-pro" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>Zona roja</span> : null}
                         {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">Sin coordenadas — dirección requiere corrección</span> : null}
                       </div>
                       <p className="cc-route-stop-meta mt-2 text-xs font-semibold">

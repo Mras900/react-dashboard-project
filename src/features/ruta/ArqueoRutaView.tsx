@@ -83,7 +83,7 @@ export function ArqueoRutaView() {
             <p className="cc-muted text-xs font-semibold">Revisión, aprobación y valorización de visitas cargadas.</p>
           </div>
         </div>
-        <span className={'cc-audit-status-badge ' + auditStatus.cssClass}>{auditStatus.label}</span>
+        <span className={'cc-badge-pro ' + auditStatus.cssClass.replace('cc-audit-', 'cc-')}>{auditStatus.label}</span>
       </div>
 
       <div className="grid gap-4 lg:grid-cols-[1fr_auto]">
@@ -114,9 +114,9 @@ export function ArqueoRutaView() {
           ['Zonas rojas', formatInt(redZoneCount), 'red'],
           ['Proyectado máximo', formatCurr(projectedMax), 'cyan'],
         ] as const).map(([label, value, tone]) => (
-          <section key={label} className="cc-audit-kpi rounded-xl border p-3" data-tone={tone || undefined}>
-            <p className="cc-audit-kpi-label">{label}</p>
-            <p className={`cc-audit-kpi-value mt-1 text-lg font-black${tone ? ' cc-audit-kpi-value-' + tone : ''}`} data-tone={tone || undefined}>{value}</p>
+          <section key={label} className="cc-kpi-card-pro" data-tone={tone || undefined}>
+            <p className="cc-kpi-label-pro">{label}</p>
+            <p className={`cc-kpi-value-pro mt-1${tone ? ' cc-audit-kpi-value-' + tone : ''}`} data-tone={tone || undefined}>{value}</p>
           </section>
         ))}
       </section>
@@ -124,19 +124,19 @@ export function ArqueoRutaView() {
       <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="cc-audit-list rounded-xl border">
           <div className="border-b border-[var(--cc-border-soft)] px-4 py-3">
-            <h3 className="cc-section-title text-sm font-black">Visitas del día</h3>
+            <h3 className="cc-section-title-pro">Visitas del día</h3>
             <p className="cc-muted text-xs font-semibold">Selecciona resultado y agrega observaciones.</p>
           </div>
 
           {dayVisits.length === 0 ? (
-            <div className="cc-audit-empty-state m-4 rounded-lg p-6 text-center text-sm font-bold">
+            <div className="cc-empty-state-pro m-4">
               No hay visitas cargadas para este día.
               <p className="cc-muted mt-1 text-xs font-semibold">Carga tickets desde Ruta Visitador o selecciona otra fecha.</p>
             </div>
           ) : (
             <div className="divide-y divide-[var(--cc-border-soft)]">
               {dayVisits.map((visit, idx) => (
-                <article key={visit.id + '-' + visit.fechaRuta} className="cc-audit-stop-card grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_200px]">
+                <article key={visit.id + '-' + visit.fechaRuta} className="cc-list-card-pro grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_200px]">
                   <div className="min-w-0">
                     <div className="flex flex-wrap items-center gap-2">
                       <span className="cc-route-stop-number rounded-md px-2 py-1 text-xs font-bold">#{idx + 1}</span>
@@ -200,7 +200,7 @@ export function ArqueoRutaView() {
           </div>
 
           <div className="cc-audit-valuation-card rounded-xl border p-4">
-            <h3 className="cc-text text-sm font-black">Totales de valorización</h3>
+            <h3 className="cc-section-title-pro">Totales de valorización</h3>
             <div className="mt-3 grid gap-2 text-sm">
               <div className="flex justify-between">
                 <span className="cc-route-stop-meta">Tramo actual</span>

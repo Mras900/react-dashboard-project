@@ -498,8 +498,8 @@ function SidebarIcon({
     <button
       aria-label={label}
       data-active={active ? 'true' : 'false'}
-      className={`cc-nav-item group relative flex h-10 w-10 items-center justify-center rounded-lg transition ${
-        active ? 'bg-[#073B91] text-white shadow-lg shadow-blue-900/20' : 'text-[#466083] hover:bg-blue-50 hover:text-[#073B91]'
+      className={`cc-sidebar-item-pro cc-nav-item group relative flex h-10 w-10 items-center justify-center rounded-lg transition ${
+        active ? 'cc-sidebar-item-active' : ''
       }`}
       onClick={onClick}
       type="button"
@@ -527,11 +527,11 @@ function FilterControl({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="cc-filter relative flex h-12 min-w-[190px] items-center justify-between rounded-lg border border-slate-200 bg-white px-3 text-left shadow-sm transition hover:border-blue-200 hover:bg-blue-50/30 focus-within:border-blue-200 focus-within:ring-2 focus-within:ring-blue-600/25">
+    <label className="cc-filter cc-input-pro relative flex h-11 min-w-[170px] items-center justify-between px-3 text-left">
       <span className="flex items-center gap-3">
         <span className="flex h-8 w-8 items-center justify-center rounded-md text-[#23446f]">{icon}</span>
         <span className="min-w-0">
-          <span className="block text-[10px] font-bold uppercase tracking-wide text-slate-500">{label}</span>
+          <span className="cc-label-pro block">{label}</span>
           <select
             aria-label={label}
             className="block max-w-[150px] appearance-none truncate bg-transparent pr-6 text-sm font-black text-[#071b4d] outline-none"
@@ -569,12 +569,12 @@ function PrimaryMetric({
   };
 
   return (
-    <Panel className="cc-kpi-card cc-kpi flex h-full min-h-[116px] items-center gap-3 p-3">
-      <div data-tone={tone} className={`cc-kpi-icon flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${colors[tone]}`}>{icon}</div>
+    <Panel className="cc-kpi-card-pro cc-kpi flex h-full min-h-[110px] items-center gap-3">
+      <div data-tone={tone} className="cc-kpi-icon-pro">{icon}</div>
       <div className="min-w-0">
-        <p className="cc-kpi-label text-xs font-black text-[#172448]">{title}</p>
-        <p className="cc-kpi-value mt-1 text-lg font-black text-[#071b4d] 2xl:text-xl">{value}</p>
-        <p data-tone={tone} className={`cc-metric-trend mt-3 text-xs font-bold ${tone === 'red' ? 'text-red-500' : tone === 'cyan' ? 'text-slate-600' : 'text-emerald-600'}`}>{delta}</p>
+        <p className="cc-kpi-label-pro">{title}</p>
+        <p className="cc-kpi-value-pro mt-1">{value}</p>
+        <p data-tone={tone} className="cc-kpi-trend-pro mt-2" style={{color:tone==='red'?'var(--cc-red)':tone==='cyan'?'var(--cc-cyan)':'var(--cc-green)'}}>{delta}</p>
       </div>
     </Panel>
   );
@@ -596,14 +596,14 @@ function InsightCard({
   badge?: string;
 }) {
   return (
-    <Panel className="cc-insight-card cc-side-rank cc-card-elevated flex h-full min-h-[112px] flex-wrap items-start gap-3 p-3">
-      <div className={`cc-kpi-icon cc-insight-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-full ${iconClass}`}>{icon}</div>
+    <Panel className="cc-kpi-card-pro flex h-full min-h-[100px] flex-wrap items-start gap-3">
+      <div className="cc-kpi-icon-pro">{icon}</div>
       <div className="min-w-[150px] flex-1">
-        <p className="cc-kpi-label text-xs font-bold text-[#466083]">{label}</p>
-        <p className="cc-insight-value mt-1 break-words text-lg font-extrabold leading-tight text-[#071b4d]">{title}</p>
-        <p className="cc-insight-detail mt-2 text-xs font-bold text-[#172448]">{detail}</p>
+        <p className="cc-kpi-label-pro">{label}</p>
+        <p className="cc-kpi-value-pro mt-1">{title}</p>
+        <p className="cc-kpi-meta-pro mt-1">{detail}</p>
       </div>
-      {badge ? <span className="cc-badge cc-badge-info shrink-0 self-start whitespace-nowrap rounded-full bg-red-100 px-2.5 py-1 text-[11px] font-bold text-red-500">{badge}</span> : null}
+      {badge ? <span className="cc-badge-pro" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>{badge}</span> : null}
     </Panel>
   );
 }
@@ -611,11 +611,11 @@ function InsightCard({
 function StatStripItem({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
   return (
     <div className="cc-stat-strip flex h-full min-w-0 items-center gap-3 px-4 py-2">
-      <div className="cc-kpi-icon cc-stat-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-blue-50 text-blue-700">{icon}</div>
+      <div className="cc-kpi-icon-pro">{icon}</div>
       <div className="min-w-0">
-        <p className="cc-kpi-label truncate text-xs font-bold text-[#466083]">{label}</p>
-        <p className="cc-kpi-value text-lg font-black leading-tight text-[#071b4d]">{value}</p>
-        <p className="cc-metric-detail truncate text-xs font-semibold text-[#466083]">{detail}</p>
+        <p className="cc-kpi-label-pro">{label}</p>
+        <p className="cc-kpi-value-pro">{value}</p>
+        <p className="cc-kpi-meta-pro">{detail}</p>
       </div>
     </div>
   );
@@ -623,8 +623,8 @@ function StatStripItem({ icon, label, value, detail }: { icon: React.ReactNode; 
 
 function EmptyState() {
   return (
-    <div className="flex min-h-[160px] items-center justify-center rounded-lg border border-dashed border-slate-200 bg-slate-50 px-4 text-center">
-      <p className="text-xs font-bold text-slate-500">Sin datos para los filtros seleccionados.</p>
+    <div className="cc-empty-state-pro min-h-[140px]">
+      <p className="cc-kpi-label-pro">Sin datos para los filtros seleccionados.</p>
     </div>
   );
 }
@@ -641,15 +641,15 @@ function CustomKpiCard({
   value: string;
 }) {
   return (
-    <Panel className="cc-kpi-card cc-custom-kpi flex min-h-[112px] items-center justify-between gap-4 p-4">
+    <Panel className="cc-kpi-card-pro flex min-h-[100px] items-center justify-between gap-3">
       <div className="flex min-w-0 items-center gap-3">
-        <div className="cc-kpi-icon cc-custom-kpi-icon flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-violet-50 text-violet-700">
+        <div className="cc-kpi-icon-pro" style={{background:"rgba(217,70,239,0.08)",color:"var(--cc-magenta)"}}>
           <Calculator size={24} />
         </div>
         <div className="min-w-0">
-          <p className="cc-kpi-label truncate text-xs font-black uppercase tracking-wide text-[#466083]">{title}</p>
-          <p className="cc-kpi-value mt-1 text-2xl font-black text-[#071b4d]">{value}</p>
-          <p className="cc-metric-detail mt-1 truncate text-xs font-bold text-[#6b7d98]">{detail}</p>
+          <p className="cc-kpi-label-pro">{title}</p>
+          <p className="cc-kpi-value-pro mt-1">{value}</p>
+          <p className="cc-kpi-meta-pro">{detail}</p>
         </div>
       </div>
       {onRemove ? (
@@ -1207,8 +1207,8 @@ function KpiBuilder({
     <div className="grid gap-4">
       <Panel className="overflow-hidden">
         <div className="border-b border-slate-200 px-5 py-4">
-          <p className="text-xs font-black uppercase tracking-wide text-[#466083]">Constructor de KPI</p>
-          <h2 className="mt-1 text-2xl font-black text-[#071b4d]">Crear indicador desde la información cargada</h2>
+          <p className="cc-label-pro">Constructor de KPI</p>
+          <h2 className="cc-page-title-pro mt-1">Crear indicador desde la información cargada</h2>
         </div>
 
         <div className="grid gap-4 p-5 xl:grid-cols-[minmax(0,1fr)_320px]">
@@ -2300,7 +2300,7 @@ const dateFilterError = useMemo(() => {
       title: 'Total comunas',
       visible: true,
       content: (
-        <Panel className="h-full">
+        <Panel className="cc-kpi-card-pro h-full">
           <StatStripItem icon={<Building2 size={22} />} label="Total comunas" value={formatInt(filteredMapData.length)} detail={viewMode === 'rm' ? 'RM filtrada' : 'Regiones'} />
         </Panel>
       ),
