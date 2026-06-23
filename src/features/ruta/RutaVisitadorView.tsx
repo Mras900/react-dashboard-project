@@ -81,9 +81,9 @@ function RutaMetricCard({ label, value, tone = 'blue' }: { label: string; value:
   }[tone];
 
   return (
-    <RutaPanel className="p-3">
-      <p className="text-xs font-semibold text-slate-500">{label}</p>
-      <p className={`mt-2 inline-flex rounded-md px-2 py-1 text-lg font-extrabold leading-tight ${toneClass}`}>{value}</p>
+    <RutaPanel className="cc-route-kpi cc-kpi-card-pro p-3">
+      <p className="cc-route-kpi-label cc-kpi-label-pro">{label}</p>
+      <p className={`cc-route-kpi-value cc-kpi-value-pro mt-2 ${toneClass}`}>{value}</p>
     </RutaPanel>
   );
 }
@@ -973,7 +973,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
     <div className="grid gap-4">
       {/* TOP GRID */}
       <div className="cc-route-top-grid-v2">
-        <RutaPanel className="cc-route-calendar-zone rounded-xl border p-4">
+        <RutaPanel className="route-calendar-card-pro cc-route-calendar-zone rounded-xl border p-4">
           <RouteMonthCalendar
             selectedDate={fechaVisita}
             onSelectDate={(d) => { setFechaVisita(d); }}
@@ -981,15 +981,15 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           />
         </RutaPanel>
 
-        <RutaPanel className="cc-route-ticket-primary rounded-xl border p-4">
+        <RutaPanel className="route-hero-pro cc-route-ticket-primary rounded-xl border p-4">
           <div className="flex items-center gap-2 mb-3">
             <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{background:"rgba(34,211,238,0.09)",color:"var(--cc-cyan, #0891b2)"}}>
               <Route size={18} />
             </span>
-            <h2 className="cc-route-ticket-header text-base font-black">Carga de ticket del d&iacute;a</h2>
+            <h2 className="route-hero-header-pro cc-route-ticket-header text-base font-black">Configuraci&oacute;n de ruta</h2>
             <span className="cc-route-badge shrink-0">Operaci&oacute;n diaria</span>
           </div>
-          <p className="cc-route-subtitle mb-3 text-xs">Busca por ticket, RUT o carga masiva para armar la ruta de la fecha seleccionada. Al cargar, la visita queda pendiente para arqueo.</p>
+          <p className="cc-route-subtitle mb-3 text-xs">Define visitador, fechas, punto de inicio y par&aacute;metros operativos para la jornada seleccionada.</p>
           <label className="grid gap-2">
             <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
               <UserRound size={15} />
@@ -1003,7 +1003,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             />
           </label>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="route-hero-grid-pro grid gap-3 sm:grid-cols-2">
             <label className="grid gap-2">
               <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
                 <CalendarDays size={15} />
@@ -1093,7 +1093,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             <span className="text-xs font-medium text-slate-500">Se suma por cada parada, no incluye el punto de inicio.</span>
           </label>
 
-          <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-1">
+          <div className="route-hero-grid-pro grid gap-3 sm:grid-cols-2">
             <label className="grid gap-2">
               <span className="text-xs font-bold text-slate-700">Rendimiento km/L</span>
               <input
@@ -1119,8 +1119,8 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           </div>
         </RutaPanel>
         {/* Weather card - enhanced */}
-        <RutaPanel className="cc-route-weather-hero rounded-xl border p-3">
-          <div className="flex items-center gap-2 mb-2">
+        <RutaPanel className="route-weather-compact-pro cc-route-weather-hero rounded-xl border p-3">
+          <div className="route-weather-header-pro flex items-center gap-2 mb-2">
             <span className="cc-route-label text-xs">Clima de ruta</span>
             <span className="cc-route-badge" style={{fontSize:"0.55rem"}}>{weatherSummary?.source === 'openweather' ? 'OpenWeather' : weatherSummary?.source === 'open-meteo' ? 'Open-Meteo respaldo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
             <select
@@ -1134,24 +1134,24 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           {weatherLoading ? <p className="cc-route-stop-meta text-xs"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando clima...</p> : null}
           {weatherError ? <p className="cc-route-stop-meta text-xs leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError}</p> : null}
           {weatherSummary && !weatherLoading ? (
-            <div className="flex flex-wrap items-center gap-3">
-              <div className="cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>
+            <div className="route-weather-content-pro flex flex-wrap items-center gap-3">
+              <div className="route-weather-icon-pro cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>
                 {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}
               </div>
               <div className="cc-route-weather-main">
-                <div className="cc-route-weather-condition text-lg">
+                <div className="route-weather-temp-pro cc-route-weather-condition text-lg">
                   {weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C
                 </div>
                 <div className="text-xs font-semibold cc-text-secondary">
                   {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}
                 </div>
               </div>
-              <div className="cc-route-weather-metrics">
+              <div className="route-weather-meta-pro cc-route-weather-metrics">
                 {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
                 {weatherSummary.current?.precipitation != null ? <span>Lluvia {weatherSummary.current.precipitation} mm</span> : weatherSummary.precipitationSum != null ? <span>Lluvia {weatherSummary.precipitationSum} mm</span> : null}
                 {weatherSummary.precipitationProbabilityMax != null ? <span>Prob. {weatherSummary.precipitationProbabilityMax}%</span> : null}
               </div>
-              <span className={'cc-route-weather-alert ' + (
+              <span className={'route-weather-badge-pro cc-route-weather-alert ' + (
                 weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-alert-high' :
                 weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-alert-warning' :
                 weatherSummary.riskLevel === 'sin_datos' ? 'cc-route-weather-alert-normal' :
@@ -1163,7 +1163,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           ) : null}
         </RutaPanel>
 
-        <RutaPanel className="grid gap-3 p-4">
+        <RutaPanel className="route-ticket-card-pro grid gap-3 p-4">
           <form
             className="grid gap-3"
             onSubmit={(event) => {
@@ -1173,6 +1173,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           >
             <div className="cc-route-segmented flex rounded-lg border">
               <button
+                aria-pressed={searchMode === 'ticket'}
                 className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? '' : 'text-[#466083] hover:text-[#071b4d]'}`}
                 onClick={() => setSearchMode('ticket')}
                 type="button"
@@ -1180,6 +1181,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                 Por Ticket
               </button>
               <button
+                aria-pressed={searchMode === 'rut'}
                 className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? '' : 'text-[#466083] hover:text-[#071b4d]'}`}
                 onClick={() => setSearchMode('rut')}
                 type="button"
@@ -1234,7 +1236,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
         </div>{/* END top grid */}
 
         {/* Actions */}
-        <RutaPanel className="cc-route-actions p-4">
+        <RutaPanel className="route-action-strip-pro cc-route-actions p-4">
           <button
             className="flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
             disabled={saving || stops.length === 0 || !visitador.trim()}
@@ -1260,7 +1262,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
       {/* END aside (removed in restructure) */}
 
       {/* BOTTOM: KPIs + Map + Stops + Valuation */}
-        <section className="cc-route-kpi-grid" style={{marginTop:"0"}}>
+        <section className="route-kpi-strip-pro cc-route-kpi-grid" style={{marginTop:"0"}}>
           <RutaMetricCard label="Tickets del día" value={summary.ticketsToday.toLocaleString('es-CL')} />
           <RutaMetricCard label="Exitosas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
           <RutaMetricCard label="No exitosas" value={summary.unsuccessful.toLocaleString('es-CL')} tone="red" />
@@ -1282,7 +1284,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           </RutaPanel>
         ) : null}
 
-        <RutaPanel className="overflow-hidden">
+        <RutaPanel className="route-map-section-pro overflow-hidden">
           <div className="border-b border-slate-200 px-4 py-3">
             <h3 className="text-base font-bold text-[#071b4d]">Mapa de ruta</h3>
           </div>
@@ -1511,8 +1513,8 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           </div>
         </RutaPanel>
 
-        <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
-          <RutaPanel className="overflow-hidden">
+        <section className="route-bottom-grid-pro grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+          <RutaPanel className="route-stops-panel-pro overflow-hidden">
             <div className="border-b border-slate-200 px-4 py-3">
               <h3 className="text-base font-bold text-[#071b4d]">Lista de paradas</h3>
               <p className="text-xs font-medium text-slate-500">Marca resultado de visita, observación y revisión territorial.</p>
@@ -1622,7 +1624,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             </div>
           </RutaPanel>
 
-          <RutaPanel className="self-start p-4">
+          <RutaPanel className="route-totals-panel-pro self-start p-4">
             <h3 className="text-base font-bold text-[#071b4d]">Totales de valorización</h3>
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex justify-between gap-3">

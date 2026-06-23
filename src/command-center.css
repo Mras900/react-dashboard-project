@@ -3664,3 +3664,339 @@
     max-width: calc(100% - 2rem);
   }
 }
+/* ETAPA 13E: layout premium de Ruta Visitador. */
+.cc-route-top-grid-v2 {
+  grid-template-areas:
+    "calendar"
+    "ticket"
+    "hero"
+    "weather";
+  align-items: start;
+}
+
+.route-calendar-card-pro { grid-area: calendar; }
+.route-ticket-card-pro { grid-area: ticket; }
+.route-hero-pro { grid-area: hero; }
+.route-weather-compact-pro { grid-area: weather; }
+
+.route-calendar-card-pro,
+.route-ticket-card-pro,
+.route-hero-pro,
+.route-weather-compact-pro,
+.route-map-section-pro,
+.route-stops-panel-pro,
+.route-totals-panel-pro {
+  min-width: 0;
+}
+
+.route-ticket-card-pro {
+  border-color: color-mix(in srgb, var(--cc-blue, #2563eb) 22%, var(--cc-border, #e2e8f0)) !important;
+  background: var(--cc-card, var(--bg-card, #ffffff)) !important;
+}
+
+.route-ticket-card-pro textarea {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.route-hero-pro {
+  display: grid;
+  align-content: start;
+  gap: 0.875rem;
+  padding: 1.125rem !important;
+  border-color: color-mix(in srgb, var(--cc-cyan, #22d3ee) 34%, var(--cc-border, #e2e8f0)) !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
+}
+
+.route-hero-pro > * {
+  min-width: 0;
+}
+
+.route-hero-header-pro {
+  font-size: 1.05rem !important;
+  font-weight: 800 !important;
+}
+
+.route-hero-grid-pro {
+  width: 100%;
+}
+
+.route-hero-pro label > span,
+.route-ticket-card-pro label > span,
+.route-ticket-card-pro form > span {
+  color: var(--cc-text-secondary, var(--text-secondary, #466083)) !important;
+}
+
+.route-hero-pro input,
+.route-ticket-card-pro input,
+.route-ticket-card-pro textarea {
+  border-color: var(--cc-border, var(--border-main, #e2e8f0)) !important;
+  background: var(--cc-panel, var(--bg-card-soft, #f8fafc)) !important;
+  color: var(--cc-text, var(--text-main, #071b4d)) !important;
+}
+
+.route-weather-compact-pro {
+  display: grid !important;
+  align-content: start;
+  gap: 0.75rem !important;
+  padding: 0.875rem !important;
+}
+
+.route-weather-header-pro {
+  display: grid !important;
+  grid-template-columns: minmax(0, 1fr) auto;
+  margin-bottom: 0 !important;
+}
+
+.route-weather-header-pro .cc-route-label {
+  align-self: center;
+}
+
+.route-weather-header-pro .cc-route-badge {
+  justify-self: end;
+}
+
+.route-weather-header-pro select {
+  grid-column: 1 / -1;
+  width: 100% !important;
+  max-width: none !important;
+}
+
+.route-weather-content-pro {
+  display: grid !important;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 0.625rem !important;
+}
+
+.route-weather-icon-pro {
+  width: 3rem !important;
+  height: 3rem !important;
+  border-radius: 10px !important;
+  font-size: 1.65rem !important;
+}
+
+.route-weather-temp-pro {
+  font-size: 1.35rem !important;
+  line-height: 1;
+}
+
+.route-weather-meta-pro {
+  grid-column: 1 / -1;
+  display: grid !important;
+  gap: 0.35rem !important;
+  padding-top: 0.625rem;
+  border-top: 1px solid var(--cc-border-soft, rgba(148, 163, 184, 0.3));
+  font-size: 0.7rem !important;
+}
+
+.route-weather-badge-pro {
+  grid-column: 1 / -1;
+  width: fit-content;
+  margin-top: 0.125rem;
+}
+
+.route-action-strip-pro {
+  display: grid !important;
+  grid-template-columns: 1fr;
+  gap: 0.75rem !important;
+  padding: 0.875rem !important;
+}
+
+.route-action-strip-pro > button {
+  width: 100%;
+  min-width: 0;
+  cursor: pointer;
+}
+
+.route-action-strip-pro > button:disabled {
+  cursor: not-allowed;
+  filter: saturate(0.65);
+  opacity: 0.55 !important;
+}
+
+.route-kpi-strip-pro {
+  gap: 0.75rem !important;
+}
+
+.route-kpi-strip-pro .cc-route-kpi {
+  min-height: 92px;
+  padding: 0.875rem !important;
+}
+
+.route-kpi-strip-pro .cc-route-kpi-value {
+  max-width: 100%;
+  overflow-wrap: anywhere;
+  font-size: clamp(1rem, 1.25vw, 1.25rem);
+}
+
+.route-map-section-pro {
+  border-color: var(--cc-border, var(--border-main, #e2e8f0)) !important;
+  box-shadow: 0 8px 22px rgba(15, 23, 42, 0.07);
+}
+
+.route-map-section-pro .cc-route-map-compact {
+  height: 390px;
+}
+
+.route-map-section-pro .cc-route-map-compact > .leaflet-container {
+  min-height: 100%;
+}
+
+.route-bottom-grid-pro {
+  align-items: start;
+}
+
+.route-stops-panel-pro {
+  min-height: 220px;
+}
+
+.route-stops-panel-pro .divide-y > div:only-child {
+  display: flex;
+  min-height: 170px;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+.route-totals-panel-pro {
+  position: sticky;
+  top: 1rem;
+  border-color: color-mix(in srgb, var(--cc-blue, #2563eb) 20%, var(--cc-border, #e2e8f0)) !important;
+}
+
+[data-theme="dark-premium"] .route-ticket-card-pro,
+[data-theme="dark-premium"] .route-hero-pro,
+[data-theme="dark-premium"] .route-weather-compact-pro,
+[data-theme="dark-premium"] .route-map-section-pro,
+[data-theme="dark-premium"] .route-stops-panel-pro,
+[data-theme="dark-premium"] .route-totals-panel-pro {
+  background: var(--cc-card, #111a2e) !important;
+}
+
+[data-theme="dark-premium"] .route-hero-pro input,
+[data-theme="dark-premium"] .route-ticket-card-pro input,
+[data-theme="dark-premium"] .route-ticket-card-pro textarea {
+  border-color: var(--cc-border, #22304d) !important;
+  background: var(--cc-card-elevated, #16213a) !important;
+  color: var(--cc-text, #f1f5f9) !important;
+}
+
+@media (min-width: 641px) {
+  .route-action-strip-pro {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1279px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: minmax(260px, 0.8fr) minmax(0, 1.2fr) !important;
+    grid-template-areas:
+      "calendar hero"
+      "ticket hero"
+      "weather weather";
+  }
+
+  .route-weather-content-pro {
+    grid-template-columns: auto minmax(140px, 0.45fr) minmax(0, 1fr) auto;
+    align-items: center;
+  }
+
+  .route-weather-meta-pro {
+    grid-column: auto;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    padding-top: 0;
+    padding-left: 0.75rem;
+    border-top: 0;
+    border-left: 1px solid var(--cc-border-soft, rgba(148, 163, 184, 0.3));
+  }
+
+  .route-weather-badge-pro {
+    grid-column: auto;
+    margin-top: 0;
+  }
+
+  .route-map-section-pro .cc-route-map-compact {
+    height: 340px;
+  }
+}
+
+@media (min-width: 1024px) {
+  .route-action-strip-pro {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: minmax(270px, 300px) minmax(500px, 1fr) minmax(220px, 250px) !important;
+    grid-template-areas:
+      "calendar hero weather"
+      "ticket hero weather";
+  }
+
+  .route-hero-pro {
+    min-height: 100%;
+  }
+
+  .route-bottom-grid-pro {
+    grid-template-columns: minmax(0, 1fr) 320px !important;
+  }
+
+  .route-map-section-pro .cc-route-map-compact {
+    height: 410px;
+  }
+}
+
+@media (min-width: 1536px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: 310px minmax(560px, 1fr) 260px !important;
+  }
+
+  .route-kpi-strip-pro {
+    grid-template-columns: repeat(7, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 640px) {
+  .route-hero-pro,
+  .route-calendar-card-pro,
+  .route-ticket-card-pro,
+  .route-weather-compact-pro {
+    padding: 0.875rem !important;
+  }
+
+  .route-hero-grid-pro {
+    grid-template-columns: 1fr !important;
+  }
+
+  .route-action-strip-pro {
+    padding: 0.75rem !important;
+  }
+
+  .route-kpi-strip-pro {
+    grid-template-columns: 1fr 1fr !important;
+  }
+
+  .route-map-section-pro .cc-route-map-compact {
+    height: 280px;
+  }
+
+  .route-totals-panel-pro {
+    position: static;
+  }
+}
+
+@media (max-width: 420px) {
+  .route-kpi-strip-pro {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .route-action-strip-pro > button,
+  .route-ticket-card-pro,
+  .route-hero-pro,
+  .route-weather-compact-pro {
+    transition: none !important;
+  }
+}
