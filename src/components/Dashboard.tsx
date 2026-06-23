@@ -2633,7 +2633,7 @@ const dateFilterError = useMemo(() => {
             <ProtectedView viewKey="dashboard">
               <ProtectedView viewKey={viewMode}>
                 <>
-                <section className="mb-4" aria-label="Filtros operativos">
+                <section className="cc-dashboard-filters mb-4" aria-label="Filtros operativos">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex flex-wrap gap-3">
                       <FilterControl
@@ -2695,9 +2695,9 @@ const dateFilterError = useMemo(() => {
                   {databaseDashboardLoading ? (
                     <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Cargando reclamos desde PostgreSQL...</p>
                   ) : databaseDashboardError ? (
-                    <div className="mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
+                    <div className="cc-api-alert mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
                       <span>No se pudo conectar con toda la API local. El dashboard continúa con datos disponibles o valores en cero.</span>
-                      <button className="rounded-md border border-amber-300 bg-white px-2 py-1 font-bold hover:bg-amber-100" onClick={() => setDatabaseReloadKey((key) => key + 1)} type="button">Reintentar</button>
+                      <button className="cc-api-retry rounded-md border border-amber-300 bg-white px-2 py-1 font-bold hover:bg-amber-100" onClick={() => setDatabaseReloadKey((key) => key + 1)} type="button">Reintentar</button>
                     </div>
                   ) : null}
 
