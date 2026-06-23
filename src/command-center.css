@@ -2687,3 +2687,187 @@
 [data-theme="dark-premium"] .cc-audit-empty-state {
   background: var(--cc-panel, #0d1324) !important;
 }
+/* ETAPA 12C: Ruta Visitador v2 layout */
+.cc-route-top-grid-v2 {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1280px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: 280px minmax(520px, 1fr) 280px;
+  }
+}
+
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+
+.cc-route-ticket-primary {
+  position: relative;
+  border-color: color-mix(in srgb, var(--cc-cyan, #22d3ee) 30%, var(--cc-border, #22304d)) !important;
+  background: var(--bg-card, #ffffff) !important;
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--cc-cyan, #22d3ee) 6%, transparent), 0 4px 8px rgba(2, 6, 23, 0.1);
+}
+
+.cc-route-ticket-primary::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 2px;
+  background: linear-gradient(90deg, var(--cc-cyan, #22d3ee), var(--cc-blue, #2563eb));
+  content: "";
+  opacity: 0.5;
+}
+
+.cc-route-ticket-header {
+  color: var(--cc-text, var(--text-main, #071b4d)) !important;
+  letter-spacing: -0.025em;
+}
+
+.cc-route-weather-hero {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 1rem;
+  border-color: var(--cc-border-soft, rgba(148, 163, 184, 0.38)) !important;
+  background: var(--bg-card, #ffffff) !important;
+}
+
+.cc-route-weather-avatar {
+  flex: none;
+  width: 3.5rem;
+  height: 3.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.cc-route-weather-avatar[data-tone="normal"] {
+  background: color-mix(in srgb, var(--cc-cyan, #22d3ee) 10%, transparent);
+  color: var(--cc-cyan, #0891b2);
+}
+
+.cc-route-weather-avatar[data-tone="rain"] {
+  background: color-mix(in srgb, var(--cc-blue, #2563eb) 10%, transparent);
+  color: var(--cc-blue, #2563eb);
+}
+
+.cc-route-weather-avatar[data-tone="storm"] {
+  background: color-mix(in srgb, var(--cc-red, #ef4444) 10%, transparent);
+  color: var(--cc-red, #dc2626);
+}
+
+.cc-route-weather-avatar[data-tone="cloud"] {
+  background: color-mix(in srgb, var(--cc-text-muted, #64748b) 10%, transparent);
+  color: var(--cc-text-muted, #64748b);
+}
+
+.cc-route-weather-main {
+  flex: 1;
+  min-width: 0;
+}
+
+.cc-route-weather-condition {
+  color: var(--cc-text, var(--text-main, #071b4d)) !important;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.cc-route-weather-metrics {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem 1.25rem;
+  color: var(--cc-text-secondary, var(--text-secondary, #466083));
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.cc-route-weather-alert {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  line-height: 1;
+  white-space: nowrap;
+}
+
+.cc-route-weather-alert-normal {
+  background: color-mix(in srgb, var(--cc-green, #10b981) 8%, transparent);
+  color: var(--cc-green, #10b981) !important;
+}
+
+.cc-route-weather-alert-warning {
+  background: color-mix(in srgb, var(--cc-orange, #f97316) 8%, transparent);
+  color: var(--cc-orange, #c2410c) !important;
+}
+
+.cc-route-weather-alert-high {
+  background: color-mix(in srgb, var(--cc-red, #ef4444) 8%, transparent);
+  color: var(--cc-red, #dc2626) !important;
+}
+
+.cc-route-bottom-grid-v2 {
+  display: grid;
+  gap: 1rem;
+}
+
+@media (min-width: 1280px) {
+  .cc-route-bottom-grid-v2 {
+    grid-template-columns: minmax(0, 1fr) 380px;
+  }
+}
+
+.cc-route-map-embedded {
+  border-color: var(--cc-border, var(--border-main, #e2e8f0)) !important;
+  background: var(--bg-card, #ffffff) !important;
+  overflow: hidden;
+  border-radius: 12px;
+}
+
+.cc-route-map-embedded .relative {
+  height: 300px !important;
+  min-height: 240px !important;
+}
+
+@media (min-width: 1280px) {
+  .cc-route-map-embedded .relative {
+    height: 320px !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .cc-route-map-embedded .relative {
+    height: 240px !important;
+  }
+}
+
+.cc-route-actions-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.cc-route-actions-compact > * {
+  flex: 1;
+  min-width: 140px;
+}
+
+.cc-route-kpis-compact {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 0.65rem;
+}
+
+[data-theme="dark-premium"] .cc-route-weather-hero,
+[data-theme="dark-premium"] .cc-route-ticket-primary,
+[data-theme="dark-premium"] .cc-route-map-embedded {
+  background: var(--cc-card, #111a2e) !important;
+}

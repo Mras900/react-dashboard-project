@@ -13,7 +13,7 @@ import { buscarPorRut, buscarPorTicket, guardarVisitasDiarias, optimizarRuta, se
 import { buildRutaCsv, buildRutaSummary, calculateStopValue, downloadCsv, findComunaRegionByPoint, getFareTable, getFeatureComunaName, getFeatureRegionName, isPointInRedZone, loadGenericGeoJson, loadRedZonesGeoJson, normalizeName, parseTicketIds } from './rutaUtils';
 import { upsertRouteDailyVisit, saveRouteDailyVisits, dispatchRouteDailyUpdate, getRouteDailyVisits } from './routeDailyStorage';
 import type { RouteDailyVisit } from './routeDailyStorage';
-import { fetchRouteWeather, getWeatherEmoji, KNOWN_COMUNAS } from './routeWeatherService';
+import { fetchRouteWeather, getWeatherEmoji, getWeatherPresentation, KNOWN_COMUNAS } from './routeWeatherService';
 import type { RouteWeatherSummary } from './routeWeatherTypes';
 
 type SearchMode = 'ticket' | 'rut';
@@ -972,7 +972,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
   return (
     <div className="grid gap-4">
       {/* TOP GRID */}
-      <div className="cc-route-top-grid">
+      <div className="cc-route-top-grid-v2">
         <RutaPanel className="cc-route-calendar-zone rounded-xl border p-4">
           <RouteMonthCalendar
             selectedDate={fechaVisita}
@@ -981,20 +981,15 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
           />
         </RutaPanel>
 
-        {/* Featured ticket loading zone */}
-        <RutaPanel className="p-4">
-          <div className="flex items-center gap-3">
-            <span className="flex h-10 w-10 items-center justify-center rounded-lg bg-blue-50 text-blue-700">
-              <Route size={21} />
+        <RutaPanel className="cc-route-ticket-primary rounded-xl border p-4">
+          <div className="flex items-center gap-2 mb-3">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{background:"rgba(34,211,238,0.09)",color:"var(--cc-cyan, #0891b2)"}}>
+              <Route size={18} />
             </span>
-            <div>
-              <h2 className="text-xl font-bold text-[#071b4d]">Ruta visitador</h2>
-              <p className="text-xs font-medium text-slate-500">Centro operativo conectado a FastAPI</p>
-            </div>
+            <h2 className="cc-route-ticket-header text-base font-black">Carga de ticket del d&iacute;a</h2>
+            <span className="cc-route-badge shrink-0">Operaci&oacute;n diaria</span>
           </div>
-        </RutaPanel>
-
-        <RutaPanel className="grid gap-3 p-4">
+          <p className="cc-route-subtitle mb-3 text-xs">Busca por ticket, RUT o carga masiva para armar la ruta de la fecha seleccionada. Al cargar, la visita queda pendiente para arqueo.</p>
           <label className="grid gap-2">
             <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
               <UserRound size={15} />
@@ -1123,33 +1118,47 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             </label>
           </div>
         </RutaPanel>
-        {/* Weather card */}
-        <RutaPanel className="cc-route-weather-card rounded-xl border p-3">
-          <div className="flex items-center justify-between gap-2">
+        {/* Weather card - enhanced */}
+        <RutaPanel className="cc-route-weather-hero rounded-xl border p-3">
+          <div className="flex items-center gap-2 mb-2">
             <span className="cc-route-label text-xs">Clima de ruta</span>
-            <span className="cc-route-badge">{getWeatherEmoji(weatherSummary?.weatherCode)} {weatherSummary?.temperatureMax ?? '--'}°</span>
-          </div>
-          <div className="mt-2">
+            <span className="cc-route-badge" style={{fontSize:"0.55rem"}}>{weatherSummary?.source === 'open-meteo' ? 'Open-Meteo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
             <select
-              className="cc-route-input h-8 w-full px-2 text-xs font-bold rounded-lg border"
+              className="cc-route-input h-7 w-auto max-w-[160px] px-2 text-[10px] font-bold rounded-lg border"
               value={weatherComuna}
               onChange={(e) => setWeatherComuna(e.target.value)}
             >
               {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
             </select>
           </div>
-          {weatherLoading ? <p className="cc-route-stop-meta mt-2 text-xs"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando clima...</p> : null}
-          {weatherError ? <p className="cc-route-stop-meta mt-2 text-xs leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError.includes('Pronóstico') ? weatherError : 'No se pudo obtener el clima. Puedes continuar cargando la ruta.'}</p> : null}
+          {weatherLoading ? <p className="cc-route-stop-meta text-xs"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando clima...</p> : null}
+          {weatherError ? <p className="cc-route-stop-meta text-xs leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError}</p> : null}
           {weatherSummary && !weatherLoading ? (
-            <div className="mt-2">
-              <span className={'cc-route-weather-risk ' + (
-                weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-risk-high' :
-                weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-risk-warning' :
-                'cc-route-weather-risk-normal'
+            <div className="flex flex-wrap items-center gap-3">
+              <div className="cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>
+                {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}
+              </div>
+              <div className="cc-route-weather-main">
+                <div className="cc-route-weather-condition text-lg">
+                  {weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C
+                </div>
+                <div className="text-xs font-semibold cc-text-secondary">
+                  {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}
+                </div>
+              </div>
+              <div className="cc-route-weather-metrics">
+                {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
+                {weatherSummary.current?.precipitation != null ? <span>Lluvia {weatherSummary.current.precipitation} mm</span> : weatherSummary.precipitationSum != null ? <span>Lluvia {weatherSummary.precipitationSum} mm</span> : null}
+                {weatherSummary.precipitationProbabilityMax != null ? <span>Prob. {weatherSummary.precipitationProbabilityMax}%</span> : null}
+              </div>
+              <span className={'cc-route-weather-alert ' + (
+                weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-alert-high' :
+                weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-alert-warning' :
+                weatherSummary.riskLevel === 'sin_datos' ? 'cc-route-weather-alert-normal' :
+                'cc-route-weather-alert-normal'
               )}>
-                {weatherSummary.riskLevel === 'alto' ? '⚠️' : weatherSummary.riskLevel === 'precaucion' ? '⚡' : '✅'} {weatherSummary.riskLevel === 'alto' ? 'Alto' : weatherSummary.riskLevel === 'precaucion' ? 'Precaución' : 'Normal'}
+                {weatherSummary.riskLevel === 'alto' ? '⚠️' : weatherSummary.riskLevel === 'precaucion' ? '⚡' : weatherSummary.riskLevel === 'sin_datos' ? 'ℹ️' : '✅'} {weatherSummary.riskLevel === 'alto' ? 'Alto' : weatherSummary.riskLevel === 'precaucion' ? 'Precaución' : weatherSummary.riskLevel === 'sin_datos' ? 'Sin datos' : 'Normal'}
               </span>
-              <p className="cc-route-stop-meta mt-1 text-[10px] leading-tight">{weatherSummary.riskLabel}</p>
             </div>
           ) : null}
         </RutaPanel>
@@ -1162,16 +1171,16 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
               void handleSearch();
             }}
           >
-            <div className="grid grid-cols-2 gap-2 rounded-lg bg-slate-100 p-1">
+            <div className="cc-route-segmented flex rounded-lg border">
               <button
-                className={`h-9 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? '' : 'text-[#466083] hover:text-[#071b4d]'}`}
                 onClick={() => setSearchMode('ticket')}
                 type="button"
               >
                 Por Ticket
               </button>
               <button
-                className={`h-9 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-900'}`}
+                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? '' : 'text-[#466083] hover:text-[#071b4d]'}`}
                 onClick={() => setSearchMode('rut')}
                 type="button"
               >
@@ -1180,10 +1189,10 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             </div>
 
             <label className="grid gap-2">
-              <span className="text-xs font-bold text-slate-700">{searchMode === 'ticket' ? 'Ticket' : 'RUT'}</span>
+              <span className="cc-route-label text-xs">{searchMode === 'ticket' ? 'Ticket' : 'RUT'}</span>
               <div className="flex gap-2">
                 <input
-                  className="h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                  className="cc-route-input h-10 min-w-0 flex-1 px-3 text-sm font-medium"
                   onChange={(event) => setSearchValue(event.target.value)}
                   placeholder={searchMode === 'ticket' ? 'ID ticket' : '14276958-1'}
                   value={searchValue}
