@@ -1,5 +1,68 @@
 # AGENTS.md
 
+## Prioridad obligatoria de skills
+
+Para tareas de diseno visual, UI, UX, dashboard, cards, tipografia, colores, responsive, menu lateral, tablas, botones, formularios, estados visuales, dark mode o apariencia profesional, la skill principal debe ser **ui-ux-pro-max**.
+
+- **ui-ux-pro-max** → UI, UX, diseno visual, layout, responsive, cards, tablas, dashboard, sidebar.
+- **impeccable** → solo como apoyo secundario de consistencia visual.
+
+Si Codex no puede usar ui-ux-pro-max, debe detenerse y avisar antes de modificar archivos.
+
+## Reglas para mejoras visuales
+
+- Usar ui-ux-pro-max como guia principal.
+- No crear parametrizacion si el usuario no la pidio.
+- No crear drag and drop si el usuario no lo pidio.
+- No tocar backend.
+- No tocar DB.
+- No tocar Docker.
+- No tocar Cloudflare.
+- No tocar login/auth.
+- No tocar parsers.
+- No tocar normalizadores.
+- No cambiar calculos.
+- No cambiar tarifas.
+- No cambiar autosave.
+- No cambiar fuentes de datos.
+- No mezclar RM con Regiones.
+- No mezclar Ruta con RM/Regiones.
+- No exponer API keys.
+- No instalar dependencias.
+- No usar eval.
+- No reescribir componentes completos si basta con clases CSS.
+- Ejecutar npm run build al finalizar una tarea visual.
+
+## Objetivo visual del proyecto
+
+El dashboard debe verse como una aplicacion SaaS profesional, sobria, ejecutiva y centrada en datos.
+
+Priorizar:
+
+- Data-first, sin decoracion innecesaria.
+- Cards limpias.
+- Buena jerarquia visual.
+- Tipografia clara.
+- No abusar de font-black.
+- Tamanos consistentes.
+- Colores usados con intencion.
+- Azul solo para acciones/datos relevantes.
+- Verde para exito.
+- Ambar para pendiente/precaucion.
+- Rojo para error/alerta.
+- Neutros para estructura.
+- Menu lateral elegante.
+- Tablas/listas legibles.
+- Estados loading, empty, error y sin datos.
+- Responsive movil/tablet.
+- Compatibilidad con tema claro y dark-premium.
+
+## Frase obligatoria antes de modificar UI
+
+Antes de modificar una tarea visual, Codex debe confirmar:
+
+"Voy a usar ui-ux-pro-max como skill principal. Impeccable queda solo como apoyo secundario. Hare cambios visuales minimos sin tocar logica de negocio."
+
 ## Proyecto
 
 Este proyecto es un dashboard de facturación, reclamos, visitas y comunas.
@@ -38,8 +101,7 @@ No reescribir todo el proyecto si el usuario pidió corregir una parte.
 * No mover archivos si no es necesario.
 * No refactorizar por gusto.
 * No modificar lógica no relacionada.
-* Hacer primero que funcione.
-* Después mejorar visualmente.
+* Si la funcion ya esta operativa y el usuario pide mejora visual, priorizar UI/UX profesional sin tocar logica.
 
 ---
 
