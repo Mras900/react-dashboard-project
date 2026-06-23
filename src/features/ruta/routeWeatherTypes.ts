@@ -13,7 +13,7 @@ export interface RouteWeatherCurrent {
 }
 
 export interface RouteWeatherSummary {
-  source: 'meteochile' | 'open-meteo' | 'unavailable';
+  source?: 'openweather' | 'meteochile' | 'open-meteo' | 'unavailable';
   locationName?: string;
   date: string;
   temperatureMax?: number;

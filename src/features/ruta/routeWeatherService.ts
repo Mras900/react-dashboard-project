@@ -115,7 +115,45 @@ export async function fetchRouteWeather(params: RouteWeatherParams): Promise<Rou
     return cached.data;
   }
 
-  // Try MeteoChile first (currently not available, falls back immediately)
+  // Try backend proxy first (OpenWeather via FastAPI)
+  try {
+    const backendUrl = `/api/weather/route?lat=${params.latitude}&lon=${params.longitude}&date=${params.date}`;
+    const backendResp = await fetch(backendUrl);
+    if (backendResp.ok) {
+      const backendData: RouteWeatherSummary & { source?: string } = await backendResp.json();
+      if (backendData.source === 'openweather') {
+        const summary: RouteWeatherSummary = {
+          source: 'openweather',
+          locationName: backendData.locationName,
+          date: params.date,
+          temperatureMax: backendData.temperatureMax,
+          temperatureMin: backendData.temperatureMin,
+          precipitationSum: backendData.precipitationSum,
+          precipitationProbabilityMax: backendData.precipitationProbabilityMax,
+          windSpeedMax: backendData.windSpeedMax,
+          weatherCode: typeof backendData.weatherCode === 'number' ? backendData.weatherCode : undefined,
+          current: {
+            temperature2m: backendData.temperatureCurrent ?? undefined,
+            relativeHumidity2m: backendData.humidity ?? undefined,
+            precipitation: backendData.precipitationCurrent ?? undefined,
+            windSpeed10m: backendData.windSpeedCurrent ?? undefined,
+            windGusts10m: backendData.windGusts ?? undefined,
+            isDay: undefined,
+          },
+          riskLevel: backendData.riskLevel ?? 'normal',
+          riskLabel: backendData.riskLabel ?? '',
+          riskReasons: backendData.riskReasons ?? [],
+        };
+        cache.set(cacheKey, { data: summary, cachedAt: Date.now() });
+        writeCache(cache);
+        return summary;
+      }
+    }
+  } catch {
+    // Backend unavailable — fall through to Open-Meteo
+  }
+
+  // Try MeteoChile fallback
   const meteochileResult = await fetchMeteoChileWeather(params);
   if (meteochileResult) {
     cache.set(cacheKey, { data: meteochileResult, cachedAt: Date.now() });
@@ -123,7 +161,7 @@ export async function fetchRouteWeather(params: RouteWeatherParams): Promise<Rou
     return meteochileResult;
   }
 
-  // Fallback: Open-Meteo
+  // Final fallback: Open-Meteo direct
   const url = `${FORECAST_API}?latitude=${params.latitude}&longitude=${params.longitude}&current=temperature_2m,relative_humidity_2m,precipitation,rain,weather_code,cloud_cover,wind_speed_10m,wind_gusts_10m,is_day&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,precipitation_probability_max,wind_speed_10m_max,weather_code&timezone=America/Santiago&forecast_days=16`;
 
   const response = await fetch(url);
@@ -184,7 +222,6 @@ export async function fetchRouteWeather(params: RouteWeatherParams): Promise<Rou
     riskReasons: riskReasons.length > 0 ? riskReasons : ['Sin alertas climáticas significativas.'],
   };
 
-  // Cache
   cache.set(cacheKey, { data: summary, cachedAt: Date.now() });
   writeCache(cache);
 

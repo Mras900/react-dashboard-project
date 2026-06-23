@@ -1122,7 +1122,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
         <RutaPanel className="cc-route-weather-hero rounded-xl border p-3">
           <div className="flex items-center gap-2 mb-2">
             <span className="cc-route-label text-xs">Clima de ruta</span>
-            <span className="cc-route-badge" style={{fontSize:"0.55rem"}}>{weatherSummary?.source === 'open-meteo' ? 'Open-Meteo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
+            <span className="cc-route-badge" style={{fontSize:"0.55rem"}}>{weatherSummary?.source === 'openweather' ? 'OpenWeather' : weatherSummary?.source === 'open-meteo' ? 'Open-Meteo respaldo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
             <select
               className="cc-route-input h-7 w-auto max-w-[160px] px-2 text-[10px] font-bold rounded-lg border"
               value={weatherComuna}

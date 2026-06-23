@@ -29,17 +29,22 @@ from services.red_zones_crud_service import create_red_zone, delete_red_zone, li
 from services.ruta_optimizaciones_service import list_optimizations, save_optimization_request
 from services.ruta_visitas_service import list_daily_visits, save_daily_visits
 from auth.routes import ensure_initial_admin, router as auth_router
+from routes.weather_router import router as weather_router
 
 
 @asynccontextmanager
 async def lifespan(_: FastAPI):
     required = ['DATABASE_URL', 'JWT_SECRET', 'ADMIN_USERNAME', 'ADMIN_PASSWORD']
+    optional = ['OPENWEATHER_API_KEY']
     print('[startup] Verificando variables de entorno requeridas...')
     for var in required:
         val = os.getenv(var, '')
         print(f'[startup] {var}={ "OK" if val else "FALTA" }')
         if not val:
             print(f'[startup] ADVERTENCIA: La variable {var} no esta configurada. Revisa backend/.env')
+    for var in optional:
+        val = os.getenv(var, '')
+        print(f'[startup] {var}={ "OK" if val else "no configurada (opcional)" }')
     create_database_tables()
     ensure_initial_admin()
     yield
@@ -48,6 +53,7 @@ async def lifespan(_: FastAPI):
 app = FastAPI(title="Ruta Backend", lifespan=lifespan)
 app.include_router(dashboard_router)
 app.include_router(auth_router)
+app.include_router(weather_router)
 
 app.add_middleware(
     CORSMiddleware,
