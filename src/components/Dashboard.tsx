@@ -1526,11 +1526,18 @@ export default function Dashboard() {
   });
 
   const refreshImportedRows = useCallback(() => {
-    setImportedRows(loadImportedDashboardRows());
-    // Null out backend data so dashboard falls back to localStorage immediately.
-    // Re-fetch will update it once backend responds.
-    setDatabaseDashboardData(null);
+    const fresh = loadImportedDashboardRows();
+    setImportedRows(fresh);
+    // Keep backend as main source if it's already available.
+    // Trigger re-fetch so backend picks up newly imported data.
+    setDatabaseDashboardLoading(true);
     setDatabaseReloadKey((key) => key + 1);
+    // Switch view to match import target based on what was saved to localStorage
+    if (fresh.rm.length > 0 && fresh.regiones.length === 0) {
+      setViewMode('rm');
+    } else if (fresh.regiones.length > 0 && fresh.rm.length === 0) {
+      setViewMode('regiones');
+    }
   }, []);
   const refreshActiveRedZones = useCallback(() => {
     fetchRedZones()
