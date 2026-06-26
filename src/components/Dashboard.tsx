@@ -66,6 +66,7 @@ import type { RoutePeriod, RouteDailyMetrics } from '../features/ruta/routeDaily
 import type { RedZone } from '../features/red-zones/redZoneTypes';
 import { fetchDashboardDailyVisits, type DashboardDailyResponse } from '../services/dashboardApi';
 import { fetchDashboardDatabase, type DashboardClaim, type DashboardDatabaseResponse } from '../services/dashboardDatabaseApi';
+import { isRmComuna } from '../services/rmComunas';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
@@ -262,7 +263,7 @@ function databaseClaimToImportedRow(claim: DashboardClaim, index: number): Impor
     cliente: claim.cliente ?? undefined,
     facturacionTotal: Number(claim.facturacion ?? 0),
     observacion: claim.observacion ?? undefined,
-    scope: isRmRegion(claim.region) ? 'rm' : 'regiones',
+    scope: (claim.region && isRmRegion(claim.region)) || (!claim.region && isRmComuna(claim.comuna)) ? 'rm' : 'regiones',
     sourceFileName: 'PostgreSQL',
     validationStatus: 'valid',
   };
@@ -1840,7 +1841,7 @@ const dateFilterError = useMemo(() => {
 
     (databaseDashboardData?.comunas ?? []).forEach((item) => {
       const key = normalizeName(item.comuna);
-      const scope = item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? 'rm');
+      const scope = item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? (isRmComuna(item.comuna) ? 'rm' : 'regiones'));
       const detail = details[scope].get(key);
       result[scope].push({
         comuna: item.comuna,

@@ -158,6 +158,45 @@ def _database_unavailable() -> HTTPException:
     return HTTPException(status_code=503, detail="No se pudo conectar a la base de datos configurada.")
 
 
+_RM_COMUNAS = {
+    "SANTIAGO", "CERRILLOS", "CERRO NAVIA", "CONCHALI", "EL BOSQUE",
+    "ESTACION CENTRAL", "HUECHURABA", "INDEPENDENCIA", "LA CISTERNA",
+    "LA FLORIDA", "LA GRANJA", "LA PINTANA", "LA REINA", "LAS CONDES",
+    "LO BARNECHEA", "LO ESPEJO", "LO PRADO", "MACUL", "MAIPU",
+    "NUNOA", "PEDRO AGUIRRE CERDA", "PENALOLEN", "PROVIDENCIA",
+    "PUDAHUEL", "QUILICURA", "QUINTA NORMAL", "RECOLETA", "RENCA",
+    "SAN JOAQUIN", "SAN MIGUEL", "SAN RAMON", "VITACURA",
+    "PUENTE ALTO", "PIRQUE", "SAN JOSE DE MAIPO",
+    "COLINA", "LAMPA", "TILTIL",
+    "SAN BERNARDO", "BUIN", "CALERA DE TANGO", "PAINE",
+    "MELIPILLA", "ALHUE", "CURACAVI", "MARIA PINTO", "SAN PEDRO",
+    "TALAGANTE", "EL MONTE", "ISLA DE MAIPO", "PADRE HURTADO", "PENAFLOR",
+}
+
+
+def _normalize_name(value: str | None) -> str:
+    if not value:
+        return ""
+    import unicodedata
+    return unicodedata.normalize("NFD", value).encode("ascii", "ignore").decode("ascii").strip().upper()
+
+
+def _is_rm_comuna(comuna: str | None, ciudad: str | None = None) -> bool:
+    name = _normalize_name(comuna) or _normalize_name(ciudad) or ""
+    if not name:
+        return False
+    return name in _RM_COMUNAS
+
+
+def _normalize_region(region: str | None, comuna: str | None = None, ciudad: str | None = None) -> str | None:
+    cleaned = _clean_text(region)
+    if cleaned:
+        return cleaned
+    if _is_rm_comuna(comuna, ciudad):
+        return "Región Metropolitana"
+    return None
+
+
 @router.get("/api/health/db")
 def database_health() -> dict[str, bool | str]:
     if engine is None:
@@ -276,7 +315,18 @@ def dashboard_claims(
         raise _database_unavailable() from error
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
-    return [dict(row._mapping) for row in rows]
+
+    result: list[dict[str, Any]] = []
+    for row in rows:
+        item = dict(row._mapping)
+        raw_region = item.get("region")
+        comuna = item.get("comuna")
+        ciudad = item.get("ciudad")
+        normalized = _normalize_region(raw_region, comuna, ciudad)
+        if normalized is not None:
+            item["region"] = normalized
+        result.append(item)
+    return result
 
 
 def _extract_import_payload(payload: Any) -> tuple[list[Any], list[str]]:
@@ -296,12 +346,15 @@ def _clean_import_row(item: dict[str, Any]) -> dict[str, Any]:
     traslado = float(_clean_number(item.get("traslado")) or 0)
     precio_neto_traslado = _clean_number(item.get("precio_neto_traslado"))
     facturacion = _clean_number(item.get("facturacion"))
+    comuna = _clean_text(item.get("comuna"))
+    ciudad = _clean_text(item.get("ciudad"))
+    raw_region = item.get("region")
     return {
         "ticket": _clean_text(item.get("ticket")),
         "mes": _clean_text(item.get("mes")),
-        "region": _clean_text(item.get("region")),
-        "ciudad": _clean_text(item.get("ciudad")),
-        "comuna": _clean_text(item.get("comuna")),
+        "region": _normalize_region(raw_region, comuna, ciudad),
+        "ciudad": ciudad,
+        "comuna": comuna,
         "cliente": _clean_text(item.get("cliente")),
         "prioridad": _clean_text(item.get("prioridad")),
         "retiro_muestra": _clean_bool(item.get("retiro_muestra")),

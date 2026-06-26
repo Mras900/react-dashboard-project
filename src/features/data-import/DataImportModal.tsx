@@ -123,22 +123,24 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
     setErrorMessage('');
     setSuccessMessage('');
 
+    // Save to localStorage FIRST — always works, no backend dependency
+    if (mode === 'auto') saveAutoImportedRows(rowsToSave);
+    if (mode === 'rm') saveImportedRows('rm', rowsToSave);
+    if (mode === 'regiones') saveImportedRows('regiones', rowsToSave);
+
+    let message = '';
     try {
       const result = await importClaimsToBackend(rowsToSave, preview.detectedColumns);
-
-      if (mode === 'auto') saveAutoImportedRows(rowsToSave);
-      if (mode === 'rm') saveImportedRows('rm', rowsToSave);
-      if (mode === 'regiones') saveImportedRows('regiones', rowsToSave);
-
-      const message = result.message || `Importación completada: ${result.insertados} insertados, ${result.actualizados ?? 0} actualizados.`;
-      setSuccessMessage(message);
-      onImported(result);
-      onClose();
+      message = result.message || `Importación completada: ${result.insertados} insertados, ${result.actualizados ?? 0} actualizados.`;
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'No se pudo persistir la importación en backend.');
-    } finally {
-      setIsPersisting(false);
+      message = `Importación guardada localmente. No se pudo persistir en servidor: ${err instanceof Error ? err.message : 'Error de conexión'}`;
+      console.warn('[import] Backend persist skipped, data saved in localStorage');
     }
+
+    setSuccessMessage(message);
+    onImported();
+    onClose();
+    setIsPersisting(false);
   };
 
   const clearScope = (scope?: 'rm' | 'regiones') => {
