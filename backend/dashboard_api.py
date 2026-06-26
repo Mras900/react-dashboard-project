@@ -224,13 +224,13 @@ def dashboard_communes(
     comuna_expr = "COALESCE(NULLIF(TRIM(comuna), ''), NULLIF(TRIM(ciudad), ''), 'Sin comuna')" if "ciudad" in columns else "COALESCE(NULLIF(TRIM(comuna), ''), 'Sin comuna')"
     raw_sql = f"""
         SELECT {comuna_expr} AS comuna,
-               NULLIF(TRIM(region), '') AS region,
+               COALESCE(NULLIF(TRIM(region), ''), 'Región Metropolitana') AS region,
                COUNT(*) AS reclamos,
                COALESCE(SUM(facturacion), 0) AS facturacion,
                COALESCE(AVG(facturacion), 0) AS promedio,
                SUM(CASE WHEN LOWER(TRIM(COALESCE(prioridad, ''))) IN ('alta', 'alto', 'high') THEN 1 ELSE 0 END) AS prioridad_alta
         FROM reclamos {where_clause}
-        GROUP BY {comuna_expr}, NULLIF(TRIM(region), '')
+        GROUP BY {comuna_expr}, COALESCE(NULLIF(TRIM(region), ''), 'Región Metropolitana')
         ORDER BY reclamos DESC, facturacion DESC
     """
     try:

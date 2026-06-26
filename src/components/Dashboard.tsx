@@ -1751,6 +1751,12 @@ const dateFilterError = useMemo(() => {
     fetchDashboardDatabase(databaseRequestFilters, controller.signal)
       .then((response) => {
         if (controller.signal.aborted) return;
+        if (import.meta.env.DEV) {
+          console.log('[dashboard] resumen recibido:', response.resumen);
+          console.log('[dashboard] comunas recibidas:', response.comunas?.length ?? 0);
+          console.log('[dashboard] reclamos recibidos:', response.reclamos?.length ?? 0);
+          console.log('[dashboard] disponible:', response.available);
+        }
         setDatabaseDashboardData(response.available ? response : null);
         setDatabaseDashboardError(response.errors.join(' · '));
       })
@@ -1834,7 +1840,7 @@ const dateFilterError = useMemo(() => {
 
     (databaseDashboardData?.comunas ?? []).forEach((item) => {
       const key = normalizeName(item.comuna);
-      const scope = item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? 'regiones');
+      const scope = item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? 'rm');
       const detail = details[scope].get(key);
       result[scope].push({
         comuna: item.comuna,
@@ -1853,11 +1859,21 @@ const dateFilterError = useMemo(() => {
     return result;
   }, [databaseDashboardData, databaseRows]);
   const rmData = useMemo(
-    () => (databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(localRowsByStatus.rm)),
+    () => {
+      const source = databaseDashboardData ? 'backend' : 'localStorage';
+      const data = databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(localRowsByStatus.rm);
+      if (import.meta.env.DEV) console.log('[dashboard] fuente activa RM:', source, 'filas:', data.length);
+      return data;
+    },
     [databaseDashboardData, databaseMetrics.rm, localRowsByStatus.rm],
   );
   const regionesData = useMemo(
-    () => (databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(localRowsByStatus.regiones)),
+    () => {
+      const source = databaseDashboardData ? 'backend' : 'localStorage';
+      const data = databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(localRowsByStatus.regiones);
+      if (import.meta.env.DEV) console.log('[dashboard] fuente activa Regiones:', source, 'filas:', data.length);
+      return data;
+    },
     [databaseDashboardData, databaseMetrics.regiones, localRowsByStatus.regiones],
   );
   const dailyComunaData = useMemo<ComunaMetric[]>(
