@@ -39,6 +39,7 @@ export interface ImportedDashboardRow {
   trackingStarken?: string;
   observacion?: string;
   scope: TerritoryScope;
+  datasetScope?: TerritoryScope;
   sourceFileName?: string;
   importMode?: ImportMode;
   validationStatus?: ImportValidationStatus;

@@ -1,4 +1,5 @@
 import type { ImportedDashboardRow, ImportMode, RawImportedRow } from './importTypes';
+import { detectDatasetScope } from '../../services/rmComunas';
 import {
   getAliasField,
   getRawAliasField,
@@ -74,7 +75,8 @@ export function normalizeRegionRows(rows: RawImportedRow[], sourceFileName: stri
       trackingStarken: getAliasField(row, 'tracking'),
       fechaEnvioMuestras: formatImportedDate(getRawAliasField(row, 'fechaEnvio')),
       observacion: getAliasField(row, 'observacion'),
-      scope: 'regiones' as const,
+      scope: detectDatasetScope({ region: regionOriginal, comuna, ciudad, importScope: 'regiones' }),
+      datasetScope: detectDatasetScope({ region: regionOriginal, comuna, ciudad, importScope: 'regiones' }),
       sourceFileName,
       importMode,
       validationStatus: validationMessages.length > 0 ? ('error' as const) : regionWarning ? ('warning' as const) : ('valid' as const),

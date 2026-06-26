@@ -32,5 +32,6 @@ class Reclamo(Base):
     calle = Column(String(255), nullable=True)
     numero = Column(String(100), nullable=True)
     source_file_name = Column(String(255), nullable=True)
+    dataset_scope = Column(String(50), nullable=True, index=True)
     created_at = Column(DateTime, nullable=True, server_default=func.now())
     updated_at = Column(DateTime, nullable=True, onupdate=func.now())

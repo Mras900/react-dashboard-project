@@ -22,6 +22,29 @@ export function normalizeName(value?: string | null): string {
     .toUpperCase();
 }
 
-export function isRmComuna(comuna?: string | null): boolean {
-  return _RM_COMUNAS_NORMALIZED.has(normalizeName(comuna));
+export function isRmComuna(comuna?: string | null, ciudad?: string | null): boolean {
+  const name = normalizeName(comuna) || normalizeName(ciudad) || '';
+  return name ? _RM_COMUNAS_NORMALIZED.has(name) : false;
+}
+
+export function isRmRegion(region?: string | null): boolean {
+  const name = normalizeName(region || '');
+  if (!name) return false;
+  return name.includes('METROPOLITANA') || name === 'RM' || name.includes('SANTIAGO');
+}
+
+export type DetectDatasetScopeInput = {
+  region?: string | null;
+  comuna?: string | null;
+  ciudad?: string | null;
+  importScope?: string | null;
+};
+
+export function detectDatasetScope(input: DetectDatasetScopeInput): 'rm' | 'regiones' {
+  if (isRmComuna(input.comuna, input.ciudad)) return 'rm';
+  if (isRmRegion(input.region)) return 'rm';
+  if (input.region) return 'regiones';
+  if (input.importScope === 'rm') return 'rm';
+  if (input.importScope === 'regiones') return 'regiones';
+  return 'regiones';
 }

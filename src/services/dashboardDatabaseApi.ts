@@ -17,6 +17,7 @@ export type DashboardSummary = {
 export type DashboardCommune = {
   comuna: string;
   region: string | null;
+  dataset_scope?: string;
   reclamos: number;
   facturacion: number;
   promedio: number;
@@ -51,6 +52,7 @@ export type DashboardClaim = {
   promedio: number | null;
   observacion: string | null;
   created_at?: string | null;
+  dataset_scope?: string;
   [key: string]: unknown;
 };
 

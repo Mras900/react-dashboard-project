@@ -21,7 +21,7 @@ EXPANDED_IMPORT_COLUMNS = (
     "precio_neto_traslado", "fecha_envio", "tracking", "valor_envio", "factura",
     "calle", "numero", "source_file_name",
 )
-IMPORT_COLUMNS = (*BASE_IMPORT_COLUMNS, *EXPANDED_IMPORT_COLUMNS)
+IMPORT_COLUMNS = (*BASE_IMPORT_COLUMNS, *EXPANDED_IMPORT_COLUMNS, "dataset_scope")
 
 MIGRATION_COLUMNS: dict[str, str] = {
     "ciudad": "VARCHAR(255)",
@@ -39,6 +39,7 @@ MIGRATION_COLUMNS: dict[str, str] = {
     "numero": "VARCHAR(100)",
     "source_file_name": "VARCHAR(255)",
     "updated_at": "TIMESTAMP",
+    "dataset_scope": "VARCHAR(50)",
 }
 
 
@@ -80,6 +81,22 @@ def _ensure_reclamos_columns(conn: Any) -> set[str]:
             existing.add(column)
         except SQLAlchemyError:
             continue
+    # Backfill dataset_scope for legacy rows
+    if "dataset_scope" in existing:
+        try:
+            conn.execute(text("""
+                UPDATE reclamos SET dataset_scope = 'rm'
+                WHERE dataset_scope IS NULL AND (
+                    LOWER(TRIM(COALESCE(region, ''))) LIKE '%metropolitana%'
+                    OR LOWER(TRIM(COALESCE(region, ''))) = 'rm'
+                )
+            """))
+            conn.execute(text("""
+                UPDATE reclamos SET dataset_scope = 'regiones'
+                WHERE dataset_scope IS NULL
+            """))
+        except SQLAlchemyError:
+            pass
     return existing
 
 
@@ -197,6 +214,43 @@ def _normalize_region(region: str | None, comuna: str | None = None, ciudad: str
     return None
 
 
+def _is_rm_region(region: str | None) -> bool:
+    if not region:
+        return False
+    name = _normalize_name(region)
+    return "METROPOLITANA" in name or name == "RM" or "SANTIAGO" in name
+
+
+def _detect_dataset_scope(
+    region: str | None = None,
+    comuna: str | None = None,
+    ciudad: str | None = None,
+    imported_scope: str | None = None,
+) -> str:
+    if _is_rm_comuna(comuna, ciudad):
+        return "rm"
+    if _is_rm_region(region):
+        return "rm"
+    if region:
+        return "regiones"
+    if imported_scope == "rm":
+        return "rm"
+    if imported_scope == "regiones":
+        return "regiones"
+    return "regiones"
+
+
+def _ensure_dataset_scope_column(conn: Any) -> bool:
+    existing = _get_reclamos_columns()
+    if "dataset_scope" in existing:
+        return False
+    try:
+        conn.execute(text("ALTER TABLE reclamos ADD COLUMN dataset_scope VARCHAR(50)"))
+        return True
+    except SQLAlchemyError:
+        return False
+
+
 @router.get("/api/health/db")
 def database_health() -> dict[str, bool | str]:
     if engine is None:
@@ -261,15 +315,18 @@ def dashboard_communes(
     where_clause, values = _build_claim_filters(mes=mes, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, region=region, comuna=comuna, prioridad=prioridad, estado=estado)
     columns = _get_reclamos_columns()
     comuna_expr = "COALESCE(NULLIF(TRIM(comuna), ''), NULLIF(TRIM(ciudad), ''), 'Sin comuna')" if "ciudad" in columns else "COALESCE(NULLIF(TRIM(comuna), ''), 'Sin comuna')"
+    has_scope = "dataset_scope" in columns
+    scope_expr = "COALESCE(NULLIF(TRIM(dataset_scope), ''), 'rm')" if has_scope else "'rm'"
     raw_sql = f"""
         SELECT {comuna_expr} AS comuna,
                COALESCE(NULLIF(TRIM(region), ''), 'Región Metropolitana') AS region,
+               {scope_expr} AS dataset_scope,
                COUNT(*) AS reclamos,
                COALESCE(SUM(facturacion), 0) AS facturacion,
                COALESCE(AVG(facturacion), 0) AS promedio,
                SUM(CASE WHEN LOWER(TRIM(COALESCE(prioridad, ''))) IN ('alta', 'alto', 'high') THEN 1 ELSE 0 END) AS prioridad_alta
         FROM reclamos {where_clause}
-        GROUP BY {comuna_expr}, COALESCE(NULLIF(TRIM(region), ''), 'Región Metropolitana')
+        GROUP BY {comuna_expr}, {scope_expr}
         ORDER BY reclamos DESC, facturacion DESC
     """
     try:
@@ -284,6 +341,7 @@ def dashboard_communes(
         {
             "comuna": row["comuna"],
             "region": row["region"],
+            "dataset_scope": row["dataset_scope"],
             "reclamos": int(row["reclamos"] or 0),
             "facturacion": float(row["facturacion"] or 0),
             "promedio": float(row["promedio"] or 0),
@@ -316,6 +374,7 @@ def dashboard_claims(
     except RuntimeError as error:
         raise HTTPException(status_code=503, detail=str(error)) from error
 
+    has_scope_column = "dataset_scope" in _get_reclamos_columns()
     result: list[dict[str, Any]] = []
     for row in rows:
         item = dict(row._mapping)
@@ -325,6 +384,8 @@ def dashboard_claims(
         normalized = _normalize_region(raw_region, comuna, ciudad)
         if normalized is not None:
             item["region"] = normalized
+        if not has_scope_column or not item.get("dataset_scope"):
+            item["dataset_scope"] = _detect_dataset_scope(region=raw_region, comuna=comuna, ciudad=ciudad)
         result.append(item)
     return result
 
@@ -349,6 +410,8 @@ def _clean_import_row(item: dict[str, Any]) -> dict[str, Any]:
     comuna = _clean_text(item.get("comuna"))
     ciudad = _clean_text(item.get("ciudad"))
     raw_region = item.get("region")
+    imported_scope = _clean_text(item.get("import_scope")) or _clean_text(item.get("dataset_scope")) or _clean_text(item.get("scope"))
+    dataset_scope = _detect_dataset_scope(region=raw_region, comuna=comuna, ciudad=ciudad, imported_scope=imported_scope)
     return {
         "ticket": _clean_text(item.get("ticket")),
         "mes": _clean_text(item.get("mes")),
@@ -376,6 +439,7 @@ def _clean_import_row(item: dict[str, Any]) -> dict[str, Any]:
         "calle": _clean_text(item.get("calle")),
         "numero": _clean_text(item.get("numero")),
         "source_file_name": _clean_text(item.get("source_file_name")),
+        "dataset_scope": dataset_scope,
     }
 
 

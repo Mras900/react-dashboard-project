@@ -263,7 +263,8 @@ function databaseClaimToImportedRow(claim: DashboardClaim, index: number): Impor
     cliente: claim.cliente ?? undefined,
     facturacionTotal: Number(claim.facturacion ?? 0),
     observacion: claim.observacion ?? undefined,
-    scope: (claim.region && isRmRegion(claim.region)) || (!claim.region && isRmComuna(claim.comuna)) ? 'rm' : 'regiones',
+    scope: (claim.dataset_scope as 'rm' | 'regiones') || (isRmRegion(claim.region) ? 'rm' : 'regiones'),
+    datasetScope: (claim.dataset_scope as 'rm' | 'regiones'),
     sourceFileName: 'PostgreSQL',
     validationStatus: 'valid',
   };
@@ -1848,7 +1849,7 @@ const dateFilterError = useMemo(() => {
 
     (databaseDashboardData?.comunas ?? []).forEach((item) => {
       const key = normalizeName(item.comuna);
-      const scope = item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? (isRmComuna(item.comuna) ? 'rm' : 'regiones'));
+      const scope = (item.dataset_scope as 'rm' | 'regiones' | undefined) || (item.region ? (isRmRegion(item.region) ? 'rm' : 'regiones') : (scopeByComuna.get(key) ?? (isRmComuna(item.comuna) ? 'rm' : 'regiones')));
       const detail = details[scope].get(key);
       result[scope].push({
         comuna: item.comuna,

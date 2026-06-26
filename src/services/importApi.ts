@@ -30,6 +30,8 @@ type BackendClaimPayload = {
   calle: string | null;
   numero: string | null;
   source_file_name: string | null;
+  dataset_scope?: string | null;
+  scope?: string | null;
 };
 
 type ImportRequestBody = {
@@ -73,6 +75,7 @@ function mapRowToPayload(row: ImportedDashboardRow): BackendClaimPayload {
     calle: row.calle || null,
     numero: row.numeroDireccion || null,
     source_file_name: row.sourceFileName || null,
+    dataset_scope: row.datasetScope || row.scope || null,
   };
 }
 

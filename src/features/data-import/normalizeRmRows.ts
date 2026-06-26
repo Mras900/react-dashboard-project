@@ -1,4 +1,5 @@
 import type { ImportedDashboardRow, ImportMode, RawImportedRow } from './importTypes';
+import { detectDatasetScope } from '../../services/rmComunas';
 import {
   getAliasField,
   getRawAliasField,
@@ -73,7 +74,8 @@ export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, 
       valorEnvioBulto: parseMoney(getAliasField(row, 'valorEnvio')),
       retiroMuestra: parseBooleanValue(getAliasField(row, 'retiroMuestra')),
       trackingStarken: getAliasField(row, 'tracking'),
-      scope: 'rm' as const,
+      scope: detectDatasetScope({ region: regionOriginal, comuna, ciudad: getAliasField(row, 'ciudad'), importScope: 'rm' }),
+      datasetScope: detectDatasetScope({ region: regionOriginal, comuna, ciudad: getAliasField(row, 'ciudad'), importScope: 'rm' }),
       sourceFileName,
       importMode,
       validationStatus: validationMessages.length > 0 ? ('warning' as const) : ('valid' as const),

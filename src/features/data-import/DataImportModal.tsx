@@ -123,10 +123,11 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
     setErrorMessage('');
     setSuccessMessage('');
 
-    // Save to localStorage FIRST — always works, no backend dependency
-    if (mode === 'auto') saveAutoImportedRows(rowsToSave);
-    if (mode === 'rm') saveImportedRows('rm', rowsToSave);
-    if (mode === 'regiones') saveImportedRows('regiones', rowsToSave);
+    // Save to localStorage FIRST — separate by detected datasetScope, not UI mode
+    const rmRows = rowsToSave.filter((r) => (r.datasetScope || r.scope) === 'rm');
+    const regionesRows = rowsToSave.filter((r) => (r.datasetScope || r.scope) === 'regiones');
+    if (rmRows.length > 0) saveImportedRows('rm', rmRows);
+    if (regionesRows.length > 0) saveImportedRows('regiones', regionesRows);
 
     let message = '';
     try {
