@@ -68,7 +68,7 @@ function RutaPanel({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={`cc-route-card rounded-xl border ${className}`}>{children}</section>;
+  return <section className={`cc-route-card rounded-lg border border-slate-200 bg-white text-slate-900 shadow-sm ${className}`}>{children}</section>;
 }
 
 function RutaMetricCard({ label, value, tone = 'blue' }: { label: string; value: string; tone?: 'blue' | 'green' | 'red' | 'amber' | 'slate' }) {
@@ -336,7 +336,7 @@ function RouteMonthCalendar({ selectedDate, onSelectDate, visitsByDate }: {
     </div>
   );
 }
-export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
+export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: RutaVisitadorViewProps) {
   const today = new Date().toISOString().slice(0, 10);
   const [visitador, setVisitador] = useState('');
   const [fechaCarga, setFechaCarga] = useState(today);
@@ -380,6 +380,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
   const redZoneSaveButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const weatherCoords = KNOWN_COMUNAS.find((k) => k.name === weatherComuna);
+  const importedEligibleCount = importedReclamos.length;
 
   useEffect(() => {
     if (!weatherCoords) return;
@@ -990,6 +991,11 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             <span className="cc-route-badge shrink-0">Operaci&oacute;n diaria</span>
           </div>
           <p className="cc-route-subtitle mb-3 text-xs">Define visitador, fechas, punto de inicio y par&aacute;metros operativos para la jornada seleccionada.</p>
+          {importedEligibleCount > 0 ? (
+            <p className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
+              Reclamos importados elegibles disponibles como contexto: {importedEligibleCount.toLocaleString('es-CL')}. La ruta mantiene búsqueda/CRM como fuente de paradas.
+            </p>
+          ) : null}
           <label className="grid gap-2">
             <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
               <UserRound size={15} />
@@ -997,8 +1003,8 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             </span>
             <input
               className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              aria-label="Nombre del visitador"
               onChange={(event) => setVisitador(event.target.value)}
-              placeholder="Nombre del visitador"
               value={visitador}
             />
           </label>
@@ -1037,13 +1043,13 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             </span>
             <input
               className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              aria-label="Punto de inicio"
               onChange={(event) => {
                 setStartPoint(event.target.value);
                 setSelectedStartPoint(null);
                 setSelectingStartPoint(false);
                 setOptimizedRoute(null);
               }}
-              placeholder="Dirección o referencia"
               value={startPoint}
             />
           </label>
@@ -1195,8 +1201,8 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
               <div className="flex gap-2">
                 <input
                   className="cc-route-input h-10 min-w-0 flex-1 px-3 text-sm font-medium"
+                  aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'}
                   onChange={(event) => setSearchValue(event.target.value)}
-                  placeholder={searchMode === 'ticket' ? 'ID ticket' : '14276958-1'}
                   value={searchValue}
                 />
                 <button
@@ -1221,10 +1227,11 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
             }}
           >
             <span className="text-xs font-bold text-slate-700">Carga masiva de tickets</span>
+            <p className="text-xs font-medium text-slate-500">Acepta saltos de línea, comas o punto y coma.</p>
             <textarea
               className="min-h-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              aria-label="Carga masiva de tickets"
               onChange={(event) => setBulkTicketIds(event.target.value)}
-              placeholder="Separar por salto de línea, coma o punto y coma"
               value={bulkTicketIds}
             />
             <button className="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60" disabled={loading} type="submit">
@@ -1435,10 +1442,10 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                         </button>
                       </div>
 
-                      <input className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, name: event.target.value })} placeholder="Nombre zona" value={redZoneDraft.name} />
+                      <input aria-label="Nombre de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, name: event.target.value })} value={redZoneDraft.name} />
                       <div className="grid grid-cols-2 gap-2">
-                        <input className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, comuna: event.target.value })} placeholder="Comuna" value={redZoneDraft.comuna ?? ''} />
-                        <input className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, region: event.target.value })} placeholder="Región" value={redZoneDraft.region ?? ''} />
+                        <input aria-label="Comuna de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, comuna: event.target.value })} value={redZoneDraft.comuna ?? ''} />
+                        <input aria-label="Región de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, region: event.target.value })} value={redZoneDraft.region ?? ''} />
                       </div>
 
                       <button
@@ -1455,8 +1462,8 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                       {redZonePicking ? <p className="text-[11px] font-semibold text-amber-300">Haz click en el mapa para definir el centro.</p> : null}
 
                       <div className="grid grid-cols-2 gap-2">
-                        <input className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lat: Number(event.target.value) })} placeholder="Latitud" step="any" type="number" value={redZoneDraft.lat ?? ''} />
-                        <input className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lon: Number(event.target.value) })} placeholder="Longitud" step="any" type="number" value={redZoneDraft.lon ?? ''} />
+                        <input aria-label="Latitud de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lat: Number(event.target.value) })} step="any" type="number" value={redZoneDraft.lat ?? ''} />
+                        <input aria-label="Longitud de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lon: Number(event.target.value) })} step="any" type="number" value={redZoneDraft.lon ?? ''} />
                       </div>
 
                       <label className="grid gap-1 text-xs font-bold text-slate-200">
@@ -1478,7 +1485,7 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                         </select>
                       </div>
 
-                      <textarea className={redZoneTextareaClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, notes: event.target.value })} placeholder="Notas" value={redZoneDraft.notes ?? ''} />
+                      <textarea aria-label="Notas de zona roja" className={redZoneTextareaClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, notes: event.target.value })} value={redZoneDraft.notes ?? ''} />
 
                       {redZoneManageError ? <p className="text-[11px] font-semibold text-red-300">{redZoneManageError}</p> : null}
                       {redZoneDetectMessage ? <p className="text-[11px] font-semibold text-emerald-300">{redZoneDetectMessage}</p> : null}
@@ -1555,8 +1562,8 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                           <input
                             className="h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            aria-label={`Corregir dirección de ${stop.clientName}`}
                             onChange={(event) => updateAddressQuery(stop.id, event.target.value)}
-                            placeholder="Buscar dirección corregida"
                             value={addressQueries[stop.id] ?? stop.cleanAddress ?? stop.address}
                           />
                           <button
@@ -1603,9 +1610,9 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
                       </select>
                       <textarea
                         className="min-h-20 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900 outline-none disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        aria-label={`Observación de ${stop.clientName}`}
                         disabled={stop.status === 'pendiente'}
                         onChange={(event) => updateStopObservation(stop.id, event.target.value)}
-                        placeholder={stop.status === 'pendiente' ? 'Disponible al cerrar visita' : 'Observación de la parada'}
                         value={stop.observation}
                       />
                       <div className="flex items-center justify-between gap-2">
@@ -1684,3 +1691,5 @@ export function RutaVisitadorView({ redZonesGeoJson }: RutaVisitadorViewProps) {
     </div>
   );
 }
+
+

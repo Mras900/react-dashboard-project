@@ -28,11 +28,25 @@ export type DashboardClaim = {
   mes: string | null;
   region: string | null;
   comuna: string | null;
+  ciudad?: string | null;
   cliente: string | null;
   prioridad: string | null;
   estado_visita: string | null;
   fecha_recepcion: string | null;
   fecha_visita: string | null;
+  retiro_muestra?: boolean | null;
+  tarifa_ruta?: number | null;
+  km?: number | null;
+  precio_neto?: number | null;
+  traslado?: number | null;
+  precio_neto_traslado?: number | null;
+  fecha_envio?: string | null;
+  tracking?: string | null;
+  valor_envio?: number | null;
+  factura?: string | null;
+  calle?: string | null;
+  numero?: string | null;
+  source_file_name?: string | null;
   facturacion: number | null;
   promedio: number | null;
   observacion: string | null;
@@ -73,6 +87,7 @@ export type DashboardDatabaseFilters = {
   region?: string;
   comuna?: string;
   prioridad?: string;
+  estado?: string;
 };
 
 export async function fetchDashboardDatabase(
@@ -86,6 +101,7 @@ export async function fetchDashboardDatabase(
   if (filters.region) query.set('region', filters.region);
   if (filters.comuna) query.set('comuna', filters.comuna);
   if (filters.prioridad) query.set('prioridad', filters.prioridad);
+  if (filters.estado) query.set('estado', filters.estado);
   const suffix = query.size > 0 ? `?${query.toString()}` : '';
 
   const results = await Promise.allSettled([
@@ -111,3 +127,4 @@ export async function fetchDashboardDatabase(
     available: results.some((result) => result.status === 'fulfilled'),
   };
 }
+

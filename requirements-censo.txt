@@ -1,0 +1,8 @@
+pandas
+pyarrow
+duckdb
+openpyxl
+geopandas
+shapely
+fiona
+pyogrio

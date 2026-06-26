@@ -3,19 +3,20 @@ import { useMemo, useState } from 'react';
 import { classifyTerritory } from './classifyTerritory';
 import { FileUploadDropzone } from './FileUploadDropzone';
 import { clearImportedRows, saveAutoImportedRows, saveImportedRows } from './importStorage';
-import type { ImportedDashboardRow, ImportMode, ImportPreviewResult, RawImportedRow } from './importTypes';
+import type { ImportedDashboardRow, ImportMode, ImportPreviewResult, ImportResult, RawImportedRow } from './importTypes';
 import { ImportPreviewTable, type ImportPreviewFilter } from './ImportPreviewTable';
 import { ImportSummaryCards } from './ImportSummaryCards';
 import { normalizeRmRows } from './normalizeRmRows';
 import { isConsolidadoRegionesFormat, normalizeRegionRows } from './normalizeRegionRows';
-import { summarizeImportRows } from './normalizeImportedRows';
+import { detectImportedColumns, summarizeImportRows } from './normalizeImportedRows';
 import { parseCsv } from './parseCsv';
 import { parseExcel } from './parseExcel';
 import { applyEditableImportedChanges, type EditableImportedChanges } from './validateImportedRows';
+import { importClaimsToBackend } from '../../services/importApi';
 
 type DataImportModalProps = {
   onClose: () => void;
-  onImported: () => void;
+  onImported: (result?: ImportResult) => void;
 };
 
 const modeOptions: Array<{ label: string; value: ImportMode }> = [
@@ -84,23 +85,27 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
   const [originalRows, setOriginalRows] = useState<ImportedDashboardRow[]>([]);
   const [previewFilter, setPreviewFilter] = useState<ImportPreviewFilter>('all');
   const [isReading, setIsReading] = useState(false);
+  const [isPersisting, setIsPersisting] = useState(false);
   const [errorMessage, setErrorMessage] = useState('');
+  const [successMessage, setSuccessMessage] = useState('');
 
   const previewRows = preview?.rows ?? [];
   const summary = useMemo(() => summarizeImportRows(previewRows), [previewRows]);
   const rowsToSave = useMemo(() => previewRows.filter((row) => row.validationStatus === 'valid' || row.validationStatus === 'warning'), [previewRows]);
   const errorRows = useMemo(() => previewRows.filter((row) => row.validationStatus === 'error'), [previewRows]);
-  const canConfirm = rowsToSave.length > 0 && !isReading;
+  const canConfirm = rowsToSave.length > 0 && !isReading && !isPersisting;
 
   const handleFile = async (file: File) => {
     setIsReading(true);
     setErrorMessage('');
+    setSuccessMessage('');
 
     try {
       const rawRows = await parseFile(file);
       const rows = normalizeByMode(rawRows, file.name, mode);
+      const detectedColumns = detectImportedColumns(rawRows);
       setOriginalRows(rows.map((row) => ({ ...row })));
-      setPreview({ rows, summary: summarizeImportRows(rows), fileName: file.name });
+      setPreview({ rows, summary: summarizeImportRows(rows), fileName: file.name, detectedColumns });
       setPreviewFilter(rows.some((row) => row.validationStatus === 'error') ? 'error' : 'all');
     } catch (error) {
       setPreview(null);
@@ -111,15 +116,29 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
     }
   };
 
-  const confirmImport = () => {
+  const confirmImport = async () => {
     if (!preview || !canConfirm) return;
 
-    if (mode === 'auto') saveAutoImportedRows(rowsToSave);
-    if (mode === 'rm') saveImportedRows('rm', rowsToSave);
-    if (mode === 'regiones') saveImportedRows('regiones', rowsToSave);
+    setIsPersisting(true);
+    setErrorMessage('');
+    setSuccessMessage('');
 
-    onImported();
-    onClose();
+    try {
+      const result = await importClaimsToBackend(rowsToSave, preview.detectedColumns);
+
+      if (mode === 'auto') saveAutoImportedRows(rowsToSave);
+      if (mode === 'rm') saveImportedRows('rm', rowsToSave);
+      if (mode === 'regiones') saveImportedRows('regiones', rowsToSave);
+
+      const message = result.message || `Importación completada: ${result.insertados} insertados, ${result.actualizados ?? 0} actualizados.`;
+      setSuccessMessage(message);
+      onImported(result);
+      onClose();
+    } catch (err: unknown) {
+      setErrorMessage(err instanceof Error ? err.message : 'No se pudo persistir la importación en backend.');
+    } finally {
+      setIsPersisting(false);
+    }
   };
 
   const clearScope = (scope?: 'rm' | 'regiones') => {
@@ -183,6 +202,8 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
                         setPreview(null);
                         setOriginalRows([]);
                         setPreviewFilter('all');
+                        setErrorMessage('');
+                        setSuccessMessage('');
                       }}
                       type="button"
                     >
@@ -193,6 +214,8 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
               </div>
               <FileUploadDropzone fileName={preview?.fileName} onFileSelect={handleFile} />
               {isReading ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">Leyendo archivo...</p> : null}
+              {isPersisting ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">Guardando en backend...</p> : null}
+              {successMessage ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">{successMessage}</p> : null}
               {errorMessage ? <p className="cc-import-notice cc-import-notice-error">{errorMessage}</p> : null}
             </div>
 
@@ -227,9 +250,9 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
                 Descargar errores CSV
               </button>
             ) : null}
-            <button className="cc-button-secondary cc-focus-ring" onClick={onClose} type="button">Cancelar</button>
+            <button className="cc-button-secondary cc-focus-ring" disabled={isPersisting} onClick={onClose} type="button">Cancelar</button>
             <button className="cc-button-primary cc-focus-ring disabled:cursor-not-allowed disabled:opacity-50" disabled={!canConfirm} onClick={confirmImport} type="button">
-              {errorRows.length > 0 ? `Confirmar ${rowsToSave.length} filas válidas` : 'Confirmar carga'}
+              {isPersisting ? 'Guardando...' : errorRows.length > 0 ? `Confirmar ${rowsToSave.length} filas válidas` : 'Confirmar carga'}
             </button>
           </div>
         </div>

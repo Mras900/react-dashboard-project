@@ -39,7 +39,8 @@ import { GeoJSON, LayerGroup, LayersControl, MapContainer, TileLayer, useMap, Zo
 import { monthlyFacturacion, operationalSummary, sourceSummary, type ComunaMetric } from '../data/dashboardData';
 import { DataImportModal } from '../features/data-import/DataImportModal';
 import { aggregateImportedRows, loadRegionImportedRows, loadRmImportedRows } from '../features/data-import/importStorage';
-import type { ImportedDashboardRow } from '../features/data-import/importTypes';
+import { normalizeVisitStatus } from '../features/data-import/normalizeImportedRows';
+import type { ImportedDashboardRow, ImportedVisitStatus, ImportResult } from '../features/data-import/importTypes';
 import type { DashboardWidget } from '../features/layout/types';
 import { MapView } from '../features/mapa/MapView';
 import { ReportsView } from '../features/reports/ReportsView';
@@ -55,6 +56,10 @@ import { getRegionalFeatureName, normalizeMapJoinKey } from '../features/maps/no
 import { RegionClaimsLayer } from '../features/maps/RegionClaimsLayer';
 import { ActiveRedZonesLayers } from '../features/red-zones/ActiveRedZonesLayers';
 import { fetchRedZones } from '../features/red-zones/redZonesApi';
+import { TerritorialInsightCards } from '../features/territorial/TerritorialInsightCards';
+import { TerritorialExplanationModal } from '../features/territorial/TerritorialExplanationModal';
+import { TerritorialComunaDetailModal } from '../features/territorial/TerritorialComunaDetailModal';
+import { useTerritorialMetrics } from '../features/territorial/useTerritorialMetrics';
 import { getRouteDailyVisits, getRouteVisitsByDateRange } from '../features/ruta/routeDailyStorage';
 import { getRouteDateRange, calculateRouteDailyMetrics } from '../features/ruta/routeDailyMetrics';
 import type { RoutePeriod, RouteDailyMetrics } from '../features/ruta/routeDailyMetrics';
@@ -64,6 +69,7 @@ import { fetchDashboardDatabase, type DashboardClaim, type DashboardDatabaseResp
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
+type StatusFilter = 'todos' | ImportedVisitStatus;
 type MonthFilter = 'all' | string;
 type LocationFilter = 'all' | string;
 type DashboardTheme = 'default' | 'dark-premium';
@@ -71,8 +77,10 @@ type DateFilterMode = 'month' | 'week' | 'day' | 'range';
 type DashboardFilters = {
   month: MonthFilter;
   priority: PriorityFilter;
+  status: StatusFilter;
   location: LocationFilter;
 };
+type TerritorialMetricsResult = ReturnType<typeof useTerritorialMetrics>;
 type TableRow = ComunaMetric & {
   share: number;
   average: number;
@@ -133,6 +141,7 @@ const mapLayerSources: Array<{ key: MapLayerKey; url: string }> = [
 const DEFAULT_FILTERS: DashboardFilters = {
   month: 'all',
   priority: 'todas',
+  status: 'todos',
   location: 'all',
 };
 const THEME_STORAGE_KEY = 'dashboard-theme';
@@ -217,13 +226,6 @@ const mergeComunaMetrics = (historical: ComunaMetric[], daily: ComunaMetric[]) =
 
   return [...grouped.values()].sort((a, b) => b.visitas - a.visitas);
 };
-
-function getStoredDashboardTheme(): DashboardTheme {
-  if (typeof window === 'undefined') return 'default';
-
-  const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-  return storedTheme === 'default' ? 'default' : 'dark-premium';
-}
 
 function loadImportedDashboardRows() {
   return {
@@ -378,11 +380,20 @@ const downloadCsv = (filename: string, rows: Array<Array<string | number>>) => {
 const getMapColor = (value: number, max: number) => {
   const ratio = max > 0 ? value / max : 0;
 
-  if (ratio >= 0.72) return '#0f5fcf';
+  if (ratio >= 0.76) return '#0f5fcf';
   if (ratio >= 0.52) return '#2f8fe8';
   if (ratio >= 0.34) return '#8cc8f5';
-  return '#d8ebfb';
+  if (ratio >= 0.14) return '#d8ebfb';
+  return '#eaf3fb';
 };
+
+const MAP_LEGEND_LEVELS = [
+  { label: 'Muy alto', color: '#0f5fcf' },
+  { label: 'Alto', color: '#2f8fe8' },
+  { label: 'Medio', color: '#8cc8f5' },
+  { label: 'Bajo', color: '#d8ebfb' },
+  { label: 'Muy bajo', color: '#eaf3fb' },
+];
 
 const normalizeName = (value?: string | null) =>
   (value ?? '')
@@ -549,79 +560,167 @@ function FilterControl({
   );
 }
 
+function ProgressLine({ pct, tone = 'blue' }: { pct?: number; tone?: 'blue' | 'red' | 'green' }) {
+  if (!pct || pct <= 0) return null;
+
+  const color = tone === 'red' ? 'from-orange-500 to-red-500' : tone === 'green' ? 'from-emerald-400 to-emerald-600' : 'from-sky-400 to-blue-600';
+
+  return (
+    <div className="mt-3 h-1.5 w-full overflow-hidden rounded-full bg-slate-100">
+      <div className={`h-full rounded-full bg-gradient-to-r ${color}`} style={{ width: `${Math.min(100, Math.max(0, pct))}%` }} />
+    </div>
+  );
+}
+
 function PrimaryMetric({
   icon,
   tone,
   title,
   value,
   delta,
+  actionLabel,
+  onAction,
 }: {
   icon: React.ReactNode;
   tone: 'blue' | 'red' | 'cyan';
   title: string;
   value: string;
   delta: string;
+  actionLabel?: string;
+  onAction?: () => void;
 }) {
-  const colors = {
-    blue: 'bg-blue-100 text-blue-700',
-    red: 'bg-red-100 text-red-600',
-    cyan: 'bg-cyan-100 text-cyan-700',
-  };
-
   return (
-    <Panel className="cc-kpi-card-pro cc-kpi flex h-full min-h-[110px] items-center gap-3">
-      <div data-tone={tone} className="cc-kpi-icon-pro">{icon}</div>
-      <div className="min-w-0">
-        <p className="cc-kpi-label-pro">{title}</p>
-        <p className="cc-kpi-value-pro mt-1">{value}</p>
-        <p data-tone={tone} className="cc-kpi-trend-pro mt-2" style={{color:tone==='red'?'var(--cc-red)':tone==='cyan'?'var(--cc-cyan)':'var(--cc-green)'}}>{delta}</p>
+    <Panel className="cc-kpi-card-pro cc-kpi flex h-full min-h-[150px] flex-col justify-between gap-4 p-4">
+      <div className="flex min-w-0 items-start gap-3">
+        <div data-tone={tone} className="cc-kpi-icon-pro flex h-11 w-11 shrink-0 items-center justify-center rounded-full">{icon}</div>
+        <div className="min-w-0 flex-1">
+          <p className="cc-kpi-label-pro">{title}</p>
+          <p className="cc-kpi-value-pro mt-2 text-2xl font-black leading-tight 2xl:text-3xl">{value}</p>
+          <p data-tone={tone} className="cc-kpi-trend-pro mt-2 leading-relaxed" style={{color:tone==='red'?'var(--cc-red)':tone==='cyan'?'var(--cc-cyan)':'var(--cc-green)'}}>{delta}</p>
+        </div>
       </div>
+      {actionLabel ? (
+        <div className="mt-auto border-t border-slate-200 pt-3 dark:border-slate-700">
+          <button
+            className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+        </div>
+      ) : null}
     </Panel>
   );
 }
 
 function InsightCard({
   icon,
-  iconClass,
   label,
   title,
   detail,
   badge,
+  actionLabel,
+  onAction,
+  secondaryActionLabel,
+  onSecondaryAction,
+  showCrown,
+  progressPct,
+  progressTone = 'blue',
 }: {
   icon: React.ReactNode;
-  iconClass: string;
+  iconClass?: string;
   label: string;
   title: string;
   detail: string;
   badge?: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  secondaryActionLabel?: string;
+  onSecondaryAction?: () => void;
+  showCrown?: boolean;
+  progressPct?: number;
+  progressTone?: 'blue' | 'red' | 'green';
 }) {
   return (
-    <Panel className="cc-kpi-card-pro flex h-full min-h-[100px] flex-wrap items-start gap-3">
-      <div className="cc-kpi-icon-pro">{icon}</div>
-      <div className="min-w-[150px] flex-1">
-        <p className="cc-kpi-label-pro">{label}</p>
-        <p className="cc-kpi-value-pro mt-1">{title}</p>
-        <p className="cc-kpi-meta-pro mt-1">{detail}</p>
+    <Panel className="cc-kpi-card-pro flex h-full min-h-[140px] flex-col justify-between gap-3 p-4">
+      <div className="min-w-0">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 items-center gap-3">
+            <div className="cc-kpi-icon-pro flex h-9 w-9 shrink-0 items-center justify-center rounded-full">{icon}</div>
+            <p className="cc-kpi-label-pro truncate">{label}</p>
+          </div>
+          {showCrown ? <Crown className="shrink-0 text-amber-500" size={18} /> : null}
+        </div>
+        <p className="cc-kpi-value-pro mt-3 break-words text-xl font-black leading-tight">{title}</p>
+        <p className="cc-kpi-meta-pro mt-1 leading-relaxed">{detail}</p>
+        {badge ? <span className="cc-badge-pro mt-3 inline-flex w-fit" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>{badge}</span> : null}
+        <ProgressLine pct={progressPct} tone={progressTone} />
       </div>
-      {badge ? <span className="cc-badge-pro" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>{badge}</span> : null}
+      {actionLabel ? (
+        <div className="mt-auto flex flex-wrap gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
+          <button
+            className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+          {secondaryActionLabel ? (
+            <button
+              className="inline-flex h-8 items-center justify-center rounded-lg bg-[#073B91] px-3 text-[11px] font-black text-white shadow-sm transition hover:bg-blue-800"
+              onClick={onSecondaryAction}
+              type="button"
+            >
+              {secondaryActionLabel}
+            </button>
+          ) : null}
+        </div>
+      ) : null}
     </Panel>
   );
 }
 
-function StatStripItem({ icon, label, value, detail }: { icon: React.ReactNode; label: string; value: string; detail: string }) {
+function StatStripItem({
+  icon,
+  label,
+  value,
+  detail,
+  actionLabel,
+  onAction,
+  progressPct,
+  progressTone = 'blue',
+}: {
+  icon: React.ReactNode;
+  label: string;
+  value: string;
+  detail: string;
+  actionLabel?: string;
+  onAction?: () => void;
+  progressPct?: number;
+  progressTone?: 'blue' | 'red' | 'green';
+}) {
   return (
-    <div className="cc-stat-strip flex h-full min-w-0 items-center gap-3 px-4 py-2">
-      <div className="cc-kpi-icon-pro">{icon}</div>
-      <div className="min-w-0">
+    <div className="cc-stat-strip flex h-full min-w-0 items-start gap-3 px-4 py-3">
+      <div className="cc-kpi-icon-pro flex h-9 w-9 shrink-0 items-center justify-center rounded-full">{icon}</div>
+      <div className="min-w-0 flex-1">
         <p className="cc-kpi-label-pro">{label}</p>
-        <p className="cc-kpi-value-pro">{value}</p>
-        <p className="cc-kpi-meta-pro">{detail}</p>
+        <p className="cc-kpi-value-pro mt-1">{value}</p>
+        <p className="cc-kpi-meta-pro mt-1 leading-relaxed">{detail}</p>
+        <ProgressLine pct={progressPct} tone={progressTone} />
+        {actionLabel ? (
+          <button
+            className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
+            onClick={onAction}
+            type="button"
+          >
+            {actionLabel}
+          </button>
+        ) : null}
       </div>
     </div>
   );
-}
-
-function EmptyState() {
+}function EmptyState() {
   return (
     <div className="cc-empty-state-pro min-h-[140px]">
       <p className="cc-kpi-label-pro">Sin datos para los filtros seleccionados.</p>
@@ -757,7 +856,7 @@ function RegionMapBounds({
       map.invalidateSize();
 
       if (!data) {
-        map.setView([-35.6751, -71.543], 4);
+        map.setView([-33.45, -70.65], 10);
         return;
       }
 
@@ -768,10 +867,10 @@ function RegionMapBounds({
         if (bounds.isValid()) {
           map.fitBounds(bounds, { padding: [20, 20] });
         } else {
-          map.setView([-35.6751, -71.543], 4);
+          map.setView([-33.45, -70.65], 10);
         }
       } catch {
-        map.setView([-35.6751, -71.543], 4);
+        map.setView([-33.45, -70.65], 10);
       }
     }, 150);
 
@@ -781,233 +880,17 @@ function RegionMapBounds({
   return null;
 }
 
-/** Mapa exclusivo de regiones de Chile. NO incluye capas RM, burbujas, cuadrantes ni límite urbano. */
-function RegionPreviewMap({
-  data,
-  hasRegionalData,
-  layerError,
-  metricsByComuna,
-  maxVisitas,
-  recenterKey = 0,
-  activeRedZones = [],
-}: {
-  data: FeatureCollection | null;
-  hasRegionalData: boolean;
-  layerError: string;
-  metricsByComuna: Map<string, RegionalMapMetric>;
-  maxVisitas: number;
-  recenterKey?: number;
-  activeRedZones?: RedZone[];
-}) {
-  const featureJoinKeys = useMemo(() => {
-    const keys = new Set<string>();
-    data?.features.forEach((feature) => {
-      const key = normalizeMapJoinKey(getRegionalFeatureName(feature));
-      if (key) keys.add(key);
-    });
-    return keys;
-  }, [data]);
-  const unmatchedMetricCount = useMemo(
-    () => [...metricsByComuna.keys()].filter((key) => !featureJoinKeys.has(key)).length,
-    [featureJoinKeys, metricsByComuna],
-  );
-  const getMetricForRegionalFeature = useCallback(
-    (feature?: Feature) => metricsByComuna.get(normalizeMapJoinKey(getRegionalFeatureName(feature))),
-    [metricsByComuna],
-  );
-  const regionalFeatureStyle = useCallback(
-    (feature?: Feature) => {
-      const claims = getMetricForRegionalFeature(feature)?.visitas ?? 0;
-      if (claims === 0) return { fillColor: '#111827', color: '#334155', fillOpacity: 0.25, opacity: 0.9, weight: 0.8 };
-      if (claims <= 5) return { fillColor: '#1E3A8A', color: '#334155', fillOpacity: 0.65, opacity: 1, weight: 1 };
-      if (claims <= 10) return { fillColor: '#1B4FD8', color: '#334155', fillOpacity: 0.7, opacity: 1, weight: 1 };
-      if (claims <= 20) return { fillColor: '#22D3EE', color: '#334155', fillOpacity: 0.72, opacity: 1, weight: 1 };
-      return { fillColor: '#F97316', color: '#334155', fillOpacity: 0.76, opacity: 1, weight: 1 };
-    },
-    [getMetricForRegionalFeature],
-  );
-  const onEachRegionalFeature = useCallback(
-    (feature: Feature, layer: L.Layer) => {
-      const featureName = getRegionalFeatureName(feature) || 'Comuna/ciudad sin nombre';
-      const metric = getMetricForRegionalFeature(feature);
-      layer.bindTooltip(featureName, { direction: 'top', sticky: true });
-
-      if (metric) {
-        const popupTitle = escapePopupValue(metric.comuna || featureName);
-        layer.bindPopup([
-          '<div style="min-width:210px">',
-          '<p style="font-weight:800;font-size:14px;border-bottom:1px solid #22304D;padding-bottom:5px;margin-bottom:7px;color:#F1F5F9">' + popupTitle + '</p>',
-          '<div style="font-size:12px;line-height:1.55;color:#CBD5E1">',
-          '<p>Reclamos: <strong>' + formatInt(metric.visitas) + '</strong></p>',
-          '<p>Tickets únicos: <strong>' + formatInt(metric.ticketsUnicos) + '</strong></p>',
-          '<p>Facturación: <strong>' + formatCurrency(metric.facturacion) + '</strong></p>',
-          '<p>KM: <strong>' + formatInt(metric.km) + '</strong></p>',
-          '<p>Traslado: <strong>' + formatCurrency(metric.traslado) + '</strong></p>',
-          '<p>Envío bulto: <strong>' + formatCurrency(metric.valorEnvioBulto) + '</strong></p>',
-          '<p>Alta prioridad: <strong>' + formatInt(metric.alta) + '</strong></p>',
-          '<p>Media prioridad: <strong>' + formatInt(metric.media) + '</strong></p>',
-          '<p>Baja prioridad: <strong>' + formatInt(metric.baja) + '</strong></p>',
-          '<p>Completadas: <strong>' + formatInt(metric.completadas) + '</strong></p>',
-          '<p>Pendientes: <strong>' + formatInt(metric.pendientes) + '</strong></p>',
-          '<p>No realizadas: <strong>' + formatInt(metric.noRealizadas) + '</strong></p>',
-          '</div></div>',
-        ].join(''));
-      } else {
-        layer.bindPopup(`<strong>${escapePopupValue(featureName)}</strong><br/>Sin reclamos cargados para esta comuna`);
-      }
-
-      const pathLayer = layer as L.Path;
-      pathLayer.on({
-        mouseover: () => {
-          pathLayer.setStyle({ color: '#EAF0F8', weight: 2, fillOpacity: 0.85 });
-          pathLayer.bringToFront();
-        },
-        mouseout: () => pathLayer.setStyle(regionalFeatureStyle(feature)),
-      });
-    },
-    [getMetricForRegionalFeature, regionalFeatureStyle],
-  );
-
-  return (
-    <div className="cc-map-surface relative h-full w-full overflow-hidden rounded-xl">
-      <MapContainer
-        center={[-35.6751, -71.543]}
-        zoom={4}
-        minZoom={3}
-        className="h-full w-full"
-        zoomControl={false}
-        doubleClickZoom
-        scrollWheelZoom
-        dragging
-        attributionControl={false}
-        preferCanvas
-      >
-        <ZoomControl position="topleft" />
-        <RegionMapBounds data={data} recenterKey={recenterKey} />
-        <BaseMapLayers>
-          {data ? (
-            <LayersControl.Overlay checked name="Comunas / ciudades Regiones">
-              <GeoJSON
-                key={`regiones-claims-${metricsByComuna.size}-${maxVisitas}-${data.features.length}`}
-                data={data}
-                onEachFeature={onEachRegionalFeature}
-                style={regionalFeatureStyle}
-              />
-            </LayersControl.Overlay>
-          ) : null}
-          <ActiveRedZonesLayers redZoneMode="readonly" zones={activeRedZones} />
-        </BaseMapLayers>
-      </MapContainer>
-
-      <div className="cc-map-legend pointer-events-none absolute bottom-4 left-4 z-[500] w-[220px] rounded-lg border border-[#22304D] bg-[#0D1324]/95 p-3 text-[#CBD5E1] shadow-lg">
-        <p className="mb-2 text-[10px] font-black uppercase">Reclamos por comuna</p>
-        <div className="grid grid-cols-5 gap-1 text-center text-[9px] font-bold">
-          {[
-            ['#111827', '0'],
-            ['#1E3A8A', '1-5'],
-            ['#1B4FD8', '6-10'],
-            ['#22D3EE', '11-20'],
-            ['#F97316', '20+'],
-          ].map(([color, label]) => (
-            <span key={label}><i className="mb-1 block h-2 rounded-sm" style={{ backgroundColor: color }} />{label}</span>
-          ))}
-        </div>
-      </div>
-
-      {!hasRegionalData ? (
-        <div className="cc-map-warning cc-map-warning-info pointer-events-none absolute left-14 top-4 z-[500] rounded-lg border border-[#22304D] bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-[#94A3B8] shadow-lg">
-          Sin datos de regiones cargados
-        </div>
-      ) : null}
-      {layerError ? (
-        <div className="cc-map-warning cc-map-warning-danger pointer-events-none absolute bottom-4 right-4 z-[500] max-w-[280px] rounded-lg border border-[#22304D] bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-[#94A3B8] shadow-lg">
-          {layerError}
-        </div>
-      ) : null}
-      {data && unmatchedMetricCount > 0 && !layerError ? (
-        <div className="cc-map-warning cc-map-warning-warning pointer-events-none absolute right-4 top-4 z-[500] max-w-[280px] rounded-lg border border-orange-500/40 bg-[#0D1324]/95 px-3 py-2 text-xs font-bold text-orange-300 shadow-lg">
-          {formatInt(unmatchedMetricCount)} comunas no coinciden con la capa geográfica
-        </div>
-      ) : null}
-    </div>
-  );
-}
-/** Modal exclusivo de regiones de Chile. NO hereda capas RM ni del mapa principal. */
-function ModalMap({
-  data,
-  hasRegionalData,
-  layerError,
-  metricsByComuna,
-  maxVisitas,
-  onClose,
-}: {
-  data: FeatureCollection | null;
-  hasRegionalData: boolean;
-  layerError: string;
-  metricsByComuna: Map<string, RegionalMapMetric>;
-  maxVisitas: number;
-  onClose: () => void;
-}) {
-  const [recenterKey, setRecenterKey] = useState(0);
+function MapResizeHandler({ deps = [] }: { deps?: React.DependencyList }) {
+  const map = useMap();
 
   useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
+    const timer = window.setTimeout(() => {
+      map.invalidateSize();
+    }, 150);
+    return () => window.clearTimeout(timer);
+  }, [map, ...deps]);
 
-    document.addEventListener('keydown', handleKey);
-    document.body.style.overflow = 'hidden';
-
-    return () => {
-      document.removeEventListener('keydown', handleKey);
-      document.body.style.overflow = '';
-    };
-  }, [onClose]);
-
-  return (
-    <div
-      className="cc-modal-backdrop fixed inset-0 z-[9999] isolate flex items-center justify-center bg-black/50 p-4"
-      onClick={(e) => {
-        if (e.target === e.currentTarget) onClose();
-      }}
-      role="dialog"
-      aria-modal="true"
-      aria-labelledby="region-modal-title"
-    >
-      <div className="cc-modal cc-map-modal relative z-[10000] flex max-h-[90vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl bg-white">
-        <div className="cc-map-header flex items-center justify-between border-b border-slate-200 px-6 py-4">
-          <h2 id="region-modal-title" className="cc-section-title text-lg font-black text-[#071b4d]">Vista ampliada: Regiones de Chile</h2>
-          <div className="flex items-center gap-2">
-            <button
-              className="flex h-8 items-center gap-1.5 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
-              onClick={() => setRecenterKey((k) => k + 1)}
-              type="button"
-            >
-              Centrar Chile
-            </button>
-            <button
-              className="flex h-10 w-10 items-center justify-center rounded-lg text-slate-500 transition hover:bg-slate-100 hover:text-slate-700"
-              onClick={onClose}
-              type="button"
-              aria-label="Cerrar vista ampliada de regiones"
-            >
-              ✕
-            </button>
-          </div>
-        </div>
-        <div className="h-[75vh] w-full">
-          <RegionPreviewMap
-            data={data}
-            hasRegionalData={hasRegionalData}
-            layerError={layerError}
-            metricsByComuna={metricsByComuna}
-            maxVisitas={maxVisitas}
-            recenterKey={recenterKey}
-          />
-        </div>
-      </div>
-    </div>
-  );
+  return null;
 }
 
 const MapLayers = React.memo(function MapLayers({
@@ -1345,171 +1228,246 @@ function SettingsView({
   );
 }
 
-function RegionSidebar({
-  regionalLayer,
-  hasRegionalData,
-  regionalLayerError,
-  regionalMapMetrics,
-  regionalMaxVisitas,
-  setShowRegionModal,
-  operationalSummary,
-  successfulVisits,
-  successfulPct,
-}: {
-  regionalLayer: FeatureCollection | null;
-  hasRegionalData: boolean;
-  regionalLayerError: string;
-  regionalMapMetrics: Map<string, RegionalMapMetric>;
-  regionalMaxVisitas: number;
-  setShowRegionModal: (show: boolean) => void;
-  operationalSummary: typeof import('../data/dashboardData').operationalSummary;
-  successfulVisits: number;
-  successfulPct: number;
-}) {
-  return (
-    <aside className="cc-side-panel hidden w-[286px] shrink-0 2xl:block">
-      <Panel className="cc-side-shell sticky top-3 h-[calc(100vh-24px)] overflow-y-auto rounded-xl border border-slate-200 bg-white p-3">
-        <div className="cc-side-header mb-3 flex items-center justify-between gap-2">
-          <h2 className="cc-side-title flex min-w-0 items-center gap-2 text-base font-black text-[#071b4d]"><MapPin size={16} />Vista previa: Regiones</h2>
-          <button
-            className="cc-side-expand cc-button-secondary flex h-8 items-center gap-1 rounded-lg border border-slate-200 bg-white px-2.5 text-[10px] font-black text-[#073B91] transition hover:bg-blue-50"
-            onClick={() => setShowRegionModal(true)}
-            type="button"
-          >
-            Ampliar
-          </button>
-        </div>
-        <div className="cc-preview-card cc-preview-map cc-side-map h-[250px] min-h-[240px] w-full overflow-hidden rounded-lg bg-blue-50">
-          <RegionPreviewMap
-            data={regionalLayer}
-            hasRegionalData={hasRegionalData}
-            layerError={regionalLayerError}
-            metricsByComuna={regionalMapMetrics}
-            maxVisitas={regionalMaxVisitas}
-          />
-        </div>
-
-        <div className="cc-side-section mt-3 grid gap-2.5">
-          <Panel className="cc-side-card cc-kpi-card cc-region-metric flex items-center gap-3 p-3">
-            <div className="cc-kpi-icon cc-region-km flex h-11 w-11 items-center justify-center rounded-full bg-blue-50 text-blue-700"><Navigation size={22} /></div>
-            <div>
-              <p className="cc-side-label text-xs font-black uppercase text-[#466083]">KM</p>
-              <p className="cc-side-value text-xl font-black text-[#071b4d]">{hasRegionalData ? '125.430' : '0'}</p>
-              <p className="cc-side-meta text-[11px] font-bold text-emerald-600">{hasRegionalData ? '+9,3% vs. mes anterior' : 'Sin datos de regiones'}</p>
-            </div>
-          </Panel>
-
-          <Panel className="cc-side-card cc-kpi-card cc-region-metric flex items-center gap-3 p-3">
-            <div className="cc-kpi-icon cc-region-transfer flex h-11 w-11 items-center justify-center rounded-full bg-slate-100 text-[#466083]"><Truck size={22} /></div>
-            <div>
-              <p className="cc-side-label text-xs font-black uppercase text-[#466083]">Traslado</p>
-              <p className="cc-side-value text-xl font-black text-[#071b4d]">{hasRegionalData ? '4.612' : '0'}</p>
-              <p className="cc-side-meta text-[11px] font-bold text-slate-500">{hasRegionalData ? '-4,2% vs. mes anterior' : 'Sin datos de regiones'}</p>
-            </div>
-          </Panel>
-
-          <Panel className="cc-side-card cc-kpi-card cc-status-card p-3">
-            <div className="cc-status-heading mb-3 flex items-center gap-2">
-              <CheckCircle2 className="cc-status-icon text-[#466083]" size={20} />
-              <h3 className="cc-side-title text-sm font-black text-[#071b4d]">Estado visita</h3>
-            </div>
-            <Donut
-              center={hasRegionalData ? `${successfulPct}%` : '0%'}
-              label="Completadas"
-              segments={[
-                { color: '#10b981', from: 0, to: hasRegionalData ? successfulPct : 0, name: 'Completadas', value: formatInt(hasRegionalData ? successfulVisits : 0) },
-                { color: '#f59e0b', from: hasRegionalData ? successfulPct : 0, to: hasRegionalData ? 94 : 0, name: 'Pendientes', value: formatInt(hasRegionalData ? operationalSummary.visitsFrom13Services : 0) },
-                { color: '#ef4444', from: hasRegionalData ? 94 : 0, to: hasRegionalData ? 100 : 0, name: 'No realizadas', value: formatInt(hasRegionalData ? operationalSummary.unsuccessfulVisits : 0) },
-              ]}
-            />
-            <p className="cc-status-total mt-3 text-xs font-bold text-[#466083]">Total: <strong>{formatInt(hasRegionalData ? operationalSummary.validVisits : 0)}</strong></p>
-          </Panel>
-
-          <button className="cc-side-action cc-button-secondary mt-1 flex h-12 items-center justify-between rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-[#071b4d]" type="button">
-            Ir a vista Regiones
-            <span className="text-2xl">-&gt;</span>
-          </button>
-        </div>
-      </Panel>
-    </aside>
-  );
-}
-
-
 function DashboardSlot({
   widgets,
   id,
   className = '',
+  domId,
 }: {
   widgets: DashboardWidget[];
   id: string;
   className?: string;
+  domId?: string;
 }) {
   const widget = widgets.find((item) => item.id === id && item.visible);
 
   if (!widget) return null;
 
-  return <div className={className}>{widget.content}</div>;
+  return <div id={domId} className={className}>{widget.content}</div>;
+}
+function RouteMiniMap({ hasRouteTickets }: { hasRouteTickets: boolean }) {
+  return (
+    <div className="relative h-32 min-w-[150px] flex-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+      <div className="absolute inset-0 opacity-80" style={{ backgroundImage: 'linear-gradient(90deg, rgba(148,163,184,.18) 1px, transparent 1px), linear-gradient(rgba(148,163,184,.18) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
+      <div className="absolute left-8 top-8 h-3 w-3 rounded-full bg-blue-600 ring-4 ring-blue-100" />
+      <div className={`absolute bottom-8 right-8 h-3 w-3 rounded-full ${hasRouteTickets ? 'bg-red-500 ring-red-100' : 'bg-slate-400 ring-slate-200'} ring-4`} />
+      <div className="absolute left-11 top-11 h-[2px] w-[96px] origin-left rotate-[24deg] rounded-full border-t-2 border-dashed border-blue-500" />
+      <span className="absolute bottom-2 left-3 text-[10px] font-black uppercase text-slate-500">Ruta</span>
+    </div>
+  );
 }
 
-function ExecutiveDashboardLayout({ widgets }: { widgets: DashboardWidget[] }) {
-  const customWidgets = widgets.filter((widget) => widget.id.startsWith('customKpi:') && widget.visible);
+function RouteMetricsSummary({
+  routeMetrics,
+  routePeriod,
+  setRoutePeriod,
+  routeDateBase,
+  setRouteDateBase,
+  onOptimizeRoute,
+  onViewPending,
+}: {
+  routeMetrics: RouteDailyMetrics;
+  routePeriod: RoutePeriod;
+  setRoutePeriod: (period: RoutePeriod) => void;
+  routeDateBase: string;
+  setRouteDateBase: (date: string) => void;
+  onOptimizeRoute?: () => void;
+  onViewPending?: () => void;
+}) {
+  const hasRouteTickets = routeMetrics.ticketsRuta > 0;
 
   return (
-    <div className="cc-dashboard-layout space-y-3">
-      <section className="cc-dashboard-grid grid grid-cols-1 gap-3 2xl:grid-cols-[218px_minmax(0,1fr)_250px]">
-        <div className="cc-kpi-rail grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-1">
-          <DashboardSlot widgets={widgets} id="kpiFacturacion" />
-          <DashboardSlot widgets={widgets} id="kpiReclamos" />
-          <DashboardSlot widgets={widgets} id="kpiPromedio" />
+    <Panel className="cc-route-summary-card h-full rounded-xl border p-4">
+      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_170px] xl:grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_170px]">
+        <div className="min-w-0">
+          <div className="flex flex-wrap items-start justify-between gap-3">
+            <div>
+              <h2 className="cc-section-title text-lg font-black">Ruta Visitador</h2>
+              <p className="cc-muted mt-1 text-xs font-semibold">Planifica y revisa la cobertura territorial de visitas.</p>
+            </div>
+            <div className="flex flex-wrap items-center gap-2">
+              <button
+                className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!hasRouteTickets}
+                onClick={onOptimizeRoute}
+                title={hasRouteTickets ? undefined : 'Disponible al cargar tickets.'}
+                type="button"
+              >
+                <Route size={15} /> Optimizar ruta
+              </button>
+              <button
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                disabled={!hasRouteTickets}
+                onClick={onViewPending}
+                title={hasRouteTickets ? undefined : 'Disponible al cargar tickets.'}
+                type="button"
+              >
+                <ClipboardCheck size={15} /> Ver pendientes
+              </button>
+            </div>
+          </div>
+
+          <div className="mt-4 flex flex-wrap items-center gap-2">
+            <div className="cc-segmented flex rounded-lg border">
+              {(['dia', 'semana', 'mes'] as const).map((period) => (
+                <button
+                  key={period}
+                  aria-selected={routePeriod === period}
+                  className={`px-3 py-1.5 text-xs font-black transition ${routePeriod === period ? '' : 'cc-text-secondary hover:cc-text'}`}
+                  onClick={() => setRoutePeriod(period)}
+                  type="button"
+                >
+                  {period === 'dia' ? 'Día' : period === 'semana' ? 'Semana' : 'Mes'}
+                </button>
+              ))}
+            </div>
+            <input
+              className="cc-input h-9 rounded-lg border px-3 text-xs font-bold"
+              onChange={(event) => setRouteDateBase(event.target.value)}
+              type="date"
+              value={routeDateBase}
+            />
+          </div>
         </div>
+        <RouteMiniMap hasRouteTickets={hasRouteTickets} />
+      </div>
 
-        <DashboardSlot
-          widgets={widgets}
-          id="mapaReclamos"
-          className="cc-main-map-frame h-[430px] lg:h-[470px] xl:h-[500px] 2xl:h-[530px]"
-        />
+      <div className="cc-stat-grid mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
+        <div className="cc-kpi-card cc-card rounded-xl border p-3">
+          <p className="cc-kpi-label text-xs font-bold">Tickets ruta</p>
+          <p className="cc-kpi-value mt-1 text-lg font-black">{routeMetrics.ticketsRuta.toLocaleString('es-CL')}</p>
+        </div>
+        <div className="cc-kpi-card cc-card rounded-xl border p-3">
+          <p className="cc-kpi-label text-xs font-bold">Exitosas</p>
+          <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.exitosas.toLocaleString('es-CL')}</p>
+        </div>
+        <div className="cc-kpi-card cc-card rounded-xl border p-3">
+          <p className="cc-kpi-label text-xs font-bold">No exitosas</p>
+          <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.noExitosas.toLocaleString('es-CL')}</p>
+        </div>
+        <div className="cc-kpi-card cc-card rounded-xl border p-3">
+          <p className="cc-kpi-label text-xs font-bold">Pendientes</p>
+          <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-orange, #f97316)' }}>{routeMetrics.pendientes.toLocaleString('es-CL')}</p>
+        </div>
+        <div className="cc-kpi-card cc-card rounded-xl border p-3">
+          <p className="cc-kpi-label text-xs font-bold">Total valorizado</p>
+          <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.totalValorizado.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
+        </div>
+        <div className="cc-kpi-card cc-card rounded-xl border p-3">
+          <p className="cc-kpi-label text-xs font-bold">Proyectado máximo</p>
+          <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-blue, #2563eb)' }}>{routeMetrics.proyectadoMaximo.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
+        </div>
+      </div>
+    </Panel>
+  );
+}function ExecutiveDashboardLayout({
+  widgets,
+  routeMetrics,
+  routePeriod,
+  setRoutePeriod,
+  routeDateBase,
+  setRouteDateBase,
+  showTerritorialInsights,
+  territorialMetrics,
+  onOpenTerritorialExplanation,
+  onOpenTerritorialComuna,
+  onShowTerritorialEvidence,
+  onOptimizeRoute,
+  onViewRoutePending,
+}: {
+  widgets: DashboardWidget[];
+  routeMetrics: RouteDailyMetrics;
+  routePeriod: RoutePeriod;
+  setRoutePeriod: (period: RoutePeriod) => void;
+  routeDateBase: string;
+  setRouteDateBase: (date: string) => void;
+  onOpenRegions?: () => void;
+  showTerritorialInsights?: boolean;
+  territorialMetrics: TerritorialMetricsResult;
+  onOpenTerritorialExplanation?: () => void;
+  onOpenTerritorialComuna?: (comuna: string) => void;
+  onShowTerritorialEvidence?: (comuna: string) => void;
+  onOptimizeRoute?: () => void;
+  onViewRoutePending?: () => void;
+}) {
+  return (
+    <div className="cc-dashboard-layout cc-executive-dashboard flex flex-col min-h-0 gap-5 pb-4">
+      <div className="flex-1 min-h-[480px] min-w-0">
+        <section className="cc-exec-map-row grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)_300px] h-full min-h-0">
+          <aside className="cc-kpi-left-column flex flex-col gap-4 overflow-y-auto min-h-0">
+            <DashboardSlot widgets={widgets} id="kpiFacturacion" />
+            <DashboardSlot widgets={widgets} id="kpiReclamos" />
+            <DashboardSlot widgets={widgets} id="kpiPromedio" />
+          </aside>
 
-        <div className="cc-insight-rail grid grid-cols-1 gap-3 md:grid-cols-3 2xl:grid-cols-1">
+          <div className="min-w-0 min-h-0 flex flex-col">
+            <DashboardSlot
+              widgets={widgets}
+              id="mapaReclamos"
+              domId="dashboard-map-section"
+              className="flex-1 min-h-[400px]"
+            />
+          </div>
+
+          <aside className="cc-insights-right-column flex flex-col gap-4 overflow-y-auto min-h-0">
           <DashboardSlot widgets={widgets} id="kpiComunaTop" />
           <DashboardSlot widgets={widgets} id="kpiFacturacionTop" />
           <DashboardSlot widgets={widgets} id="kpiCoberturaComunas" />
-        </div>
-      </section>
+          {showTerritorialInsights ? (
+            <TerritorialInsightCards
+              resumen={territorialMetrics.resumen}
+              comunaCritica={territorialMetrics.comunaCritica}
+              topReclamos={territorialMetrics.topReclamos}
+              topFacturacion={territorialMetrics.topFacturacion}
+              topIntensidad={territorialMetrics.topIntensidad}
+              isUsingFallback={territorialMetrics.isUsingFallback}
+              hasActiveData={territorialMetrics.hasActiveData}
+              onOpenComuna={onOpenTerritorialComuna}
+              onOpenExplanation={onOpenTerritorialExplanation}
+              onShowEvidence={onShowTerritorialEvidence}
+            />
+          ) : null}
+        </aside>      {/* close right column */}
+      </section>      {/* close map row grid */}
+      </div>          {/* close flex-1 map row wrapper */}
 
-      <section className="cc-stat-grid grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-4">
+      <section className="flex-shrink-0 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
         <DashboardSlot widgets={widgets} id="statTotalComunas" />
         <DashboardSlot widgets={widgets} id="statAltaPrioridad" />
         <DashboardSlot widgets={widgets} id="statVariacionMensual" />
         <DashboardSlot widgets={widgets} id="statTicketsUnicos" />
       </section>
 
-      <section className="cc-chart-grid grid grid-cols-1 gap-3 lg:grid-cols-2 2xl:grid-cols-4">
-        <DashboardSlot widgets={widgets} id="graficoFacturacionMensual" className="min-h-[268px]" />
-        <DashboardSlot widgets={widgets} id="topComunasReclamos" className="min-h-[268px]" />
-        <DashboardSlot widgets={widgets} id="topComunasFacturacion" className="min-h-[268px]" />
-        <DashboardSlot widgets={widgets} id="distribucionPrioridad" className="min-h-[268px]" />
+      <section id="dashboard-charts-section" className="flex-shrink-0 grid grid-cols-1 gap-4 xl:grid-cols-4">
+        <DashboardSlot widgets={widgets} id="graficoFacturacionMensual" className="min-h-[240px]" />
+        <DashboardSlot widgets={widgets} id="topComunasReclamos" className="min-h-[240px]" />
+        <DashboardSlot widgets={widgets} id="topComunasFacturacion" className="min-h-[240px]" />
+        <DashboardSlot widgets={widgets} id="distribucionPrioridad" className="min-h-[240px]" />
       </section>
 
-      <DashboardSlot widgets={widgets} id="tablaComunas" />
-
-      {customWidgets.length > 0 ? (
-        <section className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
-          {customWidgets.map((widget) => (
-            <div key={widget.id}>{widget.content}</div>
-          ))}
-        </section>
-      ) : null}
+      <section className="flex-shrink-0 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,1fr)]">
+        <DashboardSlot widgets={widgets} id="tablaComunas" domId="dashboard-evidence-section" />
+        <div id="dashboard-route-section">
+          <RouteMetricsSummary
+            routeMetrics={routeMetrics}
+            routePeriod={routePeriod}
+            setRoutePeriod={setRoutePeriod}
+            routeDateBase={routeDateBase}
+            setRouteDateBase={setRouteDateBase}
+            onOptimizeRoute={onOptimizeRoute}
+            onViewPending={onViewRoutePending}
+          />
+        </div>
+      </section>
     </div>
   );
 }
-
 export default function Dashboard() {
   const { hasPermission } = useAuth();
-  const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>(getStoredDashboardTheme);
+  const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>('default');
   const [showImportModal, setShowImportModal] = useState(false);
   const [importedRows, setImportedRows] = useState<{ rm: ImportedDashboardRow[]; regiones: ImportedDashboardRow[] }>(loadImportedDashboardRows);
-  const [showRegionModal, setShowRegionModal] = useState(false);
+
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
   const [viewMode, setViewMode] = useState<'rm' | 'regiones'>('rm');
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
@@ -1522,7 +1480,9 @@ export default function Dashboard() {
   const [evidenceRegion, setEvidenceRegion] = useState('all');
   const [tablePage, setTablePage] = useState(0);
   const PAGE_SIZE = 10;
-  const [showEvidenceTable, setShowEvidenceTable] = useState(false);
+  const [showEvidenceTable, setShowEvidenceTable] = useState(true);
+  const [showTerritorialExplanation, setShowTerritorialExplanation] = useState(false);
+  const [territorialComunaDetail, setTerritorialComunaDetail] = useState<string | null>(null);
   const [mapLayers, setMapLayers] = useState<MapLayers>({
     borde: null,
     limiteUrbano: null,
@@ -1538,6 +1498,7 @@ export default function Dashboard() {
   const [databaseDashboardLoading, setDatabaseDashboardLoading] = useState(true);
   const [databaseDashboardError, setDatabaseDashboardError] = useState('');
   const [databaseReloadKey, setDatabaseReloadKey] = useState(0);
+  const [lastImportResult, setLastImportResult] = useState<ImportResult | null>(null);
   const [activeRedZones, setActiveRedZones] = useState<RedZone[]>([]);
   const [routePeriod, setRoutePeriod] = useState<RoutePeriod>('dia');
   const [routeDateBase, setRouteDateBase] = useState(() => new Date().toISOString().slice(0, 10));
@@ -1562,9 +1523,13 @@ export default function Dashboard() {
     aggregation: 'sum',
     format: 'number',
   });
-  const shouldShowRegionsPreview = activeTab === 'dashboard' && viewMode === 'rm' && hasPermission('regiones');
+
   const refreshImportedRows = useCallback(() => {
     setImportedRows(loadImportedDashboardRows());
+    // Null out backend data so dashboard falls back to localStorage immediately.
+    // Re-fetch will update it once backend responds.
+    setDatabaseDashboardData(null);
+    setDatabaseReloadKey((key) => key + 1);
   }, []);
   const refreshActiveRedZones = useCallback(() => {
     fetchRedZones()
@@ -1572,6 +1537,70 @@ export default function Dashboard() {
       .catch(() => {
         setActiveRedZones([]);
       });
+  }, []);
+
+
+  const scrollToDashboardSection = useCallback((sectionId: string) => {
+    window.setTimeout(() => {
+      document.getElementById(sectionId)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 80);
+  }, []);
+
+  const showEvidenceForComuna = useCallback((comuna: string) => {
+    setActiveTab('dashboard');
+    setViewMode('rm');
+    setFilters((current) => ({ ...current, location: comuna }));
+    setEvidenceSearch(comuna);
+    setShowEvidenceTable(true);
+    setTablePage(0);
+    scrollToDashboardSection('dashboard-evidence-section');
+  }, [scrollToDashboardSection]);
+
+  const filterComunaFromModal = useCallback((comuna: string) => {
+    setTerritorialComunaDetail(null);
+    showEvidenceForComuna(comuna);
+  }, [showEvidenceForComuna]);
+
+  const showComunaOnMap = useCallback((comuna: string) => {
+    setTerritorialComunaDetail(null);
+    setActiveTab('dashboard');
+    setViewMode('rm');
+    setFilters((current) => ({ ...current, location: comuna }));
+    scrollToDashboardSection('dashboard-map-section');
+  }, [scrollToDashboardSection]);
+
+  const showEvidencePanel = useCallback(() => {
+    setActiveTab('dashboard');
+    setShowEvidenceTable(true);
+    setTablePage(0);
+    scrollToDashboardSection('dashboard-evidence-section');
+  }, [scrollToDashboardSection]);
+
+  const filterHighPriority = useCallback(() => {
+    setActiveTab('dashboard');
+    setFilters((current) => ({ ...current, priority: 'alta' }));
+    setShowEvidenceTable(true);
+    setTablePage(0);
+    scrollToDashboardSection('dashboard-evidence-section');
+  }, [scrollToDashboardSection]);
+
+  const showDuplicates = useCallback(() => {
+    setActiveTab('dashboard');
+    setEvidenceSearch('');
+    setShowEvidenceTable(true);
+    setTablePage(0);
+    console.info('Revisar posibles duplicados desde tickets únicos');
+    scrollToDashboardSection('dashboard-evidence-section');
+  }, [scrollToDashboardSection]);
+
+  const openRouteOptimization = useCallback(() => {
+    setActiveTab('ruta');
+    console.info('Abrir optimización de Ruta Visitador');
+  }, []);
+
+  const openRoutePending = useCallback(() => {
+    setActiveTab('ruta');
+    console.info('Abrir pendientes de Ruta Visitador');
   }, []);
 
   useEffect(() => {
@@ -1588,13 +1617,7 @@ export default function Dashboard() {
     window.localStorage.setItem(THEME_STORAGE_KEY, dashboardTheme);
   }, [dashboardTheme]);
 
-  useEffect(() => {
-    if (!shouldShowRegionsPreview) {
-      setShowRegionModal(false);
-    }
-  }, [shouldShowRegionsPreview]);
-
-  useEffect(() => {
+useEffect(() => {
     const controller = new AbortController();
 
     Promise.all(
@@ -1734,7 +1757,7 @@ const dateFilterError = useMemo(() => {
       .catch((error: unknown) => {
         if (controller.signal.aborted) return;
         setDatabaseDashboardData(null);
-        setDatabaseDashboardError(error instanceof Error ? error.message : 'No se pudieron cargar los reclamos');
+        setDatabaseDashboardError(error instanceof Error ? error.message.includes('fetch') ? 'Sin conexión con el servidor de datos.' : error.message : 'No se pudieron cargar los reclamos');
       })
       .finally(() => {
         if (!controller.signal.aborted) setDatabaseDashboardLoading(false);
@@ -1773,6 +1796,28 @@ const dateFilterError = useMemo(() => {
     () => (databaseDashboardData?.reclamos ?? []).map(databaseClaimToImportedRow),
     [databaseDashboardData],
   );
+  const currentDetailRows = useMemo(
+    () => (databaseDashboardData ? databaseRows : [...importedRows.rm, ...importedRows.regiones]),
+    [databaseDashboardData, databaseRows, importedRows.regiones, importedRows.rm],
+  );
+  const currentRegionalDetailRows = useMemo(
+    () => currentDetailRows.filter((row) => row.scope === 'regiones'),
+    [currentDetailRows],
+  );
+  const localRowsByStatus = useMemo(
+    () => {
+      const matchesStatus = (row: ImportedDashboardRow) => filters.status === 'todos' || row.estadoVisitaNormalizado === filters.status;
+      return {
+        rm: importedRows.rm.filter(matchesStatus),
+        regiones: importedRows.regiones.filter(matchesStatus),
+      };
+    },
+    [filters.status, importedRows.regiones, importedRows.rm],
+  );
+  const eligibleRouteReclamos = useMemo(
+    () => currentDetailRows.filter((row) => row.ticket && row.validationStatus !== 'error' && (row.comuna || row.ciudad || row.calle)),
+    [currentDetailRows],
+  );
   const databaseMetrics = useMemo(() => {
     const detailByScope = {
       rm: aggregateImportedRows(databaseRows.filter((row) => row.scope === 'rm')),
@@ -1808,12 +1853,12 @@ const dateFilterError = useMemo(() => {
     return result;
   }, [databaseDashboardData, databaseRows]);
   const rmData = useMemo(
-    () => (databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(importedRows.rm)),
-    [databaseDashboardData, databaseMetrics.rm, importedRows.rm],
+    () => (databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(localRowsByStatus.rm)),
+    [databaseDashboardData, databaseMetrics.rm, localRowsByStatus.rm],
   );
   const regionesData = useMemo(
-    () => (databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(importedRows.regiones)),
-    [databaseDashboardData, databaseMetrics.regiones, importedRows.regiones],
+    () => (databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(localRowsByStatus.regiones)),
+    [databaseDashboardData, databaseMetrics.regiones, localRowsByStatus.regiones],
   );
   const dailyComunaData = useMemo<ComunaMetric[]>(
     () =>
@@ -1873,15 +1918,16 @@ const dateFilterError = useMemo(() => {
       ticketsByComuna.set(key, tickets);
     };
 
-    importedRows.regiones
+    currentRegionalDetailRows
       .filter((row) => {
         if (row.scope !== 'regiones' || row.validationStatus === 'error') return false;
 
         const comuna = row.ciudad || row.comuna || row.regionNormalizada || row.regionOriginal || 'Sin comuna';
         const matchesLocation = filters.location === 'all' || normalizeMapJoinKey(comuna) === normalizeMapJoinKey(filters.location);
         const matchesPriority = filters.priority === 'todas' || row.prioridad === filters.priority;
+        const matchesStatus = filters.status === 'todos' || row.estadoVisitaNormalizado === filters.status;
 
-        return matchesLocation && matchesPriority;
+        return matchesLocation && matchesPriority && matchesStatus;
       })
       .forEach((row) => {
         const comuna = row.ciudad || row.comuna || row.regionNormalizada || row.regionOriginal || 'Sin comuna';
@@ -1906,7 +1952,7 @@ const dateFilterError = useMemo(() => {
     }
 
     return grouped;
-  }, [dailyDashboardData, filters.location, filters.priority, importedRows.regiones, viewMode]);
+  }, [currentRegionalDetailRows, dailyDashboardData, filters.location, filters.priority, filters.status, viewMode]);
   const regionalMaxVisitas = useMemo(() => Math.max(0, ...[...regionalMapMetrics.values()].map((item) => item.visitas)), [regionalMapMetrics]);
   const routeDateRange = useMemo(() => getRouteDateRange(routePeriod, routeDateBase), [routePeriod, routeDateBase, routeRefreshKey]);
   const filteredRouteVisits = useMemo(
@@ -1935,6 +1981,17 @@ const dateFilterError = useMemo(() => {
     [],
   );
 
+  const availableStatuses = useMemo(
+    () => [
+      { label: 'Todos', value: 'todos' },
+      { label: 'Completada', value: 'completada' },
+      { label: 'Pendiente', value: 'pendiente' },
+      { label: 'No realizada', value: 'no_realizada' },
+      { label: 'Sin estado', value: 'sin_estado' },
+    ],
+    [],
+  );
+
   const availableLocations = useMemo(
     () => [
       { label: 'Todas', value: 'all' },
@@ -1956,6 +2013,7 @@ const dateFilterError = useMemo(() => {
 
   const selectedMonthLabel = availableMonths.find((option) => option.value === filters.month)?.label ?? (viewMode === 'regiones' ? 'Sin datos de regiones' : sourceSummary.periodLabel);
   const selectedPriorityLabel = availablePriorities.find((option) => option.value === filters.priority)?.label ?? 'Todas';
+  const selectedStatusLabel = availableStatuses.find((option) => option.value === filters.status)?.label ?? 'Todos';
   const selectedLocationLabel = locationOptions.find((option) => option.value === filters.location)?.label ?? 'Todas';
   const baseTotals = useMemo(() => sumComunaMetrics(currentData), [currentData]);
   const databaseMonthlyFacturacion = useMemo(() => {
@@ -2008,6 +2066,14 @@ const dateFilterError = useMemo(() => {
   }, [currentData, filters.location, filters.priority, monthFactor]);
 
   const filteredMapData = filteredData;
+  const territorialMetrics = useTerritorialMetrics({
+    rows: viewMode === 'rm' ? filteredData : [],
+    hasActiveSource: viewMode === 'rm' && currentData.length > 0,
+  });
+  const selectedTerritorialMetric = useMemo(
+    () => territorialComunaDetail ? territorialMetrics.dataComunal.find((item) => item.comuna === territorialComunaDetail) ?? null : null,
+    [territorialComunaDetail, territorialMetrics.dataComunal],
+  );
   const totals = useMemo(() => sumComunaMetrics(filteredData), [filteredData]);
 
   const successfulVisits = Math.max(0, operationalSummary.validVisits - operationalSummary.unsuccessfulVisits);
@@ -2190,52 +2256,54 @@ const dateFilterError = useMemo(() => {
       id: 'kpiFacturacion',
       title: 'Facturación total',
       visible: true,
-      content: <PrimaryMetric icon={<FileBarChart size={29} />} tone="blue" title="Facturación total" value={formatCurrency(totals.facturacion)} delta={isEmptyCurrentView ? emptyViewMessage : 'Periodo seleccionado'} />,
+      content: <PrimaryMetric actionLabel={totals.facturacion > 0 ? "Ver desglose" : undefined} onAction={() => scrollToDashboardSection('dashboard-charts-section')} icon={<FileBarChart size={29} />} tone="blue" title="Facturación total" value={formatCurrency(totals.facturacion)} delta={isEmptyCurrentView ? emptyViewMessage : 'Periodo seleccionado'} />,
     },
     {
       id: 'kpiReclamos',
       title: 'Reclamos totales',
       visible: true,
-      content: <PrimaryMetric icon={<AlertTriangle size={30} />} tone="red" title="Reclamos totales" value={formatInt(totals.visitas)} delta={isEmptyCurrentView ? emptyViewMessage : 'Datos actualizados'} />,
+      content: <PrimaryMetric actionLabel={totals.visitas > 0 ? "Ver comunas" : undefined} onAction={showEvidencePanel} icon={<AlertTriangle size={30} />} tone="red" title="Reclamos totales" value={formatInt(totals.visitas)} delta={isEmptyCurrentView ? emptyViewMessage : 'Datos actualizados'} />,
     },
     {
       id: 'kpiPromedio',
       title: 'Promedio por reclamo',
       visible: true,
-      content: <PrimaryMetric icon={<Users size={30} />} tone="cyan" title="Promedio por reclamo" value={formatCurrency(averageBilling)} delta={isEmptyCurrentView ? emptyViewMessage : 'Promedio del periodo'} />,
+      content: <PrimaryMetric actionLabel={totals.visitas > 0 ? "Comparar" : undefined} onAction={showEvidencePanel} icon={<Users size={30} />} tone="cyan" title="Promedio por reclamo" value={formatCurrency(averageBilling)} delta={isEmptyCurrentView ? emptyViewMessage : 'Promedio del periodo'} />,
     },
     {
       id: 'kpiComunaTop',
       title: 'Top reclamos',
       visible: true,
-      content: <InsightCard icon={<Landmark size={28} />} iconClass="bg-orange-100 text-orange-500" label="Top reclamos" title={topClaimComuna?.comuna ?? 'Sin datos'} detail={isEmptyCurrentView ? emptyViewMessage : `${formatInt(topClaimComuna?.visitas ?? 0)} reclamos`} badge={totals.visitas > 0 && topClaimComuna ? `${asPercent((topClaimComuna.visitas / totals.visitas) * 100)} del total` : '0% del total'} />,
+      content: <InsightCard actionLabel={topClaimComuna ? "Ver detalle" : undefined} onAction={() => topClaimComuna ? setTerritorialComunaDetail(topClaimComuna.comuna) : console.info('Sin comuna top')} icon={<Landmark size={28} />} iconClass="bg-orange-100 text-orange-500" label="Top reclamos" title={topClaimComuna?.comuna ?? 'Sin datos'} detail={topClaimComuna ? `${formatInt(topClaimComuna.visitas)} reclamos` : 'Carga reclamos para identificar comuna líder.'} badge={totals.visitas > 0 && topClaimComuna ? `${asPercent((topClaimComuna.visitas / totals.visitas) * 100)} del total` : undefined} showCrown={Boolean(topClaimComuna)} progressPct={totals.visitas > 0 && topClaimComuna ? (topClaimComuna.visitas / totals.visitas) * 100 : 0} progressTone="red" />,
     },
     {
       id: 'kpiFacturacionTop',
       title: 'Top facturación',
       visible: true,
-      content: <InsightCard icon={<Crown size={28} />} iconClass="bg-blue-100 text-blue-600" label="Top facturación" title={topBillingComuna?.comuna ?? 'Sin datos'} detail={isEmptyCurrentView ? emptyViewMessage : formatCurrency(topBillingComuna?.facturacion ?? 0)} badge={totals.facturacion > 0 && topBillingComuna ? `${asPercent((topBillingComuna.facturacion / totals.facturacion) * 100)} del total` : '0% del total'} />,
+      content: <InsightCard actionLabel={topBillingComuna ? "Ver facturación" : undefined} onAction={() => scrollToDashboardSection('dashboard-charts-section')} icon={<FileBarChart size={28} />} iconClass="bg-blue-100 text-blue-600" label="Top facturación" title={topBillingComuna?.comuna ?? 'Sin datos'} detail={topBillingComuna ? formatCurrency(topBillingComuna.facturacion) : 'Carga reclamos para calcular facturación por comuna.'} badge={totals.facturacion > 0 && topBillingComuna ? `${asPercent((topBillingComuna.facturacion / totals.facturacion) * 100)} del total` : undefined} showCrown={Boolean(topBillingComuna)} progressPct={totals.facturacion > 0 && topBillingComuna ? (topBillingComuna.facturacion / totals.facturacion) * 100 : 0} progressTone="blue" />,
     },
     {
       id: 'kpiCoberturaComunas',
       title: 'Cobertura',
       visible: true,
-      content: <InsightCard icon={<ShieldCheck size={28} />} iconClass="bg-emerald-100 text-emerald-600" label="Cobertura" title={hasFilteredData ? `${Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100)}%` : '0%'} detail={isEmptyCurrentView ? emptyViewMessage : `${filteredMapData.length} comunas con información`} />,
+      content: <InsightCard actionLabel={filteredMapData.length > 0 ? "Ver cobertura" : undefined} onAction={showEvidencePanel} icon={<ShieldCheck size={28} />} iconClass="bg-emerald-100 text-emerald-600" label="Cobertura" title={hasFilteredData ? `${Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100)}%` : '0%'} detail={filteredMapData.length > 0 ? `${filteredMapData.length} comunas con información` : 'Sin comunas con información cargada.'} progressPct={hasFilteredData ? Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100) : 0} progressTone="green" />,
     },
     {
       id: 'mapaReclamos',
       title: 'Mapa de reclamos',
       visible: true,
       content: (
-        <Panel className="cc-map-panel flex h-full min-h-[420px] flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="cc-map-header border-b border-slate-200 px-4 py-3">
-            <h2 className="cc-section-title text-lg font-black text-blue-900">Mapa de reclamos</h2>
-            <p className="cc-muted mt-1 text-xs font-semibold text-slate-600">Distribución geográfica y capas disponibles para revisión territorial.</p>
+        <Panel className="cc-map-panel flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
+          <div className="cc-map-header flex-shrink-0 border-b border-slate-200 px-4 py-2">
+            <h2 className="cc-section-title text-base font-black text-blue-900">Mapa de reclamos</h2>
+            <p className="cc-muted mt-0.5 text-[11px] font-semibold text-slate-600">Intensidad territorial de reclamos en la Región Metropolitana</p>
           </div>
-          <div className="cc-map-surface relative min-h-[350px] flex-1 overflow-hidden rounded-xl lg:min-h-[390px]">
+          <div className="cc-map-surface relative min-h-0 flex-1 overflow-hidden rounded-xl">
             {viewMode === 'rm' ? (
-              <MapContainer center={[-33.49, -70.67]} className="absolute inset-0 z-0" preferCanvas zoom={10} zoomControl={false}>
+              <MapContainer center={[-33.45, -70.65]} className="absolute inset-0 z-0" preferCanvas zoom={10} zoomControl={false}>
                 <ZoomControl position="topleft" />
+                <RegionMapBounds data={mapLayers.comunasKml} />
+                <MapResizeHandler deps={[viewMode, dashboardTheme, mapLayers.comunasKml, filteredMapData.length]} />
                 <BaseMapLayers>
                   <MapLayers
                     activeRedZones={activeRedZones}
@@ -2254,8 +2322,9 @@ const dateFilterError = useMemo(() => {
             ) : (
               <MapContainer center={[-35.6751, -71.543]} zoom={4} minZoom={3} className="absolute inset-0 z-0" preferCanvas zoomControl={false}>
                 <ZoomControl position="topleft" />
+                <MapResizeHandler deps={[viewMode, dashboardTheme, regionalLayer]} />
                 <BaseMapLayers>
-                  <RegionClaimsLayer geoJson={regionalLayer} rows={importedRows.regiones} />
+                  <RegionClaimsLayer geoJson={regionalLayer} rows={currentRegionalDetailRows} />
                   <ActiveRedZonesLayers redZoneMode="readonly" zones={activeRedZones} />
                 </BaseMapLayers>
                 {regionalLayerError ? (
@@ -2282,12 +2351,15 @@ const dateFilterError = useMemo(() => {
                 </div>
               </div>
             ) : (
-              <div className="cc-map-legend absolute bottom-4 left-4 z-[500] w-[230px] rounded-lg border border-slate-200 bg-white/95 p-3 shadow-lg">
+              <div className="cc-map-legend absolute bottom-4 left-4 z-[500] w-[200px] rounded-lg border border-slate-200 bg-white/95 p-3 shadow-lg">
                 <div className="mb-2 text-[10px] font-black uppercase text-[#466083]">Reclamos por comuna</div>
-                <div className="flex items-center gap-2 text-[10px] font-bold text-[#172448]">
-                  <span>Menor</span>
-                  <div className="h-2 flex-1 rounded-full bg-gradient-to-r from-[#d8ebfb] via-[#78b9ef] to-[#0757bd]" />
-                  <span>Mayor</span>
+                <div className="space-y-1.5">
+                  {MAP_LEGEND_LEVELS.map((level) => (
+                    <div key={level.label} className="flex items-center gap-2 text-[11px] font-bold text-[#172448]">
+                      <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: level.color }} />
+                      <span>{level.label}</span>
+                    </div>
+                  ))}
                 </div>
               </div>
             )}
@@ -2301,7 +2373,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-kpi-card-pro h-full">
-          <StatStripItem icon={<Building2 size={22} />} label="Total comunas" value={formatInt(filteredMapData.length)} detail={viewMode === 'rm' ? 'RM filtrada' : 'Regiones'} />
+          <StatStripItem icon={<Building2 size={22} />} label="Total comunas" value={formatInt(filteredMapData.length)} detail={filteredMapData.length > 0 ? (viewMode === 'rm' ? 'RM incluida' : 'Regiones') : 'Sin comunas filtradas.'} />
         </Panel>
       ),
     },
@@ -2311,7 +2383,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="h-full">
-          <StatStripItem icon={<AlertTriangle size={22} />} label="Alta prioridad" value={formatInt(totals.alta)} detail={`${asPercent(altaPct)} del total`} />
+          <StatStripItem actionLabel={totals.alta > 0 ? "Filtrar alta prioridad" : undefined} onAction={filterHighPriority} icon={<AlertTriangle size={22} />} label="Alta prioridad" value={formatInt(totals.alta)} detail={totals.alta > 0 ? `${asPercent(altaPct)} del total` : 'Sin reclamos de alta prioridad.'} progressPct={totals.alta > 0 ? altaPct : 0} progressTone="red" />
         </Panel>
       ),
     },
@@ -2331,7 +2403,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="h-full">
-          <StatStripItem icon={<Users size={22} />} label="Tickets únicos" value={formatInt(totals.ticketsUnicos)} detail={totals.visitas > 0 ? `${asPercent((totals.ticketsUnicos / totals.visitas) * 100)} del total` : '0% del total'} />
+          <StatStripItem actionLabel={totals.ticketsUnicos > 0 ? "Ver duplicados" : undefined} onAction={showDuplicates} icon={<Users size={22} />} label="Tickets únicos" value={formatInt(totals.ticketsUnicos)} detail={totals.visitas > 0 ? `${asPercent((totals.ticketsUnicos / totals.visitas) * 100)} del total` : 'Sin tickets cargados.'} />
         </Panel>
       ),
     },
@@ -2375,15 +2447,17 @@ const dateFilterError = useMemo(() => {
       content: (
         <Panel className="cc-chart-card h-full p-4">
           <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Distribución por prioridad</h3>
-          <Donut
-            center={formatInt(totals.visitas)}
-            label="Total"
-            segments={[
-              { color: '#EF4444', from: 0, to: altaPct, name: 'Alta', value: `${formatInt(totals.alta)} (${asPercent(altaPct)})` },
-              { color: '#F97316', from: altaPct, to: altaPct + mediaPct, name: 'Media', value: `${formatInt(totals.media)} (${asPercent(mediaPct)})` },
-              { color: '#00F5A0', from: altaPct + mediaPct, to: 100, name: 'Baja', value: `${formatInt(totals.baja)} (${asPercent(bajaPct)})` },
-            ]}
-          />
+          {totals.visitas > 0 ? (
+            <Donut
+              center={formatInt(totals.visitas)}
+              label="Total"
+              segments={[
+                { color: '#EF4444', from: 0, to: altaPct, name: 'Alta', value: `${formatInt(totals.alta)} (${asPercent(altaPct)})` },
+                { color: '#F97316', from: altaPct, to: altaPct + mediaPct, name: 'Media', value: `${formatInt(totals.media)} (${asPercent(mediaPct)})` },
+                { color: '#00F5A0', from: altaPct + mediaPct, to: 100, name: 'Baja', value: `${formatInt(totals.baja)} (${asPercent(bajaPct)})` },
+              ]}
+            />
+          ) : <EmptyState />}
         </Panel>
       ),
     },
@@ -2402,7 +2476,7 @@ const dateFilterError = useMemo(() => {
                 </span>
               </div>
               <p className="mt-1 max-w-3xl text-xs font-semibold text-slate-600">
-                Detalle operativo por comuna. Tabla detallada con reclamos, facturación, promedio y prioridad alta.
+                Accede a respaldos, visitas y registros asociados a cada comuna.
               </p>
             </div>
             <button
@@ -2419,7 +2493,7 @@ const dateFilterError = useMemo(() => {
               ) : (
                 <>
                   <ChevronDown size={16} />
-                  Ver evidencia
+                  Ver todas →
                 </>
               )}
             </button>
@@ -2457,10 +2531,10 @@ const dateFilterError = useMemo(() => {
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[980px] text-left text-xs">
+                <table className="w-full min-w-[760px] text-left text-xs">
                   <thead className="bg-slate-50 text-[11px] uppercase text-[#466083]">
                     <tr>
-                      {['Periodo', 'Comuna', 'Región', 'Reclamos', 'Facturación', 'Promedio', 'Prioridad alta', '% del total', 'Ver detalle'].map((head) => (
+                      {['Comuna', 'Reclamos', 'Facturación', 'Alta prioridad', 'Última visita', 'Evidencia'].map((head) => (
                         <th key={head} className="px-4 py-2 font-black">{head}</th>
                       ))}
                     </tr>
@@ -2469,20 +2543,17 @@ const dateFilterError = useMemo(() => {
                     {tableRows.length > 0 ? (
                       visibleEvidenceRows.map((row) => (
                         <tr key={row.comuna} className="hover:bg-blue-50/40">
-                          <td className="px-4 py-2 font-semibold text-[#466083]">{selectedMonthLabel}</td>
                           <td className="px-4 py-2 font-black text-[#172448]">{row.comuna}</td>
-                          <td className="px-4 py-2 font-semibold text-[#466083]">{regionByComuna.get(normalizeName(row.comuna)) ?? (viewMode === 'rm' ? 'Región Metropolitana' : 'Sin región')}</td>
                           <td className="px-4 py-2 font-bold">{formatInt(row.visitas)}</td>
                           <td className="px-4 py-2 font-bold">{formatCurrency(row.facturacion)}</td>
-                          <td className="px-4 py-2 font-bold">{formatCurrency(row.average)}</td>
                           <td className="px-4 py-2"><span className="rounded-full bg-red-100 px-2 py-1 font-black text-red-500">{formatInt(row.alta)}</span></td>
-                          <td className="px-4 py-2 font-bold">{asPercent(row.share)}</td>
-                          <td className="px-4 py-2"><button aria-label={`Ver detalle de ${row.comuna}`} className="text-blue-700" type="button"><Eye size={16} /></button></td>
+                          <td className="px-4 py-2 font-semibold text-[#466083]">{selectedMonthLabel}</td>
+                          <td className="px-4 py-2"><div className="flex items-center gap-2 text-blue-700"><button aria-label={`Ver detalle de ${row.comuna}`} className="rounded-md p-1 hover:bg-blue-50" onClick={() => setTerritorialComunaDetail(row.comuna)} type="button"><Eye size={15} /></button><FileBarChart size={15} /><ClipboardCheck size={15} /><Grid2X2 size={15} /></div></td>
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td className="px-4 py-8 text-center text-sm font-bold text-slate-500" colSpan={9}>
+                        <td className="px-4 py-8 text-center text-sm font-bold text-slate-500" colSpan={6}>
                           {isEmptyCurrentView ? emptyViewMessage : 'Sin datos para los filtros seleccionados.'}
                         </td>
                       </tr>
@@ -2520,7 +2591,7 @@ const dateFilterError = useMemo(() => {
   ];
 
   return (
-    <div className="cc-shell flex min-h-screen font-sans text-[#172448]">
+    <div className="cc-shell flex h-screen font-sans text-[#172448]">
       <style>{`
         .leaflet-control-attribution { font-size: 9px; }
         .leaflet-popup-content-wrapper {
@@ -2528,7 +2599,7 @@ const dateFilterError = useMemo(() => {
           box-shadow: 0 16px 34px rgba(15, 23, 42, 0.18);
         }
         .leaflet-popup-content { margin: 12px 14px; }
-        .leaflet-container { z-index: 0; }
+        .leaflet-container { width: 100%; height: 100%; z-index: 0; }
         @media print {
           body { background: #ffffff; }
           .no-print { display: none !important; }
@@ -2536,7 +2607,7 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-14 flex-col items-center border-r border-slate-200 bg-white py-3">
+      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-slate-200 bg-white py-4">
         <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#0757bd] text-white shadow-lg shadow-blue-900/20">
           <Navigation size={22} />
         </div>
@@ -2569,9 +2640,9 @@ const dateFilterError = useMemo(() => {
         </div>
       </aside>
 
-      <main className="cc-main cc-page print-full ml-14 flex h-screen min-w-0 flex-1 gap-3 overflow-hidden bg-[#f4f7fb] p-3 print:ml-0 print:h-auto print:overflow-visible">
-        <div className="cc-page-content print-full min-w-0 flex-1 overflow-y-auto pr-0.5 print:overflow-visible">
-          <header className="cc-header mb-3 flex min-h-[72px] flex-col gap-3 rounded-lg border border-slate-200 bg-white px-4 py-3 shadow-sm xl:flex-row xl:items-center xl:justify-between">
+      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col bg-[#F8FAFC] h-screen overflow-hidden p-4 print:ml-0 print:h-auto print:overflow-visible">
+        <div className="cc-page-content print-full flex flex-col h-full min-h-0">
+          <header className="cc-header flex-shrink-0 flex min-h-[56px] flex-row items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm xl:justify-between">
             <div className="min-w-0">
               <h1 className="cc-header-title truncate text-xl font-black tracking-tight text-slate-900 2xl:text-2xl">Visor de Facturación y Reclamos</h1>
               <p className="cc-header-subtitle mt-1 text-xs font-semibold text-[#8190ad] 2xl:text-sm">Inteligencia operativa para decisiones estratégicas</p>
@@ -2629,11 +2700,38 @@ const dateFilterError = useMemo(() => {
             </div>
           </header>
 
+          <div className="flex-1 overflow-y-auto min-h-0 pr-0.5">
           {activeTab === 'dashboard' ? (
             <ProtectedView viewKey="dashboard">
               <ProtectedView viewKey={viewMode}>
                 <>
-                <section className="cc-dashboard-filters mb-4" aria-label="Filtros operativos">
+                <section className="cc-primary-tabs mb-2" role="tablist" aria-label="Vista principal">
+                  <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
+                    {hasPermission('rm') ? (
+                      <button
+                        aria-selected={viewMode === 'rm'}
+                        className={`flex-1 rounded-md px-4 py-1.5 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#073B91] text-white shadow-sm' : 'text-[#466083] hover:bg-slate-100 hover:text-[#071b4d]'}`}
+                        onClick={() => setViewMode('rm')}
+                        role="tab"
+                        type="button"
+                      >
+                        RM
+                      </button>
+                    ) : null}
+                    {hasPermission('regiones') ? (
+                      <button
+                        aria-selected={viewMode === 'regiones'}
+                        className={`flex-1 rounded-md px-4 py-1.5 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#073B91] text-white shadow-sm' : 'text-[#466083] hover:bg-slate-100 hover:text-[#071b4d]'}`}
+                        onClick={() => setViewMode('regiones')}
+                        role="tab"
+                        type="button"
+                      >
+                        Regiones
+                      </button>
+                    ) : null}
+                  </div>
+                </section>
+                <section className="cc-dashboard-filters mb-2" aria-label="Filtros operativos">
                   <div className="flex flex-col gap-3 xl:flex-row xl:items-center xl:justify-between">
                     <div className="flex flex-wrap gap-3">
                       <FilterControl
@@ -2651,52 +2749,41 @@ const dateFilterError = useMemo(() => {
                       {dateFilterMode === 'month' ? (
                         <FilterControl icon={<CalendarDays size={20} />} label="Mes" onChange={(value) => setFilters((current) => ({ ...current, month: value }))} options={availableMonths} value={filters.month} />
                       ) : dateFilterMode === 'week' ? (
-                        <label className="cc-filter grid h-12 min-w-[190px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                        <label className="cc-filter grid h-10 min-w-[170px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
                           Semana
                           <input aria-label="Semana" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setSelectedWeek(event.target.value)} type="week" value={selectedWeek} />
                         </label>
                       ) : dateFilterMode === 'day' ? (
-                        <label className="cc-filter grid h-12 min-w-[190px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                        <label className="cc-filter grid h-10 min-w-[170px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
                           Día
                           <input aria-label="Día" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setSelectedDay(event.target.value)} type="date" value={selectedDay} />
                         </label>
                       ) : (
                         <div className="flex flex-wrap gap-2" aria-label="Rango de fechas">
-                          <label className="cc-filter grid h-12 min-w-[160px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                          <label className="cc-filter grid h-10 min-w-[150px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
                             Desde
                             <input aria-label="Fecha de inicio" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setRangeStart(event.target.value)} type="date" value={rangeStart} />
                           </label>
-                          <label className="cc-filter grid h-12 min-w-[160px] gap-0.5 rounded-lg border border-slate-200 bg-white px-3 py-1.5 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                          <label className="cc-filter grid h-10 min-w-[150px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
                             Hasta
                             <input aria-label="Fecha de fin" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" min={rangeStart || undefined} onChange={(event) => setRangeEnd(event.target.value)} type="date" value={rangeEnd} />
                           </label>
                         </div>
                       )}
                       <FilterControl icon={<Siren size={20} />} label="Prioridad" onChange={(value) => setFilters((current) => ({ ...current, priority: value as PriorityFilter }))} options={availablePriorities} value={filters.priority} />
+                      <FilterControl icon={<ClipboardCheck size={20} />} label="Estado" onChange={(value) => setFilters((current) => ({ ...current, status: value as StatusFilter }))} options={availableStatuses} value={filters.status} />
                       <FilterControl icon={<MapPin size={20} />} label="Comuna/Región" onChange={(value) => setFilters((current) => ({ ...current, location: value }))} options={locationOptions} value={filters.location} />
                     </div>
 
-                    <div className={`cc-segmented grid h-12 min-w-[260px] overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm ${hasPermission('rm') && hasPermission('regiones') ? 'grid-cols-2' : 'grid-cols-1'}`} role="tablist" aria-label="Selector de vista">
-                      {hasPermission('rm') ? (
-                        <button aria-selected={viewMode === 'rm' ? 'true' : 'false'} className={`text-sm font-black transition ${viewMode === 'rm' ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`} onClick={() => setViewMode('rm')} role="tab" type="button">
-                          RM
-                        </button>
-                      ) : null}
-                      {hasPermission('regiones') ? (
-                        <button aria-selected={viewMode === 'regiones' ? 'true' : 'false'} className={`text-sm font-black transition ${viewMode === 'regiones' ? 'bg-[#073B91] text-white' : 'text-[#172448] hover:bg-slate-50'}`} onClick={() => setViewMode('regiones')} role="tab" type="button">
-                          Regiones
-                        </button>
-                      ) : null}
-                    </div>
                   </div>
                   <p className="mt-2 text-xs font-semibold text-slate-500">
-                    Filtros activos: {dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día sin seleccionar' : (rangeStart || 'Inicio') + ' — ' + (rangeEnd || 'Fin')} · Prioridad {selectedPriorityLabel} · {selectedLocationLabel}
+                    Filtros activos: {dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día sin seleccionar' : (rangeStart || 'Inicio') + ' — ' + (rangeEnd || 'Fin')} · Prioridad {selectedPriorityLabel} · Estado {selectedStatusLabel} · {selectedLocationLabel}
                   </p>
                   {databaseDashboardLoading ? (
-                    <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Cargando reclamos desde PostgreSQL...</p>
+                    <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Actualizando datos...</p>
                   ) : databaseDashboardError ? (
                     <div className="cc-api-alert mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
-                      <span>No se pudo conectar con toda la API local. El dashboard continúa con datos disponibles o valores en cero.</span>
+                      <span>Algunos datos no se pudieron actualizar. Mostrando la última información disponible.</span>
                       <button className="cc-api-retry rounded-md border border-amber-300 bg-white px-2 py-1 font-bold hover:bg-amber-100" onClick={() => setDatabaseReloadKey((key) => key + 1)} type="button">Reintentar</button>
                     </div>
                   ) : null}
@@ -2707,67 +2794,50 @@ const dateFilterError = useMemo(() => {
                     </p>
                   ) : null}
                 </section>
-                <ExecutiveDashboardLayout widgets={dashboardWidgets} />
-
-                <section className="cc-card rounded-xl border p-4">
-                  <div className="flex flex-wrap items-center justify-between gap-3">
-                    <div>
-                      <h2 className="cc-section-title text-lg font-black">Ruta Visitador</h2>
-                      <p className="cc-muted mt-1 text-xs font-semibold">Resumen operativo seg&uacute;n el periodo seleccionado.</p>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <div className="cc-segmented flex rounded-lg border">
-                        {(['dia', 'semana', 'mes'] as const).map((p) => (
-                          <button
-                            key={p}
-                            aria-selected={routePeriod === p}
-                            className={`px-3 py-1.5 text-xs font-black transition ${routePeriod === p ? '' : 'cc-text-secondary hover:cc-text'}`}
-                            onClick={() => setRoutePeriod(p)}
-                            type="button"
-                          >
-                            {p === 'dia' ? 'Día' : p === 'semana' ? 'Semana' : 'Mes'}
-                          </button>
-                        ))}
-                      </div>
-                      <input
-                        className="cc-input h-9 rounded-lg border px-3 text-xs font-bold"
-                        onChange={(e) => setRouteDateBase(e.target.value)}
-                        type="date"
-                        value={routeDateBase}
-                      />
-                    </div>
-                  </div>
-                  <div className="cc-stat-grid mt-4 grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-7">
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">Tickets ruta</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black">{routeMetrics.ticketsRuta.toLocaleString('es-CL')}</p>
-                    </div>
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">Exitosas</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.exitosas.toLocaleString('es-CL')}</p>
-                    </div>
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">No exitosas</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.noExitosas.toLocaleString('es-CL')}</p>
-                    </div>
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">Pendientes</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-orange, #f97316)' }}>{routeMetrics.pendientes.toLocaleString('es-CL')}</p>
-                    </div>
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">Zonas rojas</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.zonasRojas.toLocaleString('es-CL')}</p>
-                    </div>
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">Total valorizado</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.totalValorizado.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
-                    </div>
-                    <div className="cc-kpi-card cc-card rounded-xl border p-3">
-                      <p className="cc-kpi-label text-xs font-bold">Proyectado m&aacute;ximo</p>
-                      <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-blue, #2563eb)' }}>{routeMetrics.proyectadoMaximo.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
-                    </div>
-                  </div>
-                </section>
+                <ExecutiveDashboardLayout
+                  widgets={dashboardWidgets}
+                  routeMetrics={routeMetrics}
+                  routePeriod={routePeriod}
+                  setRoutePeriod={setRoutePeriod}
+                  routeDateBase={routeDateBase}
+                  setRouteDateBase={setRouteDateBase}
+                  onOpenRegions={() => setViewMode('regiones')}
+                  showTerritorialInsights={viewMode === 'rm'}
+                  territorialMetrics={territorialMetrics}
+                  onOpenTerritorialExplanation={() => setShowTerritorialExplanation(true)}
+                  onOpenTerritorialComuna={(comuna) => setTerritorialComunaDetail(comuna)}
+                  onShowTerritorialEvidence={showEvidenceForComuna}
+                  onOptimizeRoute={openRouteOptimization}
+                  onViewRoutePending={openRoutePending}
+                />
+                {showTerritorialExplanation ? (
+                  <TerritorialExplanationModal
+                    comunaCritica={territorialMetrics.comunaCritica}
+                    topReclamos={territorialMetrics.topReclamos}
+                    hasActiveData={territorialMetrics.hasActiveData}
+                    isUsingFallback={territorialMetrics.isUsingFallback}
+                    onClose={() => setShowTerritorialExplanation(false)}
+                    onOpenComuna={() => {
+                      const comuna = territorialMetrics.comunaCritica?.comuna;
+                      if (!comuna) return;
+                      setShowTerritorialExplanation(false);
+                      setTerritorialComunaDetail(comuna);
+                    }}
+                  />
+                ) : null}
+                {territorialComunaDetail ? (
+                  <TerritorialComunaDetailModal
+                    comuna={territorialComunaDetail}
+                    metric={selectedTerritorialMetric}
+                    onClose={() => setTerritorialComunaDetail(null)}
+                    onFilterComuna={filterComunaFromModal}
+                    onShowEvidence={(comuna) => {
+                      setTerritorialComunaDetail(null);
+                      showEvidenceForComuna(comuna);
+                    }}
+                    onShowMap={showComunaOnMap}
+                  />
+                ) : null}
                 </>
               </ProtectedView>
             </ProtectedView>
@@ -2782,7 +2852,7 @@ const dateFilterError = useMemo(() => {
               />
             </ProtectedView>
           ) : activeTab === 'ruta' ? (
-            <ProtectedView viewKey="ruta"><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" /></ProtectedView>
+            <ProtectedView viewKey="ruta"><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></ProtectedView>
           ) : activeTab === 'settings' ? (
             <ProtectedView viewKey="configuracion">
               <SettingsView
@@ -2808,32 +2878,9 @@ const dateFilterError = useMemo(() => {
               <button className="mt-6 rounded-lg bg-[#073B91] px-5 py-3 text-sm font-black text-white" onClick={() => setActiveTab('dashboard')} type="button">Volver al dashboard</button>
             </Panel>
           )}
+          </div> {/* close scroll-wrapper */}
         </div>
 
-        {shouldShowRegionsPreview ? (
-          <RegionSidebar
-            regionalLayer={regionalLayer}
-            hasRegionalData={hasRegionalData}
-            regionalLayerError={regionalLayerError}
-            regionalMapMetrics={regionalMapMetrics}
-            regionalMaxVisitas={regionalMaxVisitas}
-            setShowRegionModal={setShowRegionModal}
-            operationalSummary={operationalSummary}
-            successfulVisits={successfulVisits}
-            successfulPct={successfulPct}
-          />
-        ) : null}
-
-        {shouldShowRegionsPreview && showRegionModal && (
-          <ModalMap
-            data={regionalLayer}
-            hasRegionalData={hasRegionalData}
-            layerError={regionalLayerError}
-            metricsByComuna={regionalMapMetrics}
-            maxVisitas={regionalMaxVisitas}
-            onClose={() => setShowRegionModal(false)}
-          />
-        )}
         {showImportModal && hasPermission('importaciones') ? <DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /> : null}
       </main>
     </div>
@@ -2848,3 +2895,36 @@ function TrendingUpIcon() {
     </svg>
   );
 }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

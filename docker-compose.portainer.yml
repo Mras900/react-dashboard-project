@@ -7,6 +7,8 @@ services:
       POSTGRES_DB: "${DASHBOARD_DB_NAME:?DASHBOARD_DB_NAME requerida}"
       POSTGRES_USER: "${DASHBOARD_DB_USER:?DASHBOARD_DB_USER requerido}"
       POSTGRES_PASSWORD: "${DASHBOARD_DB_PASSWORD:?DASHBOARD_DB_PASSWORD requerida}"
+    ports:
+      - "5432:5432"
     volumes:
       - dashboard_postgres_data:/var/lib/postgresql/data
     networks:

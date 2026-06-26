@@ -314,3 +314,8 @@ Verificar:
 * El cambio no rompe el diseño.
 * El cambio no afecta lógica no relacionada.
 * Se explicó cómo probar manualmente.
+
+<!-- SPECKIT START -->
+Current Spec Kit plan: `specs/001-fix-import-dashboard-refresh/plan.md`.
+Read it before implementing import/dashboard refresh changes. It defines the source-of-truth decision, likely files to modify, contracts, validation commands, risks, and constraints for preserving RM, Regiones, Leaflet, filters, Ruta Visitador, Censo scripts, and `data/raw`.
+<!-- SPECKIT END -->

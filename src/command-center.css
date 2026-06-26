@@ -4000,3 +4000,355 @@
     transition: none !important;
   }
 }
+
+/* Ruta Visitador: contraste y distribución compacta */
+.cc-route-card {
+  color: var(--cc-text, #0f172a) !important;
+  background: var(--bg-card, #ffffff) !important;
+  box-shadow: 0 6px 16px rgba(15, 23, 42, 0.07) !important;
+}
+
+.cc-route-card input,
+.cc-route-card textarea,
+.cc-route-card select {
+  color: var(--cc-text, #0f172a) !important;
+}
+
+.cc-route-card input::placeholder,
+.cc-route-card textarea::placeholder {
+  color: transparent !important;
+}
+
+.cc-route-stop-name,
+.cc-route-stop-meta,
+.cc-text-secondary {
+  overflow-wrap: anywhere;
+}
+
+.route-kpi-strip-pro .cc-route-kpi {
+  min-height: 78px;
+}
+
+.route-map-section-pro .cc-route-map-compact {
+  height: 460px;
+}
+
+@media (min-width: 1280px) and (max-width: 1535px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: minmax(300px, 340px) minmax(0, 1fr) !important;
+    grid-template-areas:
+      "calendar hero"
+      "ticket hero"
+      "weather hero" !important;
+  }
+
+  .route-hero-pro {
+    min-height: 100%;
+  }
+
+  .route-map-section-pro .cc-route-map-compact {
+    height: 500px;
+  }
+
+  .route-bottom-grid-pro {
+    grid-template-columns: minmax(0, 1fr) minmax(280px, 320px) !important;
+  }
+}
+
+@media (min-width: 1536px) {
+  .cc-route-top-grid-v2 {
+    grid-template-columns: 300px minmax(560px, 1fr) 280px !important;
+    grid-template-areas:
+      "calendar hero weather"
+      "ticket hero weather" !important;
+  }
+
+  .route-map-section-pro .cc-route-map-compact {
+    height: 520px;
+  }
+}
+
+@media (max-width: 640px) {
+  .route-map-section-pro .cc-route-map-compact {
+    height: 340px;
+  }
+}
+
+/* Dashboard ejecutivo: mapa central, KPIs superiores y analisis por tabs */
+.cc-header {
+  position: sticky;
+  top: 0;
+  z-index: 20;
+}
+
+.cc-executive-dashboard {
+  --exec-gap: 1.25rem;
+}
+
+.cc-exec-kpi-row > div,
+.cc-exec-insights > div,
+.cc-exec-insights > section {
+  min-width: 0;
+}
+
+.cc-exec-kpi-row .cc-kpi-card-pro {
+  min-height: 116px;
+  padding: 1rem !important;
+}
+
+.cc-exec-map-grid .cc-main-map-frame > section,
+.cc-exec-map-grid .cc-main-map-frame .cc-map-panel {
+  height: 100%;
+}
+
+.cc-exec-map-grid .cc-map-panel {
+  min-height: 520px;
+}
+
+.cc-exec-map-grid .cc-map-surface {
+  min-height: 430px;
+}
+
+.cc-exec-insights .cc-kpi-card-pro {
+  min-height: 112px;
+  padding: 1rem !important;
+}
+
+.cc-insight-cta {
+  background: linear-gradient(180deg, color-mix(in srgb, var(--cc-blue, #2563eb) 8%, var(--bg-card, #ffffff)), var(--bg-card, #ffffff)) !important;
+}
+
+.cc-analysis-shell {
+  box-shadow: 0 8px 24px rgba(15, 23, 42, 0.06);
+}
+
+.cc-analysis-tab {
+  color: var(--cc-text-secondary, #466083);
+  position: relative;
+}
+
+.cc-analysis-tab[aria-selected="true"] {
+  background: color-mix(in srgb, var(--cc-blue, #2563eb) 10%, transparent);
+  color: var(--cc-blue, #2563eb);
+}
+
+.cc-analysis-tab[aria-selected="true"]::after {
+  position: absolute;
+  inset: auto 0 -0.6rem;
+  height: 2px;
+  border-radius: 999px;
+  background: var(--cc-blue, #2563eb);
+  content: "";
+}
+
+.cc-route-summary-card .cc-kpi-card {
+  min-width: 0;
+}
+
+@media (min-width: 1280px) {
+  .cc-exec-map-grid {
+    align-items: stretch;
+  }
+
+  .cc-exec-map-grid .cc-map-panel {
+    min-height: 620px;
+  }
+
+  .cc-exec-map-grid .cc-map-surface {
+    min-height: 520px;
+  }
+}
+
+@media (max-width: 1279px) {
+  .cc-exec-insights {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 767px) {
+  .cc-header {
+    position: static;
+  }
+
+  .cc-exec-kpi-row {
+    display: grid;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(220px, 78vw);
+    overflow-x: auto;
+    padding-bottom: 0.25rem;
+  }
+
+  .cc-exec-insights {
+    grid-template-columns: 1fr;
+  }
+
+  .cc-analysis-shell {
+    padding: 0.875rem !important;
+  }
+}
+
+[data-theme="dark-premium"] .cc-main,
+[data-theme="dark-premium"] .cc-page {
+  background: #0B1120 !important;
+}
+
+[data-theme="dark-premium"] .cc-header,
+[data-theme="dark-premium"] .cc-analysis-shell,
+[data-theme="dark-premium"] .cc-insight-cta,
+[data-theme="dark-premium"] .cc-route-summary-card {
+  border-color: #26364F !important;
+  background: #111827 !important;
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark-premium"] .cc-analysis-tab {
+  color: #94A3B8;
+}
+
+[data-theme="dark-premium"] .cc-analysis-tab[aria-selected="true"] {
+  background: rgba(37, 99, 235, 0.18);
+  color: #F8FAFC;
+}
+
+[data-theme="dark-premium"] .cc-kpi-left-column .cc-card,
+[data-theme="dark-premium"] .cc-insights-right-column .cc-card,
+[data-theme="dark-premium"] .cc-map-panel,
+[data-theme="dark-premium"] .cc-chart-card,
+[data-theme="dark-premium"] .cc-route-summary-card .cc-card {
+  border-color: #26364F !important;
+  background: #111827 !important;
+  color: #F8FAFC !important;
+}
+
+/* ============================================
+   New 3-column executive layout
+   ============================================ */
+.cc-exec-map-row {
+  align-items: stretch;
+}
+
+/* KPI left column cards in dark theme */
+[data-theme="dark-premium"] .cc-kpi-left-column .cc-card {
+  background: linear-gradient(135deg, #111827 0%, #172033 100%) !important;
+  border: 1px solid #26364F !important;
+}
+
+[data-theme="dark-premium"] .cc-kpi-left-column .cc-card .cc-kpi-icon {
+  background: rgba(37, 99, 235, 0.15) !important;
+}
+
+/* Insight right column cards */
+[data-theme="dark-premium"] .cc-insights-right-column .cc-card {
+  border-color: #26364F !important;
+  background: #111827 !important;
+}
+
+/* Summary row stat cards */
+[data-theme="dark-premium"] .cc-executive-dashboard .grid.grid-cols-1.gap-4.md\:grid-cols-2.xl\:grid-cols-4 .cc-card,
+[data-theme="dark-premium"] section.grid.grid-cols-1.gap-4.md\:grid-cols-2.xl\:grid-cols-4 .cc-card {
+  border-color: #26364F !important;
+  background: #111827 !important;
+}
+
+/* Chart cards dark */
+[data-theme="dark-premium"] .cc-chart-card {
+  border-color: #26364F !important;
+  background: #111827 !important;
+}
+
+[data-theme="dark-premium"] .cc-chart-title {
+  color: #F8FAFC !important;
+}
+
+/* Primary metric cards in KPI left column */
+[data-theme="dark-premium"] .cc-kpi-left-column .cc-primary-metric {
+  background: linear-gradient(135deg, #111827 0%, #172033 100%) !important;
+}
+
+[data-theme="dark-premium"] .cc-kpi-left-column .cc-primary-title {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark-premium"] .cc-kpi-left-column .cc-primary-value {
+  color: #F8FAFC !important;
+}
+
+/* Table dark */
+[data-theme="dark-premium"] table {
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark-premium"] table thead {
+  background: #172033 !important;
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark-premium"] table tbody tr {
+  border-color: #26364F !important;
+}
+
+[data-theme="dark-premium"] table tbody tr:hover {
+  background: rgba(37, 99, 235, 0.08) !important;
+}
+
+/* Evidence section dark */
+[data-theme="dark-premium"] .cc-dashboard-layout .overflow-hidden .border-slate-200 {
+  border-color: #26364F !important;
+}
+
+[data-theme="dark-premium"] .cc-dashboard-layout .overflow-hidden .bg-slate-50\/70 {
+  background: #172033 !important;
+}
+
+/* Primary tabs bar dark */
+[data-theme="dark-premium"] .cc-primary-tabs > div {
+  border-color: #26364F !important;
+  background: #111827 !important;
+}
+
+[data-theme="dark-premium"] .cc-primary-tabs button[aria-selected="false"] {
+  color: #94A3B8 !important;
+}
+
+[data-theme="dark-premium"] .cc-primary-tabs button[aria-selected="false"]:hover {
+  background: rgba(37, 99, 235, 0.1) !important;
+  color: #F8FAFC !important;
+}
+
+/* Stat strip items in dark mode */
+[data-theme="dark-premium"] .cc-kpi-card-pro,
+[data-theme="dark-premium"] .cc-stat-item {
+  border-color: #26364F !important;
+  background: #111827 !important;
+}
+
+/* Empty state */
+[data-theme="dark-premium"] .cc-empty-state {
+  color: #94A3B8 !important;
+}
+
+/* Responsive: below xl, stack columns */
+@media (max-width: 1279px) {
+  .cc-exec-map-row {
+    grid-template-columns: 1fr !important;
+  }
+  .cc-kpi-left-column {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+  .cc-insights-right-column {
+    display: grid !important;
+    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .cc-kpi-left-column {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  .cc-insights-right-column {
+    display: flex !important;
+    flex-direction: column !important;
+  }
+}

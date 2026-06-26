@@ -45,6 +45,9 @@ vite.config.js
 vite.config.d.ts
 
 # Capas geograficas pesadas / fuentes SHP
+data/raw/
+*.zip
+*.parquet
 public/data/map-layers/ComunasChile/
 public/data/map-layers/chile_comunas.geojson
 *.shp
@@ -55,4 +58,11 @@ public/data/map-layers/chile_comunas.geojson
 *.prj
 *.cpg
 *.shp.xml
+!data/processed/
+!data/processed/*.csv
+!data/processed/*.json
+!data/processed/*.geojson
 .env.local
+.local_pg_password.txt
+.local_pgdata/
+

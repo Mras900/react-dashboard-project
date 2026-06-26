@@ -1,4 +1,5 @@
 import type { GeoJsonObject } from 'geojson';
+import type { ImportedDashboardRow } from '../data-import/importTypes';
 
 export type RutaVisitStatus = 'pendiente' | 'exitosa' | 'no_exitosa';
 
@@ -89,6 +90,7 @@ export type RutaStop = RutaCrmTicket & {
 
 export type RutaVisitadorViewProps = {
   redZonesGeoJson: string;
+  importedReclamos?: ImportedDashboardRow[];
 };
 
 export type RutaSummary = {
@@ -166,3 +168,4 @@ export type SaveDailyVisitsPayload = {
     fuel_cost: number;
   } | null;
 };
+

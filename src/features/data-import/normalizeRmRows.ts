@@ -1,21 +1,31 @@
 import type { ImportedDashboardRow, ImportMode, RawImportedRow } from './importTypes';
-import { getField, normalizePriority, normalizeRegionName, normalizeVisitStatus, parseMoney } from './normalizeImportedRows';
+import {
+  getAliasField,
+  getRawAliasField,
+  formatImportedDate,
+  normalizePriority,
+  normalizeRegionName,
+  normalizeVisitStatus,
+  parseBooleanValue,
+  parseMoney,
+  parseNumberValue,
+} from './normalizeImportedRows';
 
 function getRmTicket(row: RawImportedRow) {
-  return getField(row, ['ID', 'N° Ticket', 'Ticket']);
+  return getAliasField(row, 'ticket');
 }
 
 function getRmDate(row: RawImportedRow) {
-  return getField(row, ['Fecha de Retiro / Entrega', 'Fecha Visita']);
+  return getAliasField(row, 'fechaVisita');
 }
 
 function getRmComuna(row: RawImportedRow) {
-  return getField(row, ['Descripción Comuna', 'Comuna', 'Ciudad']);
+  return getAliasField(row, 'comuna');
 }
 
 function buildValidationMessage(row: RawImportedRow) {
   const messages: string[] = [];
-  if (!getRmTicket(row)) messages.push('Falta ID, N° Ticket o Ticket');
+  if (!getRmTicket(row)) messages.push('Falta Ticket');
   if (!getRmComuna(row)) messages.push('Falta comuna');
   if (!getRmDate(row)) messages.push('Falta fecha visita');
   return messages;
@@ -24,36 +34,51 @@ function buildValidationMessage(row: RawImportedRow) {
 export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, importMode: ImportMode = 'rm'): ImportedDashboardRow[] {
   const normalizedRows = rows.map((row, index) => {
     const ticket = getRmTicket(row);
-    const estadoVisita = getField(row, ['Estado', 'Estado Visita']);
+    const estadoVisita = getAliasField(row, 'estadoVisita');
     const validationMessages = buildValidationMessage(row);
     const comuna = getRmComuna(row);
-    const facturaField = getField(row, ['FACTURA']);
-    const facturaInformada = facturaField !== '';
-    const facturacionTotal = facturaInformada ? parseMoney(facturaField) : 0;
+    const factura = getAliasField(row, 'factura');
+    const facturaInformada = factura !== '';
+    const precioNeto = parseMoney(getAliasField(row, 'precioNeto'));
+    const traslado = parseMoney(getAliasField(row, 'traslado'));
+    const precioNetoTraslado = parseMoney(getAliasField(row, 'precioNetoTraslado')) || precioNeto + traslado;
+    const facturacionTotal = facturaInformada ? parseMoney(factura) : precioNetoTraslado;
+    const regionOriginal = getAliasField(row, 'region');
 
     return {
       importRowId: `${sourceFileName}-${importMode}-rm-${index}`,
       ticket,
-      fechaVisita: getRmDate(row),
-      prioridad: normalizePriority(getField(row, ['Prioridad'])),
+      fechaVisita: formatImportedDate(getRawAliasField(row, 'fechaVisita')),
+      fechaRecepcionTicket: formatImportedDate(getRawAliasField(row, 'fechaRecepcion')),
+      fechaEnvioMuestras: formatImportedDate(getRawAliasField(row, 'fechaEnvio')),
+      prioridad: normalizePriority(getAliasField(row, 'prioridad')),
       estadoVisita,
       estadoVisitaNormalizado: normalizeVisitStatus(estadoVisita),
-      regionOriginal: getField(row, ['REGION_KUT', 'Región']),
-      regionNormalizada: normalizeRegionName(getField(row, ['REGION_KUT', 'Región'])),
+      regionOriginal,
+      regionNormalizada: normalizeRegionName(regionOriginal),
       comuna,
-      ciudad: comuna,
-      calle: getField(row, ['Calle']),
-      numeroDireccion: getField(row, ['Número', 'Numero']),
-      cliente: getField(row, ['Cliente']),
+      ciudad: getAliasField(row, 'ciudad') || comuna,
+      calle: getAliasField(row, 'calle'),
+      numeroDireccion: getAliasField(row, 'numero'),
+      cliente: getAliasField(row, 'cliente'),
       facturacionTotal,
+      factura,
       facturaInformada,
+      tarifaRuta: parseMoney(getAliasField(row, 'tarifaRuta')),
       tarifaCalculada: facturaInformada ? facturacionTotal : 0,
+      km: parseNumberValue(getAliasField(row, 'km')),
+      precioNeto,
+      traslado,
+      precioNetoTraslado,
+      valorEnvioBulto: parseMoney(getAliasField(row, 'valorEnvio')),
+      retiroMuestra: parseBooleanValue(getAliasField(row, 'retiroMuestra')),
+      trackingStarken: getAliasField(row, 'tracking'),
       scope: 'rm' as const,
       sourceFileName,
       importMode,
       validationStatus: validationMessages.length > 0 ? ('warning' as const) : ('valid' as const),
       validationMessage: validationMessages.join('; '),
-      observacion: getField(row, ['OBSERVCION', 'OBSERVACION']),
+      observacion: getAliasField(row, 'observacion'),
       extraFields: row,
     };
   });
@@ -67,7 +92,7 @@ export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, 
   rowsByDate.forEach((dailyRows) => {
     const isHighVolumeDay = dailyRows.length > 13;
     dailyRows.forEach((row) => {
-      if (row.facturaInformada) return;
+      if (row.facturaInformada || row.precioNetoTraslado) return;
 
       let tariff = 0;
       if (row.estadoVisitaNormalizado === 'completada') tariff = isHighVolumeDay ? 17500 : 21500;

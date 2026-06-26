@@ -1,5 +1,37 @@
 import type { ImportedDashboardRow, ImportedPriority, ImportedVisitStatus, ImportSummary, RawImportedRow } from './importTypes';
 
+export const IMPORT_COLUMN_ALIASES = {
+  ticket: ['Ticket', 'N° Ticket', 'N Ticket', 'ID'],
+  prioridad: ['Prioridad'],
+  retiroMuestra: ['Retiro Muestra'],
+  region: ['Región', 'Region', 'REGION_KUT'],
+  ciudad: ['Ciudad'],
+  comuna: ['Comuna', 'Descripción Comuna', 'Descripcion Comuna', 'Ciudad'],
+  cliente: ['Cliente'],
+  fechaRecepcion: ['Fecha Recepción', 'Fecha Recepcion', 'Fecha Recepcion ticket', 'Fecha Recepcion Ticket'],
+  fechaVisita: ['Fecha Visita', 'Fecha de Retiro / Entrega'],
+  estadoVisita: ['Estado Visita', 'Estado'],
+  tarifaRuta: ['Tarifa Ruta'],
+  km: ['KM', 'Cant. KM', 'Cant KM'],
+  precioNeto: ['Precio Neto', 'Precio Neto (Tarifa Plana)', 'Precio Neto Tarifa Plana'],
+  traslado: ['Traslado'],
+  precioNetoTraslado: ['Precio Neto + Traslado'],
+  fechaEnvio: ['Fecha Envío', 'Fecha Envio', 'Fecha Envio Valija', 'Fecha Envio de Muestras', 'Fecha Envio Muestras'],
+  tracking: ['Tracking', 'N° Tracking Starken', 'N Tracking Starken'],
+  valorEnvio: ['Valor Envío', 'Valor Envio', 'Valor Envio Bulto'],
+  observacion: ['Observación', 'Observacion', 'OBSERVACION', 'OBSERVCION'],
+  factura: ['Factura', 'FACTURA'],
+  calle: ['Calle'],
+  numero: ['Número', 'Numero'],
+  mes: ['Mes'],
+} as const;
+
+export type ImportColumnKey = keyof typeof IMPORT_COLUMN_ALIASES;
+
+export function aliasesFor(key: ImportColumnKey): string[] {
+  return [...IMPORT_COLUMN_ALIASES[key]];
+}
+
 export function normalizeHeader(value: string) {
   return value
     .normalize('NFD')
@@ -10,7 +42,17 @@ export function normalizeHeader(value: string) {
     .toLowerCase();
 }
 
-export function getField(row: RawImportedRow, candidates: string[]) {
+export function detectImportedColumns(rows: RawImportedRow[]) {
+  const detected = new Set<string>();
+  rows.forEach((row) => {
+    Object.keys(row).forEach((key) => {
+      if (String(key).trim()) detected.add(key);
+    });
+  });
+  return [...detected].sort((a, b) => a.localeCompare(b, 'es'));
+}
+
+export function getField(row: RawImportedRow, candidates: readonly string[]) {
   const normalizedCandidates = candidates.map(normalizeHeader);
   const entry = Object.entries(row).find(([key]) => normalizedCandidates.includes(normalizeHeader(key)));
   const value = entry?.[1];
@@ -18,10 +60,18 @@ export function getField(row: RawImportedRow, candidates: string[]) {
   return value === null || value === undefined ? '' : String(value).trim();
 }
 
-export function getRawField(row: RawImportedRow, candidates: string[]) {
+export function getAliasField(row: RawImportedRow, key: ImportColumnKey) {
+  return getField(row, IMPORT_COLUMN_ALIASES[key]);
+}
+
+export function getRawField(row: RawImportedRow, candidates: readonly string[]) {
   const normalizedCandidates = candidates.map(normalizeHeader);
   const entry = Object.entries(row).find(([key]) => normalizedCandidates.includes(normalizeHeader(key)));
   return entry?.[1];
+}
+
+export function getRawAliasField(row: RawImportedRow, key: ImportColumnKey) {
+  return getRawField(row, IMPORT_COLUMN_ALIASES[key]);
 }
 
 export function formatImportedDate(value: unknown) {

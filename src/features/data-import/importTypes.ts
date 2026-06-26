@@ -26,11 +26,14 @@ export interface ImportedDashboardRow {
   numeroDireccion?: string;
   cliente?: string;
   facturacionTotal?: number;
+  factura?: string;
   facturaInformada?: boolean;
   tarifaRuta?: number;
   tarifaCalculada?: number;
   km?: number;
+  precioNeto?: number;
   traslado?: number;
+  precioNetoTraslado?: number;
   valorEnvioBulto?: number;
   retiroMuestra?: boolean;
   trackingStarken?: string;
@@ -41,6 +44,22 @@ export interface ImportedDashboardRow {
   validationStatus?: ImportValidationStatus;
   validationMessage?: string;
   extraFields?: RawImportedRow;
+}
+
+export type ImportBackendError = string | { row?: number; message: string };
+
+export interface ImportResult {
+  ok: boolean;
+  filas_recibidas?: number;
+  filasRecibidas?: number;
+  insertados: number;
+  actualizados?: number;
+  omitidos?: number;
+  unmapped?: number;
+  errores?: ImportBackendError[];
+  detected_columns?: string[];
+  columnas_detectadas?: string[];
+  message?: string;
 }
 
 export interface ImportSummary {
@@ -60,4 +79,5 @@ export interface ImportPreviewResult {
   rows: ImportedDashboardRow[];
   summary: ImportSummary;
   fileName: string;
+  detectedColumns: string[];
 }
