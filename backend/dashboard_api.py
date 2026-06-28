@@ -2,6 +2,7 @@ from contextlib import contextmanager
 from datetime import date, datetime
 from decimal import Decimal, InvalidOperation
 from typing import Any
+import logging
 
 from fastapi import APIRouter, Body, HTTPException, Query
 from sqlalchemy import inspect, text
@@ -11,6 +12,7 @@ from database import engine
 
 
 router = APIRouter()
+logger = logging.getLogger(__name__)
 
 BASE_IMPORT_COLUMNS = (
     "ticket", "mes", "region", "comuna", "cliente", "prioridad", "estado_visita",
@@ -313,20 +315,22 @@ def dashboard_communes(
     estado: str | None = Query(default=None),
 ) -> list[dict[str, str | float | int | None]]:
     where_clause, values = _build_claim_filters(mes=mes, fecha_inicio=fecha_inicio, fecha_fin=fecha_fin, region=region, comuna=comuna, prioridad=prioridad, estado=estado)
-    columns = _get_reclamos_columns()
-    comuna_expr = "COALESCE(NULLIF(TRIM(comuna), ''), NULLIF(TRIM(ciudad), ''), 'Sin comuna')" if "ciudad" in columns else "COALESCE(NULLIF(TRIM(comuna), ''), 'Sin comuna')"
-    has_scope = "dataset_scope" in columns
-    scope_expr = "COALESCE(NULLIF(TRIM(dataset_scope), ''), 'rm')" if has_scope else "'rm'"
+    comuna_expr = "COALESCE(NULLIF(TRIM(comuna), ''), NULLIF(TRIM(ciudad), ''), 'Sin ubicación')"
+    region_expr = "COALESCE(NULLIF(TRIM(region), ''), CASE WHEN dataset_scope = 'rm' THEN 'Región Metropolitana' ELSE 'Regiones' END)"
+    scope_expr = "COALESCE(NULLIF(TRIM(dataset_scope), ''), CASE WHEN region ILIKE '%metropolitana%' THEN 'rm' ELSE 'regiones' END)"
+    value_expr = "COALESCE(facturacion, precio_neto_traslado, precio_neto, 0)"
+    average_expr = "COALESCE(promedio, facturacion, precio_neto_traslado, precio_neto, 0)"
     raw_sql = f"""
-        SELECT {comuna_expr} AS comuna,
-               COALESCE(NULLIF(TRIM(region), ''), 'Región Metropolitana') AS region,
-               {scope_expr} AS dataset_scope,
-               COUNT(*) AS reclamos,
-               COALESCE(SUM(facturacion), 0) AS facturacion,
-               COALESCE(AVG(facturacion), 0) AS promedio,
-               SUM(CASE WHEN LOWER(TRIM(COALESCE(prioridad, ''))) IN ('alta', 'alto', 'high') THEN 1 ELSE 0 END) AS prioridad_alta
+        SELECT
+          {comuna_expr} AS comuna,
+          {region_expr} AS region,
+          {scope_expr} AS dataset_scope,
+          COUNT(*)::int AS reclamos,
+          COALESCE(SUM({value_expr}), 0)::float AS facturacion,
+          COALESCE(AVG({average_expr}), 0)::float AS promedio,
+          SUM(CASE WHEN LOWER(TRIM(COALESCE(prioridad, ''))) IN ('alta', 'alto', 'high') THEN 1 ELSE 0 END)::int AS prioridad_alta
         FROM reclamos {where_clause}
-        GROUP BY {comuna_expr}, {scope_expr}
+        GROUP BY {comuna_expr}, {region_expr}, {scope_expr}
         ORDER BY reclamos DESC, facturacion DESC
     """
     try:
@@ -334,8 +338,10 @@ def dashboard_communes(
             _ensure_reclamos_columns(conn)
             rows = conn.execute(text(raw_sql), values).fetchall()
     except SQLAlchemyError as error:
-        raise _database_unavailable() from error
+        logger.exception("Error querying /api/dashboard/comunas")
+        raise HTTPException(status_code=500, detail="Error al consultar comunas en la base de datos.") from error
     except RuntimeError as error:
+        logger.exception("Database unavailable for /api/dashboard/comunas")
         raise HTTPException(status_code=503, detail=str(error)) from error
     return [
         {
