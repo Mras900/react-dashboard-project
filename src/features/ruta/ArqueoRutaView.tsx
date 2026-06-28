@@ -1,5 +1,5 @@
 import { useCallback, useMemo, useState } from 'react';
-import { CheckCircle2, ClipboardCheck, MapPin, Route } from 'lucide-react';
+import { ClipboardCheck, MapPin } from 'lucide-react';
 import { MapContainer, TileLayer, CircleMarker, Popup, ZoomControl } from 'react-leaflet';
 import { getRouteDailyVisits, upsertRouteDailyVisit, dispatchRouteDailyUpdate } from './routeDailyStorage';
 import type { RouteDailyVisit } from './routeDailyStorage';

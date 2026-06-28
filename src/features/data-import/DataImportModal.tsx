@@ -2,7 +2,7 @@ import { Download, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { classifyTerritory } from './classifyTerritory';
 import { FileUploadDropzone } from './FileUploadDropzone';
-import { clearImportedRows, saveAutoImportedRows, saveImportedRows } from './importStorage';
+import { clearImportedRows, saveImportedRows } from './importStorage';
 import type { ImportedDashboardRow, ImportMode, ImportPreviewResult, ImportResult, RawImportedRow } from './importTypes';
 import { ImportPreviewTable, type ImportPreviewFilter } from './ImportPreviewTable';
 import { ImportSummaryCards } from './ImportSummaryCards';

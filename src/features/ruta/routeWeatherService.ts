@@ -3,6 +3,14 @@ import type { RouteWeatherParams, RouteWeatherRisk, RouteWeatherSummary, RouteWe
 const CACHE_KEY = 'dashboard-route-weather-cache';
 const CACHE_TTL_MS = 6 * 60 * 60 * 1000; // 6 hours
 const FORECAST_API = 'https://api.open-meteo.com/v1/forecast';
+type BackendRouteWeatherResponse = RouteWeatherSummary & {
+  source?: string;
+  temperatureCurrent?: number | null;
+  humidity?: number | null;
+  precipitationCurrent?: number | null;
+  windSpeedCurrent?: number | null;
+  windGusts?: number | null;
+};
 
 function readCache(): Map<string, RouteWeatherCacheEntry> {
   try {
@@ -120,7 +128,7 @@ export async function fetchRouteWeather(params: RouteWeatherParams): Promise<Rou
     const backendUrl = `/api/weather/route?lat=${params.latitude}&lon=${params.longitude}&date=${params.date}`;
     const backendResp = await fetch(backendUrl);
     if (backendResp.ok) {
-      const backendData: RouteWeatherSummary & { source?: string } = await backendResp.json();
+      const backendData: BackendRouteWeatherResponse = await backendResp.json();
       if (backendData.source === 'openweather') {
         const summary: RouteWeatherSummary = {
           source: 'openweather',

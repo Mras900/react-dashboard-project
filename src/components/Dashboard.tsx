@@ -1,17 +1,13 @@
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
-  Bell,
   Building2,
   CalendarDays,
   Calculator,
-  CheckCircle2,
   ClipboardCheck,
   ChevronDown,
   ChevronUp,
   ChevronsLeft,
-  CloudDownload,
-  Crown,
   Download,
   Eye,
   FileBarChart,
@@ -19,40 +15,35 @@ import {
   HelpCircle,
   Landmark,
   MapPin,
-  Moon,
   Navigation,
   Plus,
   Route,
   Search,
   ShieldCheck,
   Siren,
-  Sun,
   Trash2,
-  Truck,
   Users,
   UserCog,
 } from 'lucide-react';
 import type { Feature, FeatureCollection, GeoJsonObject } from 'geojson';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
-import { GeoJSON, LayerGroup, LayersControl, MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
-import { monthlyFacturacion, operationalSummary, sourceSummary, type ComunaMetric } from '../data/dashboardData';
+import { GeoJSON, LayersControl, MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
+import { monthlyFacturacion, sourceSummary, type ComunaMetric } from '../data/dashboardData';
 import { DataImportModal } from '../features/data-import/DataImportModal';
 import { aggregateImportedRows, loadRegionImportedRows, loadRmImportedRows } from '../features/data-import/importStorage';
-import { normalizeVisitStatus } from '../features/data-import/normalizeImportedRows';
-import type { ImportedDashboardRow, ImportedVisitStatus, ImportResult } from '../features/data-import/importTypes';
+import type { ImportedDashboardRow, ImportedVisitStatus } from '../features/data-import/importTypes';
 import type { DashboardWidget } from '../features/layout/types';
 import { MapView } from '../features/mapa/MapView';
 import { ReportsView } from '../features/reports/ReportsView';
 import { RutaVisitadorView } from '../features/ruta/RutaVisitadorView';
-import { ArqueoRutaView } from '../features/ruta/ArqueoRutaView';
 import { UserMenu } from '../features/user/UserMenu';
 import { ProtectedView } from '../features/auth/ProtectedView';
 import type { AppViewKey } from '../features/auth/authTypes';
 import { useAuth } from '../features/auth/useAuth';
 import { UserManagementView } from '../features/users/UserManagementView';
 import { loadRegionalGeoLayer } from '../features/maps/loadRegionalGeoLayer';
-import { getRegionalFeatureName, normalizeMapJoinKey } from '../features/maps/normalizeMapJoinKey';
+import { normalizeMapJoinKey } from '../features/maps/normalizeMapJoinKey';
 import { RegionClaimsLayer } from '../features/maps/RegionClaimsLayer';
 import { ActiveRedZonesLayers } from '../features/red-zones/ActiveRedZonesLayers';
 import { fetchRedZones } from '../features/red-zones/redZonesApi';
@@ -66,6 +57,10 @@ import type { RoutePeriod, RouteDailyMetrics } from '../features/ruta/routeDaily
 import type { RedZone } from '../features/red-zones/redZoneTypes';
 import { fetchDashboardDailyVisits, type DashboardDailyResponse } from '../services/dashboardApi';
 import { fetchDashboardDatabase, type DashboardClaim, type DashboardDatabaseResponse } from '../services/dashboardDatabaseApi';
+import { TailAdminTopbar } from '../features/layout/TailAdminTopbar';
+import { TailAdminSidePanel } from '../features/layout/TailAdminSidePanel';
+import { TailAdminRightPanel } from '../features/layout/TailAdminRightPanel';
+import { TailAdminKpiCard } from '../features/ui-tailadmin/TailAdminKpiCard';
 import { isRmComuna } from '../services/rmComunas';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
@@ -425,8 +420,6 @@ const getFeatureComunaName = (feature: Feature | undefined) => {
   );
 };
 
-const escapePopupValue = (value: string) =>
-  value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#039;');
 
 const emptyRegionalMetric = (comuna: string): RegionalMapMetric => ({
   comuna,
@@ -592,43 +585,37 @@ function PrimaryMetric({
   onAction?: () => void;
 }) {
   return (
-    <Panel className="cc-kpi-card-pro cc-kpi flex h-full min-h-[150px] flex-col justify-between gap-4 p-4">
-      <div className="flex min-w-0 items-start gap-3">
-        <div data-tone={tone} className="cc-kpi-icon-pro flex h-11 w-11 shrink-0 items-center justify-center rounded-full">{icon}</div>
-        <div className="min-w-0 flex-1">
-          <p className="cc-kpi-label-pro">{title}</p>
-          <p className="cc-kpi-value-pro mt-2 text-2xl font-black leading-tight 2xl:text-3xl">{value}</p>
-          <p data-tone={tone} className="cc-kpi-trend-pro mt-2 leading-relaxed" style={{color:tone==='red'?'var(--cc-red)':tone==='cyan'?'var(--cc-cyan)':'var(--cc-green)'}}>{delta}</p>
-        </div>
-      </div>
+    <div className="flex h-full flex-col gap-2">
+      <TailAdminKpiCard
+        className="flex-1"
+        detail={delta}
+        icon={icon}
+        title={title}
+        tone={tone}
+        value={value}
+      />
       {actionLabel ? (
-        <div className="mt-auto border-t border-slate-200 pt-3 dark:border-slate-700">
-          <button
-            className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
-            onClick={onAction}
-            type="button"
-          >
-            {actionLabel}
-          </button>
-        </div>
+        <button
+          className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-[11px] font-black text-[#AFC6FF] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07]"
+          onClick={onAction}
+          type="button"
+        >
+          {actionLabel}
+        </button>
       ) : null}
-    </Panel>
+    </div>
   );
 }
 
 function InsightCard({
   icon,
+  iconClass = '',
   label,
   title,
   detail,
   badge,
   actionLabel,
   onAction,
-  secondaryActionLabel,
-  onSecondaryAction,
-  showCrown,
-  progressPct,
-  progressTone = 'blue',
 }: {
   icon: React.ReactNode;
   iconClass?: string;
@@ -644,42 +631,35 @@ function InsightCard({
   progressPct?: number;
   progressTone?: 'blue' | 'red' | 'green';
 }) {
+  const tailAdminTone = iconClass.includes('emerald')
+    ? 'green'
+    : iconClass.includes('blue')
+      ? 'blue'
+      : iconClass.includes('orange')
+        ? 'amber'
+        : 'slate';
+
   return (
-    <Panel className="cc-kpi-card-pro flex h-full min-h-[140px] flex-col justify-between gap-3 p-4">
-      <div className="min-w-0">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 items-center gap-3">
-            <div className="cc-kpi-icon-pro flex h-9 w-9 shrink-0 items-center justify-center rounded-full">{icon}</div>
-            <p className="cc-kpi-label-pro truncate">{label}</p>
-          </div>
-          {showCrown ? <Crown className="shrink-0 text-amber-500" size={18} /> : null}
-        </div>
-        <p className="cc-kpi-value-pro mt-3 break-words text-xl font-black leading-tight">{title}</p>
-        <p className="cc-kpi-meta-pro mt-1 leading-relaxed">{detail}</p>
-        {badge ? <span className="cc-badge-pro mt-3 inline-flex w-fit" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>{badge}</span> : null}
-        <ProgressLine pct={progressPct} tone={progressTone} />
-      </div>
+    <div className="flex h-full flex-col gap-2">
+      <TailAdminKpiCard
+        className="flex-1"
+        detail={detail}
+        icon={icon}
+        title={label}
+        tone={tailAdminTone}
+        trendLabel={badge}
+        value={title}
+      />
       {actionLabel ? (
-        <div className="mt-auto flex flex-wrap gap-2 border-t border-slate-200 pt-3 dark:border-slate-700">
-          <button
-            className="inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
-            onClick={onAction}
-            type="button"
-          >
-            {actionLabel}
-          </button>
-          {secondaryActionLabel ? (
-            <button
-              className="inline-flex h-8 items-center justify-center rounded-lg bg-[#073B91] px-3 text-[11px] font-black text-white shadow-sm transition hover:bg-blue-800"
-              onClick={onSecondaryAction}
-              type="button"
-            >
-              {secondaryActionLabel}
-            </button>
-          ) : null}
-        </div>
+        <button
+          className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-[11px] font-black text-[#AFC6FF] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07]"
+          onClick={onAction}
+          type="button"
+        >
+          {actionLabel}
+        </button>
       ) : null}
-    </Panel>
+    </div>
   );
 }
 
@@ -722,7 +702,9 @@ function StatStripItem({
       </div>
     </div>
   );
-}function EmptyState() {
+}
+
+function EmptyState() {
   return (
     <div className="cc-empty-state-pro min-h-[140px]">
       <p className="cc-kpi-label-pro">Sin datos para los filtros seleccionados.</p>
@@ -1411,7 +1393,7 @@ function RouteMetricsSummary({
             />
           </div>
 
-          <aside className="cc-insights-right-column flex flex-col gap-4 overflow-y-auto min-h-0">
+          <TailAdminRightPanel className="cc-insights-right-column min-h-0" compact subtitle="Resumen territorial del periodo actual" title="Resumen operativo">
           <DashboardSlot widgets={widgets} id="kpiComunaTop" />
           <DashboardSlot widgets={widgets} id="kpiFacturacionTop" />
           <DashboardSlot widgets={widgets} id="kpiCoberturaComunas" />
@@ -1429,7 +1411,7 @@ function RouteMetricsSummary({
               onShowEvidence={onShowTerritorialEvidence}
             />
           ) : null}
-        </aside>      {/* close right column */}
+        </TailAdminRightPanel>      {/* close right column */}
       </section>      {/* close map row grid */}
       </div>          {/* close flex-1 map row wrapper */}
 
@@ -1500,7 +1482,6 @@ export default function Dashboard() {
   const [databaseDashboardLoading, setDatabaseDashboardLoading] = useState(true);
   const [databaseDashboardError, setDatabaseDashboardError] = useState('');
   const [databaseReloadKey, setDatabaseReloadKey] = useState(0);
-  const [lastImportResult, setLastImportResult] = useState<ImportResult | null>(null);
   const [activeRedZones, setActiveRedZones] = useState<RedZone[]>([]);
   const [routePeriod, setRoutePeriod] = useState<RoutePeriod>('dia');
   const [routeDateBase, setRouteDateBase] = useState(() => new Date().toISOString().slice(0, 10));
@@ -1978,7 +1959,7 @@ const dateFilterError = useMemo(() => {
 
     return grouped;
   }, [currentRegionalDetailRows, dailyDashboardData, filters.location, filters.priority, filters.status, viewMode]);
-  const regionalMaxVisitas = useMemo(() => Math.max(0, ...[...regionalMapMetrics.values()].map((item) => item.visitas)), [regionalMapMetrics]);
+  void regionalMapMetrics;
   const routeDateRange = useMemo(() => getRouteDateRange(routePeriod, routeDateBase), [routePeriod, routeDateBase, routeRefreshKey]);
   const filteredRouteVisits = useMemo(
     () => getRouteVisitsByDateRange(routeDateRange.startDate, routeDateRange.endDate),
@@ -2101,8 +2082,6 @@ const dateFilterError = useMemo(() => {
   );
   const totals = useMemo(() => sumComunaMetrics(filteredData), [filteredData]);
 
-  const successfulVisits = Math.max(0, operationalSummary.validVisits - operationalSummary.unsuccessfulVisits);
-  const successfulPct = operationalSummary.validVisits > 0 ? Math.round((successfulVisits / operationalSummary.validVisits) * 100) : 0;
   const filteredKpis = useMemo(() => {
     const topClaimComuna = filteredData[0] ?? null;
     const topBillingComuna = filteredData.reduce<ComunaMetric | null>((best, item) => (!best || item.facturacion > best.facturacion ? item : best), null);
@@ -2667,54 +2646,16 @@ const dateFilterError = useMemo(() => {
 
       <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col bg-[#F8FAFC] h-screen overflow-hidden p-4 print:ml-0 print:h-auto print:overflow-visible">
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
-          <header className="cc-header flex-shrink-0 flex min-h-[56px] flex-row items-center gap-3 rounded-lg border border-slate-200 bg-white px-4 py-2 shadow-sm xl:justify-between">
-            <div className="min-w-0">
-              <h1 className="cc-header-title truncate text-xl font-black tracking-tight text-slate-900 2xl:text-2xl">Visor de Facturación y Reclamos</h1>
-              <p className="cc-header-subtitle mt-1 text-xs font-semibold text-[#8190ad] 2xl:text-sm">Inteligencia operativa para decisiones estratégicas</p>
-            </div>
-
-            <div className="cc-header-actions flex flex-wrap items-center justify-end gap-2">
-              {viewMode === 'rm' ? (
-                <button className="cc-button-primary flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white shadow-lg shadow-blue-900/15 2xl:px-4" onClick={printDashboardView} type="button">
-                  <CloudDownload size={17} />
-                  Descargar RM
-                </button>
-              ) : (
-                <button
-                  className="cc-button-primary flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white shadow-lg shadow-blue-900/15 disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
-                  disabled={isEmptyCurrentView}
-                  onClick={printDashboardView}
-                  title={isEmptyCurrentView ? emptyViewMessage : 'Descargar Regiones'}
-                  type="button"
-                >
-                  <CloudDownload size={17} />
-                  Descargar Regiones
-                </button>
-              )}
-              <button
-                className="cc-button-secondary flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
-                disabled={isEmptyCurrentView}
-                onClick={exportEvidenceCsv}
-                title={isEmptyCurrentView ? emptyViewMessage : 'Exportar evidencia'}
-                type="button"
-              >
-                <Download size={17} />
-                Exportar evidencia
-              </button>
-              <button
-                aria-label={dashboardTheme === 'dark-premium' ? 'Cambiar a tema claro' : 'Cambiar a modo oscuro'}
-                className="cc-button-secondary theme-toggle flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 2xl:px-4"
-                onClick={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
-                title={dashboardTheme === 'dark-premium' ? 'Tema claro' : 'Modo oscuro'}
-                type="button"
-              >
-                {dashboardTheme === 'dark-premium' ? <Sun size={17} /> : <Moon size={17} />}
-                <span className="hidden sm:inline">{dashboardTheme === 'dark-premium' ? 'Tema claro' : 'Modo oscuro'}</span>
-              </button>
-              <button className="cc-header-action relative flex h-10 w-10 items-center justify-center rounded-full text-[#172448]" type="button">
-                <Bell size={20} />
-                <span className="cc-notification-badge absolute right-2 top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-black text-white">3</span>
-              </button>
+          <TailAdminTopbar
+            emptyViewMessage={emptyViewMessage}
+            isDarkPremium={dashboardTheme === 'dark-premium'}
+            isEmptyCurrentView={isEmptyCurrentView}
+            onExportEvidence={exportEvidenceCsv}
+            onPrintDashboard={printDashboardView}
+            onToggleTheme={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
+            subtitle={activeTab === 'dashboard' ? 'Inteligencia operativa para decisiones estratégicas' : 'Gestión del módulo activo'}
+            title={activeTab === 'dashboard' ? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : (navItems.find((item) => item.id === activeTab)?.label ?? 'Visor de Facturación y Reclamos')}
+            userMenu={(
               <UserMenu
                 isDarkPremium={dashboardTheme === 'dark-premium'}
                 onOpenImport={() => setShowImportModal(true)}
@@ -2722,14 +2663,20 @@ const dateFilterError = useMemo(() => {
                 onOpenUsers={() => setActiveTab('users')}
                 onToggleTheme={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
               />
-            </div>
-          </header>
+            )}
+            viewMode={viewMode}
+          />
 
           <div className="flex-1 overflow-y-auto min-h-0 pr-0.5">
           {activeTab === 'dashboard' ? (
             <ProtectedView viewKey="dashboard">
               <ProtectedView viewKey={viewMode}>
                 <>
+                <TailAdminSidePanel
+                  className="mb-2"
+                  subtitle="Vista, periodo, prioridad, estado y comuna conservan la lógica actual."
+                  title="Filtros y capas territoriales"
+                >
                 <section className="cc-primary-tabs mb-2" role="tablist" aria-label="Vista principal">
                   <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
                     {hasPermission('rm') ? (
@@ -2819,6 +2766,7 @@ const dateFilterError = useMemo(() => {
                     </p>
                   ) : null}
                 </section>
+                </TailAdminSidePanel>
                 <ExecutiveDashboardLayout
                   widgets={dashboardWidgets}
                   routeMetrics={routeMetrics}

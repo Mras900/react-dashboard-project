@@ -282,7 +282,7 @@ export function useTerritorialMetrics({
   hasActiveSource = false,
   censoComunas = censoComunasRM2024,
   fallbackTerritorialData = reclamosCensoRM2026 as readonly TerritorialComunaMetric[],
-  fallbackResumen = resumenTerritorialRM2026 as TerritorialSummary,
+  fallbackResumen = resumenTerritorialRM2026 as unknown as TerritorialSummary,
   allowFallback = false,
 }: UseTerritorialMetricsParams = {}) {
   return useMemo(() => {

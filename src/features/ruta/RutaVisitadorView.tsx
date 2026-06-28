@@ -11,12 +11,13 @@ import type { RedZone, RedZoneDraft } from '../red-zones/redZoneTypes';
 import { isPointInActiveRedZone } from '../red-zones/redZoneUtils';
 import { buscarPorRut, buscarPorTicket, guardarVisitasDiarias, optimizarRuta, searchAddress } from './services/rutaApi';
 import { buildRutaCsv, buildRutaSummary, calculateStopValue, downloadCsv, findComunaRegionByPoint, getFareTable, getFeatureComunaName, getFeatureRegionName, isPointInRedZone, loadGenericGeoJson, loadRedZonesGeoJson, normalizeName, parseTicketIds } from './rutaUtils';
-import { upsertRouteDailyVisit, saveRouteDailyVisits, dispatchRouteDailyUpdate, getRouteDailyVisits } from './routeDailyStorage';
+import { saveRouteDailyVisits, dispatchRouteDailyUpdate, getRouteDailyVisits } from './routeDailyStorage';
 import type { RouteDailyVisit } from './routeDailyStorage';
-import { fetchRouteWeather, getWeatherEmoji, getWeatherPresentation, KNOWN_COMUNAS } from './routeWeatherService';
+import { fetchRouteWeather, getWeatherPresentation, KNOWN_COMUNAS } from './routeWeatherService';
 import type { RouteWeatherSummary } from './routeWeatherTypes';
 
 type SearchMode = 'ticket' | 'rut';
+type RouteVisitDayCount = { total: number; exitosas: number; noExitosas: number; pendientes: number };
 
 const STATUS_LABELS: Record<RutaVisitStatus, string> = {
   pendiente: 'Pendiente',
@@ -280,7 +281,7 @@ const WEEKDAYS = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 function RouteMonthCalendar({ selectedDate, onSelectDate, visitsByDate }: {
   selectedDate: string;
   onSelectDate: (d: string) => void;
-  visitsByDate: Record<string, { total: number }>;
+  visitsByDate: Record<string, RouteVisitDayCount>;
 }) {
   const [monthDate, setMonthDate] = useState(() => new Date(selectedDate + 'T12:00:00'));
 
@@ -366,7 +367,6 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const [redZoneSaving, setRedZoneSaving] = useState(false);
   const [redZoneManageError, setRedZoneManageError] = useState('');
   const [redZoneDetectMessage, setRedZoneDetectMessage] = useState('');
-  const [calendarMonthDate, setCalendarMonthDate] = useState(() => new Date(fechaVisita + 'T12:00:00'));
   const [weatherSummary, setWeatherSummary] = useState<RouteWeatherSummary | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState('');
@@ -459,10 +459,10 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const summary = useMemo(() => buildRutaSummary(stops), [stops]);
   const fares = useMemo(() => getFareTable(stops.length), [stops.length]);
   const visitsByDate = useMemo(() => {
-    const grouped: Record<string, { total: number }> = {};
+    const grouped: Record<string, RouteVisitDayCount> = {};
     // From current stops
     for (const s of stops) {
-      if (!grouped[fechaVisita]) grouped[fechaVisita] = { total: 0 };
+      if (!grouped[fechaVisita]) grouped[fechaVisita] = { total: 0, exitosas: 0, noExitosas: 0, pendientes: 0 };
       grouped[fechaVisita].total++;
       if (s.status === 'exitosa') grouped[fechaVisita].exitosas++;
       else if (s.status === 'no_exitosa') grouped[fechaVisita].noExitosas++;
@@ -471,7 +471,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
     // From localStorage
     const stored = getRouteDailyVisits();
     for (const v of stored) {
-      if (!grouped[v.fechaRuta]) grouped[v.fechaRuta] = { total: 0 };
+      if (!grouped[v.fechaRuta]) grouped[v.fechaRuta] = { total: 0, exitosas: 0, noExitosas: 0, pendientes: 0 };
       grouped[v.fechaRuta].total++;
     }
     return grouped;
@@ -858,33 +858,6 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
   const exportCsv = () => {
     downloadCsv(`ruta-visitador-${new Date().toISOString().slice(0, 10)}.csv`, buildRutaCsv(stops, routeFuelSummary ?? undefined));
-  };
-
-  const persistNewStops = (newStops: RutaStop[]) => {
-    const now = new Date().toISOString();
-    for (const stop of newStops) {
-      const visit: RouteDailyVisit = {
-        id: stop.id,
-        fechaRuta: fechaVisita,
-        ticket: stop.referencia,
-        rut: stop.rut,
-        idTicket: stop.id === stop.referencia ? undefined : stop.id,
-        direccion: stop.address,
-        comuna: stop.address?.split(',').pop()?.trim(),
-        lat: stop.lat,
-        lng: stop.lng,
-        estadoVisita: stop.status,
-        resultado: stop.status,
-        observacion: stop.observation,
-        zonaRoja: stop.isRedZone,
-        tarifaAplicada: 0,
-        valorVisita: 0,
-        createdAt: now,
-        updatedAt: now,
-      };
-      upsertRouteDailyVisit(visit);
-    }
-    dispatchRouteDailyUpdate(fechaVisita, 'ruta-visitador');
   };
 
   const saveDailyVisits = async () => {

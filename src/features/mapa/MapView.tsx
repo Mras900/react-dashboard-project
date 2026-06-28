@@ -1,4 +1,4 @@
-import { AlertTriangle, CheckCircle2, Layers3, Loader2, MapPin, Plus, Search } from 'lucide-react';
+import { AlertTriangle, CheckCircle2, Layers3, Loader2, Plus, Search } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { Feature, GeoJsonObject } from 'geojson';

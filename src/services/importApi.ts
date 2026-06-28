@@ -45,7 +45,7 @@ type BackendErrorPayload = {
   message?: string;
 };
 
-const nullableNumber = (value: number | undefined) => (Number.isFinite(value) ? value : null);
+const nullableNumber = (value: number | null | undefined): number | null => (typeof value === 'number' && Number.isFinite(value) ? value : null);
 
 function mapRowToPayload(row: ImportedDashboardRow): BackendClaimPayload {
   return {
