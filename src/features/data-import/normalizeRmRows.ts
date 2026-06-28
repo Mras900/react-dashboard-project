@@ -1,5 +1,5 @@
 import type { ImportedDashboardRow, ImportMode, RawImportedRow } from './importTypes';
-import { detectDatasetScope } from '../../services/rmComunas';
+import { detectDatasetScope } from './detectDatasetScope';
 import {
   getAliasField,
   getRawAliasField,
@@ -44,7 +44,7 @@ export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, 
     const traslado = parseMoney(getAliasField(row, 'traslado'));
     const precioNetoTraslado = parseMoney(getAliasField(row, 'precioNetoTraslado')) || precioNeto + traslado;
     const facturacionTotal = facturaInformada ? parseMoney(factura) : precioNetoTraslado;
-    const regionOriginal = getAliasField(row, 'region');
+    const regionOriginal = getAliasField(row, 'region') || 'Región Metropolitana';
 
     return {
       importRowId: `${sourceFileName}-${importMode}-rm-${index}`,

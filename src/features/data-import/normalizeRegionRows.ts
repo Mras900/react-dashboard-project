@@ -1,10 +1,9 @@
 import type { ImportedDashboardRow, ImportMode, RawImportedRow } from './importTypes';
-import { detectDatasetScope } from '../../services/rmComunas';
+import { detectDatasetScope, detectImportSchema } from './detectDatasetScope';
 import {
   getAliasField,
   getRawAliasField,
   formatImportedDate,
-  normalizeHeader,
   normalizePriority,
   normalizeRegionName,
   normalizeVisitStatus,
@@ -15,19 +14,15 @@ import {
 
 function buildValidationMessage(row: RawImportedRow) {
   const messages: string[] = [];
+  const warnings: string[] = [];
   if (!getAliasField(row, 'ticket')) messages.push('Falta Ticket');
   if (!getAliasField(row, 'ciudad') && !getAliasField(row, 'comuna')) messages.push('Falta Ciudad o Comuna');
-  if (!getAliasField(row, 'estadoVisita')) messages.push('Falta Estado Visita');
-  if (!getAliasField(row, 'precioNetoTraslado') && !getAliasField(row, 'precioNeto')) {
-    messages.push('Falta Precio Neto + Traslado o Precio Neto');
-  }
-  return messages;
+  if (!getAliasField(row, 'fechaVisita') && !getAliasField(row, 'fechaRecepcion')) warnings.push('Falta Fecha Visita o Fecha Recepción');
+  return { messages, warnings };
 }
 
 export function isConsolidadoRegionesFormat(row: RawImportedRow) {
-  const headers = new Set(Object.keys(row).map(normalizeHeader));
-  return ['Mes', 'Ticket', 'Ciudad', 'Estado Visita'].every((header) => headers.has(normalizeHeader(header))) &&
-    ['Precio Neto Tarifa Plana', 'Precio Neto + Traslado', 'Precio Neto'].some((header) => headers.has(normalizeHeader(header)));
+  return detectImportSchema(Object.keys(row)) === 'regiones';
 }
 
 export function normalizeRegionRows(rows: RawImportedRow[], sourceFileName: string, importMode: ImportMode = 'regiones'): ImportedDashboardRow[] {
@@ -38,7 +33,7 @@ export function normalizeRegionRows(rows: RawImportedRow[], sourceFileName: stri
     const precioNeto = parseMoney(getAliasField(row, 'precioNeto'));
     const precioNetoTraslado = parseMoney(getAliasField(row, 'precioNetoTraslado')) || precioNeto + traslado;
     const facturacionTotal = precioNetoTraslado || precioNeto + traslado;
-    const validationMessages = buildValidationMessage(row);
+    const validation = buildValidationMessage(row);
     const regionWarning = regionOriginal && regionNormalizada === regionOriginal ? 'Región sin normalización confirmada' : '';
     const ciudad = getAliasField(row, 'ciudad');
     const comuna = getAliasField(row, 'comuna') || ciudad;
@@ -79,8 +74,8 @@ export function normalizeRegionRows(rows: RawImportedRow[], sourceFileName: stri
       datasetScope: detectDatasetScope({ region: regionOriginal, comuna, ciudad, importScope: 'regiones' }),
       sourceFileName,
       importMode,
-      validationStatus: validationMessages.length > 0 ? ('error' as const) : regionWarning ? ('warning' as const) : ('valid' as const),
-      validationMessage: [...validationMessages, regionWarning].filter(Boolean).join('; '),
+      validationStatus: validation.messages.length > 0 ? ('error' as const) : (validation.warnings.length > 0 || regionWarning) ? ('warning' as const) : ('valid' as const),
+      validationMessage: [...validation.messages, ...validation.warnings, regionWarning].filter(Boolean).join('; '),
       extraFields: row,
     };
   });

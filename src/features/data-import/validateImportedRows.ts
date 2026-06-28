@@ -22,7 +22,7 @@ function hasValue(value: unknown) {
   return String(value ?? '').trim().length > 0;
 }
 
-export function validateImportedRow(row: ImportedDashboardRow, importMode: ImportMode): ImportedDashboardRow {
+export function validateImportedRow(row: ImportedDashboardRow, _importMode: ImportMode): ImportedDashboardRow {
   const messages: string[] = [];
   const warnings: string[] = [];
 
@@ -30,8 +30,6 @@ export function validateImportedRow(row: ImportedDashboardRow, importMode: Impor
 
   if (row.scope === 'regiones') {
     if (!hasValue(row.ciudad) && !hasValue(row.comuna)) messages.push('Falta ciudad/comuna');
-    if (!hasValue(row.estadoVisita)) messages.push('Falta estado visita');
-    if (row.facturacionTotal === undefined || Number.isNaN(row.facturacionTotal)) messages.push('Falta facturación');
   }
 
   if (row.scope === 'rm') {
@@ -39,8 +37,6 @@ export function validateImportedRow(row: ImportedDashboardRow, importMode: Impor
     if (!hasValue(row.fechaVisita)) warnings.push('Falta fecha visita');
   }
 
-  if (importMode === 'regiones' && row.scope !== 'regiones') messages.push('Fila fuera de scope Regiones');
-  if (importMode === 'rm' && row.scope !== 'rm') messages.push('Fila fuera de scope RM');
 
   return {
     ...row,

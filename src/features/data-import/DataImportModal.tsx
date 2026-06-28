@@ -1,14 +1,14 @@
 import { Download, X } from 'lucide-react';
 import { useMemo, useState } from 'react';
-import { classifyTerritory } from './classifyTerritory';
 import { FileUploadDropzone } from './FileUploadDropzone';
 import { clearImportedRows, saveImportedRows } from './importStorage';
 import type { ImportedDashboardRow, ImportMode, ImportPreviewResult, ImportResult, RawImportedRow } from './importTypes';
 import { ImportPreviewTable, type ImportPreviewFilter } from './ImportPreviewTable';
 import { ImportSummaryCards } from './ImportSummaryCards';
 import { normalizeRmRows } from './normalizeRmRows';
-import { isConsolidadoRegionesFormat, normalizeRegionRows } from './normalizeRegionRows';
+import { normalizeRegionRows } from './normalizeRegionRows';
 import { detectImportedColumns, summarizeImportRows } from './normalizeImportedRows';
+import { detectRowDatasetScope, detectRowsImportSchema } from './detectDatasetScope';
 import { parseCsv } from './parseCsv';
 import { parseExcel } from './parseExcel';
 import { applyEditableImportedChanges, type EditableImportedChanges } from './validateImportedRows';
@@ -33,32 +33,23 @@ async function parseFile(file: File): Promise<RawImportedRow[]> {
 }
 
 function normalizeByMode(rows: RawImportedRow[], fileName: string, mode: ImportMode): ImportedDashboardRow[] {
+  const detectedSchema = detectRowsImportSchema(rows);
+
+  if (detectedSchema === 'rm') return normalizeRmRows(rows, fileName, mode);
+  if (detectedSchema === 'regiones') return normalizeRegionRows(rows, fileName, mode);
   if (mode === 'rm') return normalizeRmRows(rows, fileName, mode);
   if (mode === 'regiones') return normalizeRegionRows(rows, fileName, mode);
-  if (rows.some(isConsolidadoRegionesFormat)) return normalizeRegionRows(rows, fileName, mode);
 
   const rmRows: RawImportedRow[] = [];
   const regionRows: RawImportedRow[] = [];
-  const unclassifiedRows: ImportedDashboardRow[] = [];
 
-  rows.forEach((row, index) => {
-    const scope = classifyTerritory(row);
+  rows.forEach((row) => {
+    const scope = detectRowDatasetScope(row, mode);
     if (scope === 'rm') rmRows.push(row);
-    if (scope === 'regiones') regionRows.push(row);
-    if (!scope) {
-      unclassifiedRows.push({
-        importRowId: `${fileName}-${mode}-sin-clasificar-${index}`,
-        ticket: '',
-        scope: 'regiones',
-        sourceFileName: fileName,
-        importMode: mode,
-        validationStatus: 'error',
-        validationMessage: 'No se pudo clasificar fila como RM o Regiones',
-      });
-    }
+    else regionRows.push(row);
   });
 
-  return [...normalizeRmRows(rmRows, fileName, mode), ...normalizeRegionRows(regionRows, fileName, mode), ...unclassifiedRows];
+  return [...normalizeRmRows(rmRows, fileName, mode), ...normalizeRegionRows(regionRows, fileName, mode)];
 }
 
 function downloadErrors(rows: ImportedDashboardRow[]) {
@@ -104,6 +95,14 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
       const rawRows = await parseFile(file);
       const rows = normalizeByMode(rawRows, file.name, mode);
       const detectedColumns = detectImportedColumns(rawRows);
+      const detectedSchema = detectRowsImportSchema(rawRows);
+      console.info('[import] preview', {
+        totalRows: rows.length,
+        rmRows: rows.filter((row) => row.scope === 'rm').length,
+        regionesRows: rows.filter((row) => row.scope === 'regiones').length,
+        detectedSchema,
+        skippedInvalidRows: rows.filter((row) => row.validationStatus === 'error').length,
+      });
       setOriginalRows(rows.map((row) => ({ ...row })));
       setPreview({ rows, summary: summarizeImportRows(rows), fileName: file.name, detectedColumns });
       setPreviewFilter(rows.some((row) => row.validationStatus === 'error') ? 'error' : 'all');

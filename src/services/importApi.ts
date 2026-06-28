@@ -76,6 +76,7 @@ function mapRowToPayload(row: ImportedDashboardRow): BackendClaimPayload {
     numero: row.numeroDireccion || null,
     source_file_name: row.sourceFileName || null,
     dataset_scope: row.datasetScope || row.scope || null,
+    scope: row.datasetScope || row.scope || null,
   };
 }
 

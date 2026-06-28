@@ -33,13 +33,15 @@ export function aliasesFor(key: ImportColumnKey): string[] {
 }
 
 export function normalizeHeader(value: string) {
-  return value
+  return String(value ?? '')
     .normalize('NFD')
     .replace(/[\u0300-\u036f]/g, '')
-    .replace(/[¿?]/g, '')
+    .replace(/ñ/g, 'n')
+    .replace(/Ñ/g, 'N')
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
     .replace(/\s+/g, ' ')
-    .trim()
-    .toLowerCase();
+    .trim();
 }
 
 export function detectImportedColumns(rows: RawImportedRow[]) {
