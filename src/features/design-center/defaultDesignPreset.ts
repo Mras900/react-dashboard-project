@@ -53,4 +53,10 @@ export const DEFAULT_DESIGN_PRESET = {
     { id: 'statVariacionMensual', title: 'Periodo analizado', description: 'Periodo aplicado a datos actuales.', icon: 'chart', accent: 'slate', visible: true, order: 2, section: 'bottom', size: 'small', protected: true, source: 'dashboard_resumen', field: 'reclamos_totales', aggregation: 'count', datasetScope: 'all' },
     { id: 'statTicketsUnicos', title: 'Tickets unicos', description: 'Tickets distintos en el periodo.', icon: 'users', accent: 'cyan', visible: true, order: 3, section: 'bottom', size: 'small', protected: true, source: 'dashboard_resumen', field: 'tickets_unicos', aggregation: 'sum', datasetScope: 'all' },
   ],
+  charts: [
+    { id: 'chartGraficoFacturacionMensual', title: 'Facturacion mensual', subtitle: 'Evolucion mensual de facturacion.', type: 'line', source: 'dashboard_reclamos', xField: 'mes', yField: 'facturacion', aggregation: 'sum', datasetScope: 'all', visible: true, order: 0, section: 'bottom', size: 'medium', accent: 'blue', protected: true },
+    { id: 'chartTopComunasReclamos', title: 'Top 10 comunas con mas reclamos', subtitle: 'Ranking por volumen de reclamos.', type: 'bar', source: 'dashboard_comunas', xField: 'comuna', yField: 'reclamos', aggregation: 'sum', datasetScope: 'all', visible: true, order: 1, section: 'bottom', size: 'medium', accent: 'red', protected: true },
+    { id: 'chartTopComunasFacturacion', title: 'Top 10 comunas con mayor facturacion', subtitle: 'Ranking por facturacion.', type: 'bar', source: 'dashboard_comunas', xField: 'comuna', yField: 'facturacion', aggregation: 'sum', datasetScope: 'all', visible: true, order: 2, section: 'bottom', size: 'medium', accent: 'blue', protected: true },
+    { id: 'chartDistribucionPrioridad', title: 'Distribucion por prioridad', subtitle: 'Composicion por prioridad.', type: 'pie', source: 'dashboard_reclamos', xField: 'prioridad', yField: 'ticket', aggregation: 'count', datasetScope: 'all', visible: true, order: 3, section: 'bottom', size: 'medium', accent: 'cyan', protected: true },
+  ],
 } as const satisfies DesignPreset;

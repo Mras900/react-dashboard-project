@@ -11,6 +11,32 @@ export type DesignKpiAggregation = 'count' | 'sum' | 'average' | 'max' | 'min';
 export type DesignKpiDatasetScope = 'all' | 'rm' | 'regiones';
 export type DesignKpiIcon = 'file' | 'alert' | 'users' | 'map' | 'shield' | 'chart';
 export type DesignKpiAccent = 'blue' | 'red' | 'cyan' | 'green' | 'amber' | 'slate';
+export type DesignChartType = 'bar' | 'line' | 'pie';
+
+export type DesignChartId =
+  | 'chartGraficoFacturacionMensual'
+  | 'chartTopComunasReclamos'
+  | 'chartTopComunasFacturacion'
+  | 'chartDistribucionPrioridad'
+  | `customConfigChart:${string}`;
+
+export type DesignChartConfig = {
+  id: DesignChartId;
+  title: string;
+  subtitle?: string;
+  type: DesignChartType;
+  source: DesignKpiSource;
+  xField: string;
+  yField: string;
+  aggregation: DesignKpiAggregation;
+  datasetScope: DesignKpiDatasetScope;
+  visible: boolean;
+  section: DesignSectionId;
+  order: number;
+  size: DesignWidgetSize;
+  accent: DesignKpiAccent;
+  protected: boolean;
+};
 
 export type DesignWidgetId =
   | 'kpiFacturacion'
@@ -90,6 +116,7 @@ export type DesignPreset = {
   sections: DesignSectionConfig[];
   widgets: DesignWidgetConfig[];
   kpis: DesignKpiConfig[];
+  charts: DesignChartConfig[];
 };
 
 export type DesignConfig = {
@@ -99,4 +126,5 @@ export type DesignConfig = {
   sections: DesignSectionConfig[];
   widgets: DesignWidgetConfig[];
   kpis: DesignKpiConfig[];
+  charts: DesignChartConfig[];
 };

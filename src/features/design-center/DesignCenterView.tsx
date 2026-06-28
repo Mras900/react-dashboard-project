@@ -1,7 +1,9 @@
 import type { ReactNode } from 'react';
 import { CardSettings } from './CardSettings';
+import { ChartSettings } from './ChartSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { KpiSettings } from './KpiSettings';
+import type { KpiDataSources } from './kpiCalculations';
 import {
   backgroundColorOptions,
   cardColorOptions,
@@ -14,6 +16,7 @@ import type { useDesignConfig } from './useDesignConfig';
 
 type DesignCenterViewProps = {
   designConfig: ReturnType<typeof useDesignConfig>;
+  configurableKpiDataSources?: KpiDataSources;
 };
 
 function FieldLabel({ children }: { children: ReactNode }) {
@@ -71,7 +74,7 @@ function SelectField<T extends string>({
   );
 }
 
-export function DesignCenterView({ designConfig }: DesignCenterViewProps) {
+export function DesignCenterView({ designConfig, configurableKpiDataSources }: DesignCenterViewProps) {
   const { draftConfig, isPreviewActive, updateDraft, saveDraft, previewDraft, stopPreview, resetConfig } = designConfig;
 
   return (
@@ -106,6 +109,7 @@ export function DesignCenterView({ designConfig }: DesignCenterViewProps) {
         </div>
 
         <KpiSettings designConfig={designConfig} />
+        <ChartSettings designConfig={designConfig} dataSources={configurableKpiDataSources ?? {}} />
         <LayoutSettings designConfig={designConfig} />
         <CardSettings designConfig={designConfig} />
       </div>

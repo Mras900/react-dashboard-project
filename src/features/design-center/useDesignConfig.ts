@@ -60,6 +60,14 @@ export function useDesignConfig() {
       kpis: defaults.kpis,
     }));
   }, []);
+
+  const resetCharts = useCallback(() => {
+    const defaults = createDefaultDesignConfig();
+    setDraftConfig((current) => ({
+      ...current,
+      charts: defaults.charts,
+    }));
+  }, []);
   return useMemo(
     () => ({
       preset: DEFAULT_DESIGN_PRESET,
@@ -75,7 +83,8 @@ export function useDesignConfig() {
       resetConfig,
       resetLayout,
       resetKpis,
+      resetCharts,
     }),
-    [activeConfig, draftConfig, hasActiveConfig, isPreviewActive, previewDraft, resetConfig, resetLayout, resetKpis, saveDraft, savedConfig, stopPreview, updateDraft],
+    [activeConfig, draftConfig, hasActiveConfig, isPreviewActive, previewDraft, resetConfig, resetLayout, resetKpis, resetCharts, saveDraft, savedConfig, stopPreview, updateDraft],
   );
 }

@@ -2,6 +2,8 @@ import { DEFAULT_DESIGN_PRESET } from './defaultDesignPreset';
 import {
   DESIGN_CONFIG_VERSION,
   DESIGN_STORAGE_KEY,
+  type DesignChartConfig,
+  type DesignChartId,
   type DesignConfig,
   type DesignKpiConfig,
   type DesignKpiId,
@@ -26,10 +28,17 @@ import {
   isAllowedKpiIcon,
   isAllowedKpiSource,
 } from './kpiRegistry';
+import {
+  isAllowedChartSource,
+  isAllowedChartType,
+  isAllowedChartXField,
+  isAllowedChartYField,
+} from './chartRegistry';
 
 const widgetIds = new Set<DesignWidgetId>(DEFAULT_DESIGN_PRESET.widgets.map((widget) => widget.id));
 const sectionIds = new Set<DesignSectionId>(DEFAULT_DESIGN_PRESET.sections.map((section) => section.id));
 const protectedKpiIds = new Set<DesignKpiId>(DEFAULT_DESIGN_PRESET.kpis.map((kpi) => kpi.id));
+const protectedChartIds = new Set<DesignChartId>(DEFAULT_DESIGN_PRESET.charts.map((chart) => chart.id));
 const maxTextLength = 90;
 
 function cleanText(value: unknown, fallback: string) {
@@ -139,6 +148,58 @@ function validateKpis(value: unknown): DesignKpiConfig[] | null {
   const customKpis = [...byId.values()].filter((kpi) => !kpi.protected);
   return [...protectedKpis, ...customKpis];
 }
+function isCustomChartId(value: unknown): value is DesignChartId {
+  return typeof value === 'string' && value.startsWith('customConfigChart:') && value.length <= 80;
+}
+
+function validateCharts(value: unknown): DesignChartConfig[] | null {
+  if (value === undefined) return DEFAULT_DESIGN_PRESET.charts.map((chart) => ({ ...chart }));
+  if (!Array.isArray(value)) return null;
+  const byId = new Map<DesignChartId, DesignChartConfig>();
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const chart = item as Record<string, unknown>;
+    const id = chart.id as DesignChartId;
+    const isProtected = typeof id === 'string' && protectedChartIds.has(id);
+    const isCustom = isCustomChartId(id);
+    if (!isProtected && !isCustom) return null;
+
+    const fallback = DEFAULT_DESIGN_PRESET.charts.find((presetChart) => presetChart.id === id);
+    const source = isAllowedChartSource(chart.source) ? chart.source : (fallback?.source ?? 'dashboard_comunas');
+    const xField = isAllowedChartXField(source, chart.xField) ? chart.xField : (fallback?.xField ?? 'comuna');
+    const yField = isAllowedChartYField(source, chart.yField) ? chart.yField : (fallback?.yField ?? 'reclamos');
+    const aggregation = isAllowedKpiAggregation(chart.aggregation) ? chart.aggregation : (fallback?.aggregation ?? 'sum');
+    const datasetScope = isAllowedKpiDatasetScope(chart.datasetScope) ? chart.datasetScope : fallback?.datasetScope ?? 'all';
+    const chartType = isAllowedChartType(chart.type) ? chart.type : fallback?.type ?? 'bar';
+    const accentValue = isAllowedKpiAccent(chart.accent) ? chart.accent : fallback?.accent ?? 'blue';
+
+    if (isCustom && (!source || !xField || !yField)) return null;
+
+    byId.set(id, {
+      id,
+      title: cleanText(chart.title, fallback?.title ?? 'Grafico personalizado'),
+      subtitle: typeof chart.subtitle === 'string' ? cleanText(chart.subtitle, '') : fallback?.subtitle,
+      type: chartType,
+      source,
+      xField,
+      yField,
+      aggregation,
+      datasetScope,
+      visible: typeof chart.visible === 'boolean' ? chart.visible : fallback?.visible ?? true,
+      section: isDesignSectionId(chart.section) ? chart.section : fallback?.section ?? 'bottom',
+      order: cleanOrder(chart.order, fallback?.order ?? 100),
+      size: isDesignWidgetSize(chart.size) ? chart.size : fallback?.size ?? 'medium',
+      accent: accentValue,
+      protected: isProtected,
+    });
+  }
+
+  const protectedCharts = DEFAULT_DESIGN_PRESET.charts.map((chart) => byId.get(chart.id) ?? { ...chart });
+  const customCharts = [...byId.values()].filter((chart) => !chart.protected);
+  return [...protectedCharts, ...customCharts];
+}
+
 function validateWidgets(value: unknown): DesignWidgetConfig[] | null {
   if (!Array.isArray(value)) return null;
   const byId = new Map<DesignWidgetId, DesignWidgetConfig>();
@@ -176,7 +237,8 @@ export function normalizeDesignConfig(value: unknown): DesignConfig | null {
   const sections = validateSections(config.sections);
   const widgets = validateWidgets(config.widgets);
   const kpis = validateKpis(config.kpis);
-  if (!tokens || !sections || !widgets || !kpis) return null;
+  const charts = validateCharts(config.charts);
+  if (!tokens || !sections || !widgets || !kpis || !charts) return null;
 
   return {
     version: DESIGN_CONFIG_VERSION,
@@ -188,6 +250,7 @@ export function normalizeDesignConfig(value: unknown): DesignConfig | null {
     sections,
     widgets,
     kpis,
+    charts,
   };
 }
 
@@ -199,6 +262,7 @@ export function createDefaultDesignConfig(): DesignConfig {
     sections: DEFAULT_DESIGN_PRESET.sections.map((section) => ({ ...section })),
     widgets: DEFAULT_DESIGN_PRESET.widgets.map((widget) => ({ ...widget })),
     kpis: DEFAULT_DESIGN_PRESET.kpis.map((kpi) => ({ ...kpi })),
+    charts: DEFAULT_DESIGN_PRESET.charts.map((chart) => ({ ...chart })),
   };
 }
 

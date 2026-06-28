@@ -65,6 +65,7 @@ import { DesignCenterView } from '../features/design-center/DesignCenterView';
 import { useDesignConfig } from '../features/design-center/useDesignConfig';
 import { designTokenValues } from '../features/design-center/safeOptions';
 import { ConfigurableKpiCard } from '../features/design-center/ConfigurableKpiCard';
+import { ConfigurableChartCard } from '../features/design-center/ConfigurableChartCard';
 import type { KpiDataSources } from '../features/design-center/kpiCalculations';
 import type { DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
@@ -1192,6 +1193,7 @@ function SettingsView({
   totals,
   canViewReports,
   designConfig,
+  configurableKpiDataSources,
 }: {
   kpiDraft: Omit<CustomKpi, 'id'>;
   setKpiDraft: React.Dispatch<React.SetStateAction<Omit<CustomKpi, 'id'>>>;
@@ -1202,6 +1204,7 @@ function SettingsView({
   totals: { visitas: number; facturacion: number };
   canViewReports: boolean;
   designConfig: ReturnType<typeof useDesignConfig>;
+  configurableKpiDataSources?: KpiDataSources;
 }) {
   return (
     <div className="grid gap-4">
@@ -1212,7 +1215,7 @@ function SettingsView({
         </p>
       </Panel>
 
-      <DesignCenterView designConfig={designConfig} />
+      <DesignCenterView designConfig={designConfig} configurableKpiDataSources={configurableKpiDataSources} />
 
       <KpiBuilder
         kpiDraft={kpiDraft}
@@ -2392,6 +2395,21 @@ const dateFilterError = useMemo(() => {
         content: <ConfigurableKpiCard kpi={kpi} dataSources={configurableKpiDataSources} />,
       }))
     : [];
+
+  const designCustomChartWidgets: ConfiguredDashboardWidget[] = hasActiveDesignConfig && activeDesignConfig
+    ? activeDesignConfig.charts
+      .filter((chart) => chart.visible)
+      .map((chart) => ({
+        id: chart.id,
+        title: chart.title,
+        visible: chart.visible,
+        description: chart.subtitle,
+        order: 500 + chart.order,
+        section: chart.section,
+        size: chart.size,
+        content: <ConfigurableChartCard chart={chart} dataSources={configurableKpiDataSources} />,
+      }))
+    : [];
   const dashboardWidgets: DashboardWidget[] = [
     {
       id: 'kpiFacturacion',
@@ -2750,6 +2768,7 @@ const dateFilterError = useMemo(() => {
         return widget.id.startsWith('customKpi:') ? { ...widget, order: 100, section: 'bottom' as const, size: 'small' as const } : widget;
       }),
       ...designCustomKpiWidgets,
+      ...designCustomChartWidgets,
     ]
     : dashboardWidgets;
 
@@ -3004,6 +3023,7 @@ const dateFilterError = useMemo(() => {
                 totals={totals}
                 canViewReports={hasPermission('reportes')}
                 designConfig={designConfig}
+                configurableKpiDataSources={configurableKpiDataSources}
               />
             </ProtectedView>
           ) : activeTab === 'reports' ? (
