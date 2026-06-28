@@ -6,6 +6,11 @@ export type DesignRadiusOption = 'default' | 'compact' | 'rounded';
 export type DesignSpacingMode = 'compact' | 'comfortable';
 export type DesignSectionId = 'hero' | 'main' | 'side' | 'bottom';
 export type DesignWidgetSize = 'small' | 'medium' | 'large';
+export type DesignKpiSource = 'dashboard_resumen' | 'dashboard_comunas' | 'dashboard_reclamos' | 'dashboard_visitas';
+export type DesignKpiAggregation = 'count' | 'sum' | 'average' | 'max' | 'min';
+export type DesignKpiDatasetScope = 'all' | 'rm' | 'regiones';
+export type DesignKpiIcon = 'file' | 'alert' | 'users' | 'map' | 'shield' | 'chart';
+export type DesignKpiAccent = 'blue' | 'red' | 'cyan' | 'green' | 'amber' | 'slate';
 
 export type DesignWidgetId =
   | 'kpiFacturacion'
@@ -25,6 +30,8 @@ export type DesignWidgetId =
   | 'distribucionPrioridad'
   | 'tablaComunas';
 
+export type DesignKpiId = DesignWidgetId | `customConfigKpi:${string}`;
+
 export type DesignSectionConfig = {
   id: DesignSectionId;
   label: string;
@@ -40,6 +47,23 @@ export type DesignWidgetConfig = {
   order: number;
   section: DesignSectionId;
   size: DesignWidgetSize;
+};
+
+export type DesignKpiConfig = {
+  id: DesignKpiId;
+  title: string;
+  description?: string;
+  icon: DesignKpiIcon;
+  accent: DesignKpiAccent;
+  visible: boolean;
+  order: number;
+  section: DesignSectionId;
+  size: DesignWidgetSize;
+  protected: boolean;
+  source?: DesignKpiSource;
+  field?: string;
+  aggregation?: DesignKpiAggregation;
+  datasetScope?: DesignKpiDatasetScope;
 };
 
 export type DesignTokens = {
@@ -65,6 +89,7 @@ export type DesignPreset = {
   tokens: DesignTokens;
   sections: DesignSectionConfig[];
   widgets: DesignWidgetConfig[];
+  kpis: DesignKpiConfig[];
 };
 
 export type DesignConfig = {
@@ -73,4 +98,5 @@ export type DesignConfig = {
   tokens: DesignTokens;
   sections: DesignSectionConfig[];
   widgets: DesignWidgetConfig[];
+  kpis: DesignKpiConfig[];
 };

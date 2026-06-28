@@ -52,6 +52,14 @@ export function useDesignConfig() {
       widgets: defaults.widgets,
     }));
   }, []);
+
+  const resetKpis = useCallback(() => {
+    const defaults = createDefaultDesignConfig();
+    setDraftConfig((current) => ({
+      ...current,
+      kpis: defaults.kpis,
+    }));
+  }, []);
   return useMemo(
     () => ({
       preset: DEFAULT_DESIGN_PRESET,
@@ -66,7 +74,8 @@ export function useDesignConfig() {
       stopPreview,
       resetConfig,
       resetLayout,
+      resetKpis,
     }),
-    [activeConfig, draftConfig, hasActiveConfig, isPreviewActive, previewDraft, resetConfig, resetLayout, saveDraft, savedConfig, stopPreview, updateDraft],
+    [activeConfig, draftConfig, hasActiveConfig, isPreviewActive, previewDraft, resetConfig, resetLayout, resetKpis, saveDraft, savedConfig, stopPreview, updateDraft],
   );
 }

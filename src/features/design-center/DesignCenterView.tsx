@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { CardSettings } from './CardSettings';
 import { LayoutSettings } from './LayoutSettings';
+import { KpiSettings } from './KpiSettings';
 import {
   backgroundColorOptions,
   cardColorOptions,
@@ -104,6 +105,7 @@ export function DesignCenterView({ designConfig }: DesignCenterViewProps) {
           <SelectField label="Espaciado" onChange={(value) => updateDraft((current) => ({ ...current, tokens: { ...current.tokens, spacingMode: value } }))} options={spacingOptions} value={draftConfig.tokens.spacingMode} />
         </div>
 
+        <KpiSettings designConfig={designConfig} />
         <LayoutSettings designConfig={designConfig} />
         <CardSettings designConfig={designConfig} />
       </div>

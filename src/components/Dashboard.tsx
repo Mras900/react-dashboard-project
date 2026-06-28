@@ -64,7 +64,9 @@ import { TailAdminKpiCard } from '../features/ui-tailadmin/TailAdminKpiCard';
 import { DesignCenterView } from '../features/design-center/DesignCenterView';
 import { useDesignConfig } from '../features/design-center/useDesignConfig';
 import { designTokenValues } from '../features/design-center/safeOptions';
-import type { DesignConfig, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
+import { ConfigurableKpiCard } from '../features/design-center/ConfigurableKpiCard';
+import type { KpiDataSources } from '../features/design-center/kpiCalculations';
+import type { DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
@@ -2350,8 +2352,12 @@ const dateFilterError = useMemo(() => {
     if (!activeDesignConfig) return new Map<DesignWidgetId, DesignConfig['widgets'][number]>();
     return new Map(activeDesignConfig.widgets.map((widget) => [widget.id, widget]));
   }, [activeDesignConfig]);
+  const designKpiById = useMemo(() => {
+    if (!activeDesignConfig) return new Map<DesignKpiId, DesignKpiConfig>();
+    return new Map(activeDesignConfig.kpis.map((kpi) => [kpi.id, kpi]));
+  }, [activeDesignConfig]);
   const getDesignWidgetLabel = (id: DesignWidgetId, fallback: string) =>
-    hasActiveDesignConfig ? (designWidgetById.get(id)?.title || fallback) : fallback;
+    hasActiveDesignConfig ? (designKpiById.get(id)?.title || designWidgetById.get(id)?.title || fallback) : fallback;
   const designCssVariables = useMemo<React.CSSProperties | undefined>(() => {
     if (!activeDesignConfig || !hasActiveDesignConfig) return undefined;
     const tokens = activeDesignConfig.tokens;
@@ -2365,6 +2371,27 @@ const dateFilterError = useMemo(() => {
       '--dc-spacing': designTokenValues.spacingMode[tokens.spacingMode],
     } as React.CSSProperties;
   }, [activeDesignConfig, hasActiveDesignConfig]);
+  const configurableKpiDataSources = useMemo<KpiDataSources>(() => ({
+    dashboard_resumen: databaseDashboardData?.resumen,
+    dashboard_comunas: databaseDashboardData?.comunas ?? [],
+    dashboard_reclamos: databaseDashboardData?.reclamos ?? [],
+    dashboard_visitas: dailyDashboardData,
+  }), [dailyDashboardData, databaseDashboardData]);
+
+  const designCustomKpiWidgets: ConfiguredDashboardWidget[] = hasActiveDesignConfig && activeDesignConfig
+    ? activeDesignConfig.kpis
+      .filter((kpi) => !kpi.protected && kpi.visible)
+      .map((kpi) => ({
+        id: kpi.id,
+        title: kpi.title,
+        visible: kpi.visible,
+        description: kpi.description,
+        order: kpi.order,
+        section: kpi.section,
+        size: kpi.size,
+        content: <ConfigurableKpiCard kpi={kpi} dataSources={configurableKpiDataSources} />,
+      }))
+    : [];
   const dashboardWidgets: DashboardWidget[] = [
     {
       id: 'kpiFacturacion',
@@ -2705,21 +2732,25 @@ const dateFilterError = useMemo(() => {
   ];
 
   const configuredDashboardWidgets = hasActiveDesignConfig
-    ? dashboardWidgets.map((widget) => {
-      const designWidget = designWidgetById.get(widget.id as DesignWidgetId);
-      if (designWidget) {
-        return {
-          ...widget,
-          description: designWidget.description,
-          order: designWidget.order,
-          section: designWidget.section,
-          size: designWidget.size,
-          title: designWidget.title,
-          visible: designWidget.visible,
-        };
-      }
-      return widget.id.startsWith('customKpi:') ? { ...widget, order: 100, section: 'bottom' as const, size: 'small' as const } : widget;
-    })
+    ? [
+      ...dashboardWidgets.map((widget) => {
+        const designWidget = designWidgetById.get(widget.id as DesignWidgetId);
+        const designKpi = designKpiById.get(widget.id as DesignKpiId);
+        if (designWidget || designKpi) {
+          return {
+            ...widget,
+            description: designKpi?.description ?? designWidget?.description,
+            order: designKpi?.order ?? designWidget?.order,
+            section: designKpi?.section ?? designWidget?.section,
+            size: designKpi?.size ?? designWidget?.size,
+            title: designKpi?.title ?? designWidget?.title ?? widget.title,
+            visible: (designWidget?.visible ?? widget.visible) && (designKpi?.visible ?? true),
+          };
+        }
+        return widget.id.startsWith('customKpi:') ? { ...widget, order: 100, section: 'bottom' as const, size: 'small' as const } : widget;
+      }),
+      ...designCustomKpiWidgets,
+    ]
     : dashboardWidgets;
 
   return (
