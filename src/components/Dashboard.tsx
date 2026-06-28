@@ -61,6 +61,10 @@ import { TailAdminTopbar } from '../features/layout/TailAdminTopbar';
 import { TailAdminSidePanel } from '../features/layout/TailAdminSidePanel';
 import { TailAdminRightPanel } from '../features/layout/TailAdminRightPanel';
 import { TailAdminKpiCard } from '../features/ui-tailadmin/TailAdminKpiCard';
+import { DesignCenterView } from '../features/design-center/DesignCenterView';
+import { useDesignConfig } from '../features/design-center/useDesignConfig';
+import { designTokenValues } from '../features/design-center/safeOptions';
+import type { DesignConfig, DesignWidgetId } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
@@ -1178,6 +1182,7 @@ function SettingsView({
   tableRows,
   totals,
   canViewReports,
+  designConfig,
 }: {
   kpiDraft: Omit<CustomKpi, 'id'>;
   setKpiDraft: React.Dispatch<React.SetStateAction<Omit<CustomKpi, 'id'>>>;
@@ -1187,6 +1192,7 @@ function SettingsView({
   tableRows: TableRow[];
   totals: { visitas: number; facturacion: number };
   canViewReports: boolean;
+  designConfig: ReturnType<typeof useDesignConfig>;
 }) {
   return (
     <div className="grid gap-4">
@@ -1196,6 +1202,8 @@ function SettingsView({
           Administra indicadores personalizados y vistas guardadas sin alterar el dashboard principal.
         </p>
       </Panel>
+
+      <DesignCenterView designConfig={designConfig} />
 
       <KpiBuilder
         kpiDraft={kpiDraft}
@@ -1448,6 +1456,7 @@ function RouteMetricsSummary({
 }
 export default function Dashboard() {
   const { hasPermission } = useAuth();
+  const designConfig = useDesignConfig();
   const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>('default');
   const [showImportModal, setShowImportModal] = useState(false);
   const [importedRows, setImportedRows] = useState<{ rm: ImportedDashboardRow[]; regiones: ImportedDashboardRow[] }>(loadImportedDashboardRows);
@@ -2255,42 +2264,63 @@ const dateFilterError = useMemo(() => {
     ),
   }));
 
+  const activeDesignConfig = designConfig.activeConfig;
+  const hasActiveDesignConfig = designConfig.hasActiveConfig && Boolean(activeDesignConfig);
+  const designWidgetById = useMemo(() => {
+    if (!activeDesignConfig) return new Map<DesignWidgetId, DesignConfig['widgets'][number]>();
+    return new Map(activeDesignConfig.widgets.map((widget) => [widget.id, widget]));
+  }, [activeDesignConfig]);
+  const getDesignWidgetLabel = (id: DesignWidgetId, fallback: string) =>
+    hasActiveDesignConfig ? (designWidgetById.get(id)?.label || fallback) : fallback;
+  const designCssVariables = useMemo<React.CSSProperties | undefined>(() => {
+    if (!activeDesignConfig || !hasActiveDesignConfig) return undefined;
+    const tokens = activeDesignConfig.tokens;
+
+    return {
+      '--dc-primary': designTokenValues.primaryColor[tokens.primaryColor],
+      '--dc-background': designTokenValues.backgroundColor[tokens.backgroundColor],
+      '--dc-card': designTokenValues.cardColor[tokens.cardColor],
+      '--dc-text': designTokenValues.textColor[tokens.textColor],
+      '--dc-radius': designTokenValues.borderRadius[tokens.borderRadius],
+      '--dc-spacing': designTokenValues.spacingMode[tokens.spacingMode],
+    } as React.CSSProperties;
+  }, [activeDesignConfig, hasActiveDesignConfig]);
   const dashboardWidgets: DashboardWidget[] = [
     {
       id: 'kpiFacturacion',
       title: 'Facturación total',
       visible: true,
-      content: <PrimaryMetric actionLabel={totals.facturacion > 0 ? "Ver desglose" : undefined} onAction={() => scrollToDashboardSection('dashboard-charts-section')} icon={<FileBarChart size={29} />} tone="blue" title="Facturación total" value={formatCurrency(totals.facturacion)} delta={isEmptyCurrentView ? emptyViewMessage : 'Periodo seleccionado'} />,
+      content: <PrimaryMetric actionLabel={totals.facturacion > 0 ? "Ver desglose" : undefined} onAction={() => scrollToDashboardSection('dashboard-charts-section')} icon={<FileBarChart size={29} />} tone="blue" title={getDesignWidgetLabel('kpiFacturacion', 'Facturación total')} value={formatCurrency(totals.facturacion)} delta={isEmptyCurrentView ? emptyViewMessage : 'Periodo seleccionado'} />,
     },
     {
       id: 'kpiReclamos',
       title: 'Reclamos totales',
       visible: true,
-      content: <PrimaryMetric actionLabel={totals.visitas > 0 ? "Ver comunas" : undefined} onAction={showEvidencePanel} icon={<AlertTriangle size={30} />} tone="red" title="Reclamos totales" value={formatInt(totals.visitas)} delta={isEmptyCurrentView ? emptyViewMessage : 'Datos actualizados'} />,
+      content: <PrimaryMetric actionLabel={totals.visitas > 0 ? "Ver comunas" : undefined} onAction={showEvidencePanel} icon={<AlertTriangle size={30} />} tone="red" title={getDesignWidgetLabel('kpiReclamos', 'Reclamos totales')} value={formatInt(totals.visitas)} delta={isEmptyCurrentView ? emptyViewMessage : 'Datos actualizados'} />,
     },
     {
       id: 'kpiPromedio',
       title: 'Promedio por reclamo',
       visible: true,
-      content: <PrimaryMetric actionLabel={totals.visitas > 0 ? "Comparar" : undefined} onAction={showEvidencePanel} icon={<Users size={30} />} tone="cyan" title="Promedio por reclamo" value={formatCurrency(averageBilling)} delta={isEmptyCurrentView ? emptyViewMessage : 'Promedio del periodo'} />,
+      content: <PrimaryMetric actionLabel={totals.visitas > 0 ? "Comparar" : undefined} onAction={showEvidencePanel} icon={<Users size={30} />} tone="cyan" title={getDesignWidgetLabel('kpiPromedio', 'Promedio por reclamo')} value={formatCurrency(averageBilling)} delta={isEmptyCurrentView ? emptyViewMessage : 'Promedio del periodo'} />,
     },
     {
       id: 'kpiComunaTop',
       title: 'Top reclamos',
       visible: true,
-      content: <InsightCard actionLabel={topClaimComuna ? "Ver detalle" : undefined} onAction={() => topClaimComuna ? setTerritorialComunaDetail(topClaimComuna.comuna) : console.info('Sin comuna top')} icon={<Landmark size={28} />} iconClass="bg-orange-100 text-orange-500" label="Top reclamos" title={topClaimComuna?.comuna ?? 'Sin datos'} detail={topClaimComuna ? `${formatInt(topClaimComuna.visitas)} reclamos` : 'Carga reclamos para identificar comuna líder.'} badge={totals.visitas > 0 && topClaimComuna ? `${asPercent((topClaimComuna.visitas / totals.visitas) * 100)} del total` : undefined} showCrown={Boolean(topClaimComuna)} progressPct={totals.visitas > 0 && topClaimComuna ? (topClaimComuna.visitas / totals.visitas) * 100 : 0} progressTone="red" />,
+      content: <InsightCard actionLabel={topClaimComuna ? "Ver detalle" : undefined} onAction={() => topClaimComuna ? setTerritorialComunaDetail(topClaimComuna.comuna) : console.info('Sin comuna top')} icon={<Landmark size={28} />} iconClass="bg-orange-100 text-orange-500" label={getDesignWidgetLabel('kpiComunaTop', 'Top reclamos')} title={topClaimComuna?.comuna ?? 'Sin datos'} detail={topClaimComuna ? `${formatInt(topClaimComuna.visitas)} reclamos` : 'Carga reclamos para identificar comuna líder.'} badge={totals.visitas > 0 && topClaimComuna ? `${asPercent((topClaimComuna.visitas / totals.visitas) * 100)} del total` : undefined} showCrown={Boolean(topClaimComuna)} progressPct={totals.visitas > 0 && topClaimComuna ? (topClaimComuna.visitas / totals.visitas) * 100 : 0} progressTone="red" />,
     },
     {
       id: 'kpiFacturacionTop',
       title: 'Top facturación',
       visible: true,
-      content: <InsightCard actionLabel={topBillingComuna ? "Ver facturación" : undefined} onAction={() => scrollToDashboardSection('dashboard-charts-section')} icon={<FileBarChart size={28} />} iconClass="bg-blue-100 text-blue-600" label="Top facturación" title={topBillingComuna?.comuna ?? 'Sin datos'} detail={topBillingComuna ? formatCurrency(topBillingComuna.facturacion) : 'Carga reclamos para calcular facturación por comuna.'} badge={totals.facturacion > 0 && topBillingComuna ? `${asPercent((topBillingComuna.facturacion / totals.facturacion) * 100)} del total` : undefined} showCrown={Boolean(topBillingComuna)} progressPct={totals.facturacion > 0 && topBillingComuna ? (topBillingComuna.facturacion / totals.facturacion) * 100 : 0} progressTone="blue" />,
+      content: <InsightCard actionLabel={topBillingComuna ? "Ver facturación" : undefined} onAction={() => scrollToDashboardSection('dashboard-charts-section')} icon={<FileBarChart size={28} />} iconClass="bg-blue-100 text-blue-600" label={getDesignWidgetLabel('kpiFacturacionTop', 'Top facturación')} title={topBillingComuna?.comuna ?? 'Sin datos'} detail={topBillingComuna ? formatCurrency(topBillingComuna.facturacion) : 'Carga reclamos para calcular facturación por comuna.'} badge={totals.facturacion > 0 && topBillingComuna ? `${asPercent((topBillingComuna.facturacion / totals.facturacion) * 100)} del total` : undefined} showCrown={Boolean(topBillingComuna)} progressPct={totals.facturacion > 0 && topBillingComuna ? (topBillingComuna.facturacion / totals.facturacion) * 100 : 0} progressTone="blue" />,
     },
     {
       id: 'kpiCoberturaComunas',
       title: 'Cobertura',
       visible: true,
-      content: <InsightCard actionLabel={filteredMapData.length > 0 ? "Ver cobertura" : undefined} onAction={showEvidencePanel} icon={<ShieldCheck size={28} />} iconClass="bg-emerald-100 text-emerald-600" label="Cobertura" title={hasFilteredData ? `${Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100)}%` : '0%'} detail={filteredMapData.length > 0 ? `${filteredMapData.length} comunas con información` : 'Sin comunas con información cargada.'} progressPct={hasFilteredData ? Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100) : 0} progressTone="green" />,
+      content: <InsightCard actionLabel={filteredMapData.length > 0 ? "Ver cobertura" : undefined} onAction={showEvidencePanel} icon={<ShieldCheck size={28} />} iconClass="bg-emerald-100 text-emerald-600" label={getDesignWidgetLabel('kpiCoberturaComunas', 'Cobertura')} title={hasFilteredData ? `${Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100)}%` : '0%'} detail={filteredMapData.length > 0 ? `${filteredMapData.length} comunas con información` : 'Sin comunas con información cargada.'} progressPct={hasFilteredData ? Math.round((filteredMapData.length / Math.max(1, currentData.length)) * 100) : 0} progressTone="green" />,
     },
     {
       id: 'mapaReclamos',
@@ -2299,7 +2329,7 @@ const dateFilterError = useMemo(() => {
       content: (
         <Panel className="cc-map-panel flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
           <div className="cc-map-header flex-shrink-0 border-b border-slate-200 px-4 py-2">
-            <h2 className="cc-section-title text-base font-black text-blue-900">Mapa de reclamos</h2>
+            <h2 className="cc-section-title text-base font-black text-blue-900">{getDesignWidgetLabel('mapaReclamos', 'Mapa de reclamos')}</h2>
             <p className="cc-muted mt-0.5 text-[11px] font-semibold text-slate-600">Intensidad territorial de reclamos en la Región Metropolitana</p>
           </div>
           <div className="cc-map-surface relative min-h-0 flex-1 overflow-hidden rounded-xl">
@@ -2377,7 +2407,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-kpi-card-pro h-full">
-          <StatStripItem icon={<Building2 size={22} />} label="Total comunas" value={formatInt(filteredMapData.length)} detail={filteredMapData.length > 0 ? (viewMode === 'rm' ? 'RM incluida' : 'Regiones') : 'Sin comunas filtradas.'} />
+          <StatStripItem icon={<Building2 size={22} />} label={getDesignWidgetLabel('statTotalComunas', 'Total comunas')} value={formatInt(filteredMapData.length)} detail={filteredMapData.length > 0 ? (viewMode === 'rm' ? 'RM incluida' : 'Regiones') : 'Sin comunas filtradas.'} />
         </Panel>
       ),
     },
@@ -2387,7 +2417,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="h-full">
-          <StatStripItem actionLabel={totals.alta > 0 ? "Filtrar alta prioridad" : undefined} onAction={filterHighPriority} icon={<AlertTriangle size={22} />} label="Alta prioridad" value={formatInt(totals.alta)} detail={totals.alta > 0 ? `${asPercent(altaPct)} del total` : 'Sin reclamos de alta prioridad.'} progressPct={totals.alta > 0 ? altaPct : 0} progressTone="red" />
+          <StatStripItem actionLabel={totals.alta > 0 ? "Filtrar alta prioridad" : undefined} onAction={filterHighPriority} icon={<AlertTriangle size={22} />} label={getDesignWidgetLabel('statAltaPrioridad', 'Alta prioridad')} value={formatInt(totals.alta)} detail={totals.alta > 0 ? `${asPercent(altaPct)} del total` : 'Sin reclamos de alta prioridad.'} progressPct={totals.alta > 0 ? altaPct : 0} progressTone="red" />
         </Panel>
       ),
     },
@@ -2397,7 +2427,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="h-full">
-          <StatStripItem icon={<TrendingUpIcon />} label="Periodo analizado" value={dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día' : 'Rango'} detail="Filtro aplicado a todos los datos" />
+          <StatStripItem icon={<TrendingUpIcon />} label={getDesignWidgetLabel('statVariacionMensual', 'Periodo analizado')} value={dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día' : 'Rango'} detail="Filtro aplicado a todos los datos" />
         </Panel>
       ),
     },
@@ -2407,7 +2437,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="h-full">
-          <StatStripItem actionLabel={totals.ticketsUnicos > 0 ? "Ver duplicados" : undefined} onAction={showDuplicates} icon={<Users size={22} />} label="Tickets únicos" value={formatInt(totals.ticketsUnicos)} detail={totals.visitas > 0 ? `${asPercent((totals.ticketsUnicos / totals.visitas) * 100)} del total` : 'Sin tickets cargados.'} />
+          <StatStripItem actionLabel={totals.ticketsUnicos > 0 ? "Ver duplicados" : undefined} onAction={showDuplicates} icon={<Users size={22} />} label={getDesignWidgetLabel('statTicketsUnicos', 'Tickets únicos')} value={formatInt(totals.ticketsUnicos)} detail={totals.visitas > 0 ? `${asPercent((totals.ticketsUnicos / totals.visitas) * 100)} del total` : 'Sin tickets cargados.'} />
         </Panel>
       ),
     },
@@ -2417,7 +2447,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM'}</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('graficoFacturacionMensual', viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM')}</h3>
           {filteredCharts.monthlyBars.length > 0 ? <VerticalBars items={filteredCharts.monthlyBars} /> : <EmptyState />}
         </Panel>
       ),
@@ -2428,7 +2458,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Top 10 comunas con más reclamos</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('topComunasReclamos', 'Top 10 comunas con más reclamos')}</h3>
           {filteredCharts.topClaims.length > 0 ? <HorizontalBars color="red" items={filteredCharts.topClaims} maxLabel={formatInt(filteredCharts.topClaims[0]?.value ?? 0)} /> : <EmptyState />}
         </Panel>
       ),
@@ -2439,7 +2469,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Top 10 comunas con mayor facturación</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('topComunasFacturacion', 'Top 10 comunas con mayor facturación')}</h3>
           {filteredCharts.topBilling.length > 0 ? <HorizontalBars color="blue" items={filteredCharts.topBilling} maxLabel={formatCurrencyShort(filteredCharts.topBilling[0]?.value ?? 0)} /> : <EmptyState />}
         </Panel>
       ),
@@ -2450,7 +2480,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">Distribución por prioridad</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('distribucionPrioridad', 'Distribución por prioridad')}</h3>
           {totals.visitas > 0 ? (
             <Donut
               center={formatInt(totals.visitas)}
@@ -2474,7 +2504,7 @@ const dateFilterError = useMemo(() => {
           <div className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${showEvidenceTable ? 'border-b border-slate-200' : ''}`}>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
-                <h2 className="text-lg font-black text-blue-900">Evidencia por comuna</h2>
+                <h2 className="text-lg font-black text-blue-900">{getDesignWidgetLabel('tablaComunas', 'Evidencia por comuna')}</h2>
                 <span className="rounded-full bg-blue-50 px-2.5 py-1 text-[11px] font-black text-blue-700">
                   {formatInt(tableRows.length)} comunas
                 </span>
@@ -2594,8 +2624,15 @@ const dateFilterError = useMemo(() => {
     ...customKpiWidgets,
   ];
 
+  const configuredDashboardWidgets = hasActiveDesignConfig
+    ? dashboardWidgets.map((widget) => {
+      const designWidget = designWidgetById.get(widget.id as DesignWidgetId);
+      return designWidget ? { ...widget, title: designWidget.label, visible: designWidget.visible } : widget;
+    })
+    : dashboardWidgets;
+
   return (
-    <div className="cc-shell flex h-screen font-sans text-[#172448]">
+    <div className={`cc-shell flex h-screen font-sans text-[#172448] ${hasActiveDesignConfig ? 'cc-design-active' : ''}`} style={designCssVariables}>
       <style>{`
         .leaflet-control-attribution { font-size: 9px; }
         .leaflet-popup-content-wrapper {
@@ -2604,6 +2641,12 @@ const dateFilterError = useMemo(() => {
         }
         .leaflet-popup-content { margin: 12px 14px; }
         .leaflet-container { width: 100%; height: 100%; z-index: 0; }
+        .cc-design-active .cc-main { background: var(--dc-background) !important; color: var(--dc-text); }
+        .cc-design-active .cc-card { background-color: var(--dc-card) !important; border-radius: var(--dc-radius) !important; }
+        .cc-design-active .cc-page-content { gap: var(--dc-spacing); }
+        .cc-design-active .cc-sidebar-logo,
+        .cc-design-active .cc-sidebar-action,
+        .cc-design-active .cc-primary-tabs [aria-selected="true"] { background: var(--dc-primary) !important; }
         @media print {
           body { background: #ffffff; }
           .no-print { display: none !important; }
@@ -2653,8 +2696,8 @@ const dateFilterError = useMemo(() => {
             onExportEvidence={exportEvidenceCsv}
             onPrintDashboard={printDashboardView}
             onToggleTheme={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
-            subtitle={activeTab === 'dashboard' ? 'Inteligencia operativa para decisiones estratégicas' : 'Gestión del módulo activo'}
-            title={activeTab === 'dashboard' ? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : (navItems.find((item) => item.id === activeTab)?.label ?? 'Visor de Facturación y Reclamos')}
+            subtitle={activeTab === 'dashboard' && hasActiveDesignConfig ? activeDesignConfig?.texts.dashboardSubtitle ?? 'Inteligencia operativa para decisiones estratégicas' : activeTab === 'dashboard' ? 'Inteligencia operativa para decisiones estratégicas' : 'Gestión del módulo activo'}
+            title={activeTab === 'dashboard' && hasActiveDesignConfig ? activeDesignConfig?.texts.dashboardTitle ?? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : activeTab === 'dashboard' ? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : (navItems.find((item) => item.id === activeTab)?.label ?? 'Visor de Facturación y Reclamos')}
             userMenu={(
               <UserMenu
                 isDarkPremium={dashboardTheme === 'dark-premium'}
@@ -2768,7 +2811,7 @@ const dateFilterError = useMemo(() => {
                 </section>
                 </TailAdminSidePanel>
                 <ExecutiveDashboardLayout
-                  widgets={dashboardWidgets}
+                  widgets={configuredDashboardWidgets}
                   routeMetrics={routeMetrics}
                   routePeriod={routePeriod}
                   setRoutePeriod={setRoutePeriod}
@@ -2837,6 +2880,7 @@ const dateFilterError = useMemo(() => {
                 tableRows={tableRows}
                 totals={totals}
                 canViewReports={hasPermission('reportes')}
+                designConfig={designConfig}
               />
             </ProtectedView>
           ) : activeTab === 'reports' ? (
