@@ -3,19 +3,32 @@ import {
   DESIGN_CONFIG_VERSION,
   DESIGN_STORAGE_KEY,
   type DesignConfig,
+  type DesignSectionConfig,
+  type DesignSectionId,
   type DesignTokens,
   type DesignWidgetConfig,
   type DesignWidgetId,
 } from './designTypes';
-import { isDesignColorOption, isDesignRadiusOption, isDesignSpacingMode } from './safeOptions';
+import {
+  isDesignColorOption,
+  isDesignRadiusOption,
+  isDesignSectionId,
+  isDesignSpacingMode,
+  isDesignWidgetSize,
+} from './safeOptions';
 
 const widgetIds = new Set<DesignWidgetId>(DEFAULT_DESIGN_PRESET.widgets.map((widget) => widget.id));
+const sectionIds = new Set<DesignSectionId>(DEFAULT_DESIGN_PRESET.sections.map((section) => section.id));
 const maxTextLength = 90;
 
 function cleanText(value: unknown, fallback: string) {
   if (typeof value !== 'string') return fallback;
   const text = value.replace(/\s+/g, ' ').trim();
   return text.length > 0 && text.length <= maxTextLength ? text : fallback;
+}
+
+function cleanOrder(value: unknown, fallback: number) {
+  return typeof value === 'number' && Number.isInteger(value) && value >= 0 && value <= 999 ? value : fallback;
 }
 
 function validateTokens(value: unknown): DesignTokens | null {
@@ -43,6 +56,30 @@ function validateTokens(value: unknown): DesignTokens | null {
   };
 }
 
+function validateSections(value: unknown): DesignSectionConfig[] | null {
+  if (value === undefined) return DEFAULT_DESIGN_PRESET.sections.map((section) => ({ ...section }));
+  if (!Array.isArray(value)) return null;
+  const byId = new Map<DesignSectionId, DesignSectionConfig>();
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const section = item as Record<string, unknown>;
+    if (typeof section.id !== 'string' || !sectionIds.has(section.id as DesignSectionId)) return null;
+    if (typeof section.visible !== 'boolean') return null;
+
+    const fallback = DEFAULT_DESIGN_PRESET.sections.find((presetSection) => presetSection.id === section.id);
+    if (!fallback) return null;
+    byId.set(section.id as DesignSectionId, {
+      id: section.id as DesignSectionId,
+      label: cleanText(section.label, fallback.label),
+      visible: section.visible,
+      order: cleanOrder(section.order, fallback.order),
+    });
+  }
+
+  return DEFAULT_DESIGN_PRESET.sections.map((section) => byId.get(section.id) ?? { ...section });
+}
+
 function validateWidgets(value: unknown): DesignWidgetConfig[] | null {
   if (!Array.isArray(value)) return null;
   const byId = new Map<DesignWidgetId, DesignWidgetConfig>();
@@ -53,11 +90,16 @@ function validateWidgets(value: unknown): DesignWidgetConfig[] | null {
     if (typeof widget.id !== 'string' || !widgetIds.has(widget.id as DesignWidgetId)) return null;
     if (typeof widget.visible !== 'boolean') return null;
 
-    const fallback = DEFAULT_DESIGN_PRESET.widgets.find((presetWidget) => presetWidget.id === widget.id)?.label ?? widget.id;
+    const fallback = DEFAULT_DESIGN_PRESET.widgets.find((presetWidget) => presetWidget.id === widget.id);
+    if (!fallback) return null;
     byId.set(widget.id as DesignWidgetId, {
       id: widget.id as DesignWidgetId,
-      label: cleanText(widget.label, fallback),
+      title: cleanText(widget.title ?? widget.label, fallback.title),
+      description: typeof widget.description === 'string' ? cleanText(widget.description, fallback.description ?? '') : fallback.description,
       visible: widget.visible,
+      order: cleanOrder(widget.order, fallback.order),
+      section: isDesignSectionId(widget.section) ? widget.section : fallback.section,
+      size: isDesignWidgetSize(widget.size) ? widget.size : fallback.size,
     });
   }
 
@@ -72,8 +114,9 @@ export function normalizeDesignConfig(value: unknown): DesignConfig | null {
 
   const texts = config.texts as Record<string, unknown>;
   const tokens = validateTokens(config.tokens);
+  const sections = validateSections(config.sections);
   const widgets = validateWidgets(config.widgets);
-  if (!tokens || !widgets) return null;
+  if (!tokens || !sections || !widgets) return null;
 
   return {
     version: DESIGN_CONFIG_VERSION,
@@ -82,6 +125,7 @@ export function normalizeDesignConfig(value: unknown): DesignConfig | null {
       dashboardSubtitle: cleanText(texts.dashboardSubtitle, DEFAULT_DESIGN_PRESET.texts.dashboardSubtitle),
     },
     tokens,
+    sections,
     widgets,
   };
 }
@@ -91,6 +135,7 @@ export function createDefaultDesignConfig(): DesignConfig {
     version: DESIGN_CONFIG_VERSION,
     texts: { ...DEFAULT_DESIGN_PRESET.texts },
     tokens: { ...DEFAULT_DESIGN_PRESET.tokens },
+    sections: DEFAULT_DESIGN_PRESET.sections.map((section) => ({ ...section })),
     widgets: DEFAULT_DESIGN_PRESET.widgets.map((widget) => ({ ...widget })),
   };
 }

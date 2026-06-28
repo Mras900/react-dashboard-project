@@ -64,7 +64,7 @@ import { TailAdminKpiCard } from '../features/ui-tailadmin/TailAdminKpiCard';
 import { DesignCenterView } from '../features/design-center/DesignCenterView';
 import { useDesignConfig } from '../features/design-center/useDesignConfig';
 import { designTokenValues } from '../features/design-center/safeOptions';
-import type { DesignConfig, DesignWidgetId } from '../features/design-center/designTypes';
+import type { DesignConfig, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
@@ -114,6 +114,13 @@ type CustomKpi = {
   metric: KpiMetricKey;
   aggregation: KpiAggregation;
   format: KpiFormat;
+};
+
+type ConfiguredDashboardWidget = DashboardWidget & {
+  description?: string;
+  order?: number;
+  section?: DesignSectionId;
+  size?: DesignWidgetSize;
 };
 
 const navItems: Array<{ id: ActiveTab; label: string; icon: typeof Grid2X2; permission: AppViewKey; badge?: boolean }> = [
@@ -1226,7 +1233,7 @@ function DashboardSlot({
   className = '',
   domId,
 }: {
-  widgets: DashboardWidget[];
+  widgets: ConfiguredDashboardWidget[];
   id: string;
   className?: string;
   domId?: string;
@@ -1248,6 +1255,15 @@ function RouteMiniMap({ hasRouteTickets }: { hasRouteTickets: boolean }) {
     </div>
   );
 }
+
+const getDesignWidgetSizeClass = (size?: DesignWidgetSize) => {
+  if (size === 'large') return 'md:col-span-2 xl:col-span-4 min-h-[260px]';
+  if (size === 'medium') return 'md:col-span-1 xl:col-span-2 min-h-[220px]';
+  return 'min-h-[160px]';
+};
+
+const sortDesignSections = (sections: DesignSectionConfig[]) => [...sections].sort((a, b) => a.order - b.order);
+const sortDesignWidgets = (widgets: ConfiguredDashboardWidget[]) => [...widgets].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
 function RouteMetricsSummary({
   routeMetrics,
@@ -1366,8 +1382,9 @@ function RouteMetricsSummary({
   onShowTerritorialEvidence,
   onOptimizeRoute,
   onViewRoutePending,
+  designSections,
 }: {
-  widgets: DashboardWidget[];
+  widgets: ConfiguredDashboardWidget[];
   routeMetrics: RouteDailyMetrics;
   routePeriod: RoutePeriod;
   setRoutePeriod: (period: RoutePeriod) => void;
@@ -1381,7 +1398,70 @@ function RouteMetricsSummary({
   onShowTerritorialEvidence?: (comuna: string) => void;
   onOptimizeRoute?: () => void;
   onViewRoutePending?: () => void;
+  designSections?: DesignSectionConfig[];
 }) {
+  if (designSections) {
+    const visibleSections = sortDesignSections(designSections).filter((section) => section.visible);
+
+    return (
+      <div className="cc-dashboard-layout cc-executive-dashboard flex flex-col min-h-0 gap-5 pb-4">
+        {visibleSections.map((section) => {
+          const sectionWidgets = sortDesignWidgets(widgets.filter((widget) => widget.visible && widget.section === section.id));
+          const hasRouteSummary = section.id === 'bottom';
+          const hasTerritorialInsights = section.id === 'side' && showTerritorialInsights;
+
+          if (sectionWidgets.length === 0 && !hasRouteSummary && !hasTerritorialInsights) return null;
+
+          return (
+            <section key={section.id} className="grid gap-3">
+              <h2 className="text-sm font-black uppercase text-[#466083]">{section.label}</h2>
+              <div className="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-4">
+                {sectionWidgets.map((widget) => (
+                  <DashboardSlot
+                    key={widget.id}
+                    widgets={sectionWidgets}
+                    id={widget.id}
+                    domId={widget.id === 'mapaReclamos' ? 'dashboard-map-section' : widget.id === 'tablaComunas' ? 'dashboard-evidence-section' : undefined}
+                    className={getDesignWidgetSizeClass(widget.size) + (widget.id === 'mapaReclamos' ? ' h-[520px]' : '')}
+                  />
+                ))}
+                {hasTerritorialInsights ? (
+                  <div className="md:col-span-2 xl:col-span-4">
+                    <TerritorialInsightCards
+                      resumen={territorialMetrics.resumen}
+                      comunaCritica={territorialMetrics.comunaCritica}
+                      topReclamos={territorialMetrics.topReclamos}
+                      topFacturacion={territorialMetrics.topFacturacion}
+                      topIntensidad={territorialMetrics.topIntensidad}
+                      isUsingFallback={territorialMetrics.isUsingFallback}
+                      hasActiveData={territorialMetrics.hasActiveData}
+                      onOpenComuna={onOpenTerritorialComuna}
+                      onOpenExplanation={onOpenTerritorialExplanation}
+                      onShowEvidence={onShowTerritorialEvidence}
+                    />
+                  </div>
+                ) : null}
+                {hasRouteSummary ? (
+                  <div id="dashboard-route-section" className="md:col-span-2 xl:col-span-4">
+                    <RouteMetricsSummary
+                      routeMetrics={routeMetrics}
+                      routePeriod={routePeriod}
+                      setRoutePeriod={setRoutePeriod}
+                      routeDateBase={routeDateBase}
+                      setRouteDateBase={setRouteDateBase}
+                      onOptimizeRoute={onOptimizeRoute}
+                      onViewPending={onViewRoutePending}
+                    />
+                  </div>
+                ) : null}
+              </div>
+            </section>
+          );
+        })}
+      </div>
+    );
+  }
+
   return (
     <div className="cc-dashboard-layout cc-executive-dashboard flex flex-col min-h-0 gap-5 pb-4">
       <div className="flex-1 min-h-[480px] min-w-0">
@@ -2271,7 +2351,7 @@ const dateFilterError = useMemo(() => {
     return new Map(activeDesignConfig.widgets.map((widget) => [widget.id, widget]));
   }, [activeDesignConfig]);
   const getDesignWidgetLabel = (id: DesignWidgetId, fallback: string) =>
-    hasActiveDesignConfig ? (designWidgetById.get(id)?.label || fallback) : fallback;
+    hasActiveDesignConfig ? (designWidgetById.get(id)?.title || fallback) : fallback;
   const designCssVariables = useMemo<React.CSSProperties | undefined>(() => {
     if (!activeDesignConfig || !hasActiveDesignConfig) return undefined;
     const tokens = activeDesignConfig.tokens;
@@ -2627,7 +2707,18 @@ const dateFilterError = useMemo(() => {
   const configuredDashboardWidgets = hasActiveDesignConfig
     ? dashboardWidgets.map((widget) => {
       const designWidget = designWidgetById.get(widget.id as DesignWidgetId);
-      return designWidget ? { ...widget, title: designWidget.label, visible: designWidget.visible } : widget;
+      if (designWidget) {
+        return {
+          ...widget,
+          description: designWidget.description,
+          order: designWidget.order,
+          section: designWidget.section,
+          size: designWidget.size,
+          title: designWidget.title,
+          visible: designWidget.visible,
+        };
+      }
+      return widget.id.startsWith('customKpi:') ? { ...widget, order: 100, section: 'bottom' as const, size: 'small' as const } : widget;
     })
     : dashboardWidgets;
 
@@ -2825,6 +2916,7 @@ const dateFilterError = useMemo(() => {
                   onShowTerritorialEvidence={showEvidenceForComuna}
                   onOptimizeRoute={openRouteOptimization}
                   onViewRoutePending={openRoutePending}
+                  designSections={hasActiveDesignConfig ? activeDesignConfig?.sections : undefined}
                 />
                 {showTerritorialExplanation ? (
                   <TerritorialExplanationModal

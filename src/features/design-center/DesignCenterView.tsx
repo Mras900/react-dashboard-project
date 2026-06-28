@@ -1,4 +1,6 @@
 import type { ReactNode } from 'react';
+import { CardSettings } from './CardSettings';
+import { LayoutSettings } from './LayoutSettings';
 import {
   backgroundColorOptions,
   cardColorOptions,
@@ -102,41 +104,8 @@ export function DesignCenterView({ designConfig }: DesignCenterViewProps) {
           <SelectField label="Espaciado" onChange={(value) => updateDraft((current) => ({ ...current, tokens: { ...current.tokens, spacingMode: value } }))} options={spacingOptions} value={draftConfig.tokens.spacingMode} />
         </div>
 
-        <div className="grid gap-3">
-          <FieldLabel>KPIs y tarjetas conocidas</FieldLabel>
-          <div className="grid gap-3 lg:grid-cols-2">
-            {draftConfig.widgets.map((widget) => (
-              <div key={widget.id} className="grid gap-3 rounded-lg border border-slate-200 bg-slate-50 p-3 sm:grid-cols-[auto_minmax(0,1fr)] sm:items-center">
-                <label className="flex items-center gap-2 text-sm font-black text-[#071b4d]">
-                  <input
-                    checked={widget.visible}
-                    className="h-4 w-4 rounded border-slate-300 text-blue-700"
-                    onChange={(event) =>
-                      updateDraft((current) => ({
-                        ...current,
-                        widgets: current.widgets.map((item) => (item.id === widget.id ? { ...item, visible: event.target.checked } : item)),
-                      }))
-                    }
-                    type="checkbox"
-                  />
-                  Visible
-                </label>
-                <input
-                  aria-label={`Etiqueta ${widget.id}`}
-                  className="h-10 min-w-0 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#071b4d] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
-                  maxLength={90}
-                  onChange={(event) =>
-                    updateDraft((current) => ({
-                      ...current,
-                      widgets: current.widgets.map((item) => (item.id === widget.id ? { ...item, label: event.target.value } : item)),
-                    }))
-                  }
-                  value={widget.label}
-                />
-              </div>
-            ))}
-          </div>
-        </div>
+        <LayoutSettings designConfig={designConfig} />
+        <CardSettings designConfig={designConfig} />
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4">

@@ -43,6 +43,15 @@ export function useDesignConfig() {
     setIsPreviewActive(false);
   }, []);
 
+
+  const resetLayout = useCallback(() => {
+    const defaults = createDefaultDesignConfig();
+    setDraftConfig((current) => ({
+      ...current,
+      sections: defaults.sections,
+      widgets: defaults.widgets,
+    }));
+  }, []);
   return useMemo(
     () => ({
       preset: DEFAULT_DESIGN_PRESET,
@@ -56,7 +65,8 @@ export function useDesignConfig() {
       previewDraft,
       stopPreview,
       resetConfig,
+      resetLayout,
     }),
-    [activeConfig, draftConfig, hasActiveConfig, isPreviewActive, previewDraft, resetConfig, saveDraft, savedConfig, stopPreview, updateDraft],
+    [activeConfig, draftConfig, hasActiveConfig, isPreviewActive, previewDraft, resetConfig, resetLayout, saveDraft, savedConfig, stopPreview, updateDraft],
   );
 }
