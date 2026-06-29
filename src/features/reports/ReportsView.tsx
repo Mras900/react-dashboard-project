@@ -89,7 +89,8 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98)) !important;
           border-color: #22304d !important;
           color: #e2e8f0 !important;
-          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.22);
+          border-radius: 16px !important;
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
         }
         .reports-ai-premium h2,
         .reports-ai-premium h3,
@@ -118,6 +119,8 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
         .reports-ai-premium .bg-white,
         .reports-ai-premium .bg-slate-50 { background-color: rgba(15, 23, 42, 0.68) !important; }
         .reports-ai-premium .border-slate-200 { border-color: #22304d !important; }
+        .reports-ai-premium button { border-radius: 10px; }
+        .reports-ai-premium .recharts-wrapper text { fill: #94a3b8; }
       `}</style>
 
       <section className="report-card overflow-hidden rounded-xl border p-5">
@@ -305,3 +308,6 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
     </div>
   );
 }
+
+
+

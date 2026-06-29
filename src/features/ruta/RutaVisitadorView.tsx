@@ -984,6 +984,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
           border-color: #22304d !important;
           color: #e2e8f0 !important;
+          border-radius: 16px !important;
           box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
         }
         .cc-route-daily-premium h2,
@@ -1011,6 +1012,8 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         .cc-route-daily-premium input::placeholder,
         .cc-route-daily-premium textarea::placeholder { color: #64748b !important; }
         .cc-route-daily-premium .route-map-section-pro .cc-route-map-compact { min-height: 560px; }
+        .cc-route-daily-premium table thead { background: rgba(2, 6, 23, 0.58); }
+        .cc-route-daily-premium .cc-list-card-pro { background: rgba(15, 23, 42, 0.38); }
       `}</style>
       <RutaPanel className="route-daily-shell-pro rounded-xl border p-4">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
@@ -1826,5 +1829,8 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
     </div>
   );
 }
+
+
+
 
 

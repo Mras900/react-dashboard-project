@@ -1352,6 +1352,8 @@ function BillingView({
           color: #f8fafc;
         }
         .billing-review-premium input::placeholder { color: #64748b; }
+        .billing-review-premium table thead { background: rgba(2, 6, 23, 0.58); }
+        .billing-review-premium table tbody tr:hover { background: rgba(30, 41, 59, 0.56); }
       `}</style>
 
       <section className="billing-card rounded-xl border p-5">
@@ -3337,6 +3339,23 @@ const dateFilterError = useMemo(() => {
         .cc-design-active .cc-sidebar-logo,
         .cc-design-active .cc-sidebar-action,
         .cc-design-active .cc-primary-tabs [aria-selected="true"] { background: var(--dc-primary) !important; }
+        .cc-sidebar-item-pro {
+          border: 1px solid transparent;
+          color: #94a3b8;
+        }
+        .cc-sidebar-item-pro:hover,
+        .cc-sidebar-item-pro:focus-visible {
+          background: rgba(37, 99, 235, 0.12);
+          border-color: #22304d;
+          color: #f8fafc;
+          outline: none;
+        }
+        .cc-sidebar-item-active {
+          background: #2563eb;
+          border-color: #60a5fa;
+          color: #ffffff;
+          box-shadow: 0 12px 28px rgba(37, 99, 235, 0.32);
+        }
         .cc-dashboard-filter-panel {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
           border-color: #22304d !important;
@@ -3405,8 +3424,8 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-slate-200 bg-white py-4">
-        <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#0757bd] text-white shadow-lg shadow-blue-900/20">
+      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-[#22304D] bg-[#0B1020] py-4">
+        <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
           <Navigation size={22} />
         </div>
 
@@ -3444,13 +3463,13 @@ const dateFilterError = useMemo(() => {
               <Pen size={18} />
             </button>
           ) : null}
-          <button className="cc-sidebar-action mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#073B91] text-white shadow-lg shadow-blue-900/25" type="button" title="Contraer menú lateral" aria-label="Contraer menú lateral">
+          <button className="cc-sidebar-action mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#2563EB] text-white shadow-lg shadow-blue-950/35" type="button" title="Contraer menú lateral" aria-label="Contraer menú lateral">
             <ChevronsLeft size={19} />
           </button>
         </div>
       </aside>
 
-      <main className={`cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden p-4 print:ml-0 print:h-auto print:overflow-visible ${activeTab === 'dashboard' ? 'bg-[#070B14]' : 'bg-[#F8FAFC]'}`}>
+      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[#070B14] p-4 print:ml-0 print:h-auto print:overflow-visible">
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
           {isComponentVisible('header') ? (
           <TailAdminTopbar
@@ -3712,43 +3731,4 @@ function TrendingUpIcon() {
     </svg>
   );
 }
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
