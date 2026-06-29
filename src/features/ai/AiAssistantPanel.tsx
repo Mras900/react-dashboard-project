@@ -10,6 +10,14 @@ const providerOptions: Array<{ label: string; value: AiProvider }> = [
   { label: 'OpenRouter', value: 'openrouter' },
 ];
 
+const quickActions = [
+  'Resumen del dashboard',
+  'Analizar comunas criticas',
+  'Generar informe mensual',
+  'Revisar visitas no exitosas',
+  'Sugerir prioridades de ruta',
+];
+
 type AiAssistantPanelProps = {
   context?: string;
 };
@@ -23,13 +31,15 @@ export function AiAssistantPanel({ context }: AiAssistantPanelProps) {
 
   const canSubmit = useMemo(() => prompt.trim().length > 0 && !isLoading, [isLoading, prompt]);
 
-  const handleSubmit = async () => {
-    if (!canSubmit) return;
+  const submitPrompt = async (nextPrompt: string) => {
+    const cleanedPrompt = nextPrompt.trim();
+    if (!cleanedPrompt || isLoading) return;
+    setPrompt(cleanedPrompt);
     setIsLoading(true);
     setError('');
     try {
       const response = await askAi({
-        prompt: prompt.trim(),
+        prompt: cleanedPrompt,
         context,
         provider,
       });
@@ -41,6 +51,8 @@ export function AiAssistantPanel({ context }: AiAssistantPanelProps) {
       setIsLoading(false);
     }
   };
+
+  const handleSubmit = async () => submitPrompt(prompt);
 
   return (
     <section className="cc-card rounded-lg border border-white/[0.08] bg-[#111827] p-4 shadow-lg shadow-black/20">
@@ -68,6 +80,20 @@ export function AiAssistantPanel({ context }: AiAssistantPanelProps) {
             ))}
           </select>
         </label>
+      </div>
+
+      <div className="mt-4 flex flex-wrap gap-2">
+        {quickActions.map((action) => (
+          <button
+            className="rounded-full border border-white/[0.08] bg-white/[0.04] px-3 py-1.5 text-xs font-black text-[#C8D7EA] transition hover:border-[#1B4FD8] hover:text-white disabled:opacity-50"
+            disabled={isLoading}
+            key={action}
+            onClick={() => submitPrompt(action)}
+            type="button"
+          >
+            {action}
+          </button>
+        ))}
       </div>
 
       <div className="mt-4 grid gap-3 lg:grid-cols-[minmax(0,1fr)_180px]">

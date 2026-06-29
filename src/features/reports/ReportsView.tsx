@@ -4,6 +4,7 @@ import type { ChartConfig } from './chart-types';
 import { buildChartData } from './chart-utils';
 import { ChartBuilder } from './ChartBuilder';
 import { useSavedCharts } from './useSavedCharts';
+import { MonthlyReportGenerator } from './MonthlyReportGenerator';
 
 type Props = {
   rmRows: Record<string, unknown>[];
@@ -40,6 +41,8 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
 
   return (
     <div className="grid gap-4">
+      <MonthlyReportGenerator />
+
       <ChartBuilder value={draft} onChange={setDraft} onSave={saveDraft} />
 
       <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
