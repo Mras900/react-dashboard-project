@@ -75,7 +75,7 @@ import type { KpiDataSources } from '../features/design-center/kpiCalculations';
 import type { DesignComponentConfig, DesignComponentId, DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
 
-type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
+type ActiveTab = 'dashboard' | 'ruta' | 'reports' | 'billing' | 'settings' | 'arqueo' | 'alerts' | 'map' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
 type StatusFilter = 'todos' | ImportedVisitStatus;
 type MonthFilter = 'all' | string;
@@ -131,19 +131,20 @@ type ConfiguredDashboardWidget = DashboardWidget & {
   size?: DesignWidgetSize;
 };
 
-const navItems: Array<{ id: ActiveTab; label: string; icon: typeof Grid2X2; permission: AppViewKey; badge?: boolean }> = [
-  { id: 'dashboard', label: 'Panel principal', icon: Grid2X2, permission: 'dashboard' },
-  { id: 'settings', label: 'Configuraciones', icon: ShieldCheck, permission: 'configuracion' },
+const navItems: Array<{ id: ActiveTab; label: string; icon: typeof Grid2X2; permission: AppViewKey; badge?: boolean; visible?: boolean }> = [
+  { id: 'dashboard', label: 'Dashboard', icon: Grid2X2, permission: 'dashboard' },
+  { id: 'ruta', label: 'Ruta diaria', icon: Route, permission: 'ruta' },
   { id: 'reports', label: 'Reportes', icon: FileBarChart, permission: 'reportes' },
-  { id: 'ruta', label: 'Ruta visitador', icon: Route, permission: 'ruta' },
-  { id: 'arqueo', label: 'Arqueo Ruta', icon: ClipboardCheck, permission: 'ruta' },
-  { id: 'alerts', label: 'Alertas', icon: AlertTriangle, permission: 'dashboard', badge: true },
-  { id: 'map', label: 'Mapa', icon: MapPin, permission: 'dashboard' },
-  { id: 'users', label: 'Usuarios', icon: UserCog, permission: 'usuarios' },
+  { id: 'billing', label: 'Facturación', icon: Calculator, permission: 'dashboard' },
+  { id: 'settings', label: 'Configuraciones', icon: ShieldCheck, permission: 'configuracion' },
+  { id: 'arqueo', label: 'Arqueo Ruta', icon: ClipboardCheck, permission: 'ruta', visible: false },
+  { id: 'alerts', label: 'Alertas', icon: AlertTriangle, permission: 'dashboard', badge: true, visible: false },
+  { id: 'map', label: 'Mapa', icon: MapPin, permission: 'dashboard', visible: false },
+  { id: 'users', label: 'Usuarios', icon: UserCog, permission: 'usuarios', visible: false },
 ];
 
 const bottomNavItems = [
-  { id: 'help' as const, label: 'Ayuda', icon: HelpCircle, permission: 'dashboard' as AppViewKey },
+  { id: 'help' as const, label: 'Ayuda', icon: HelpCircle, permission: 'dashboard' as AppViewKey, visible: false },
 ];
 
 const mapLayerSources: Array<{ key: MapLayerKey; url: string }> = [
@@ -1188,6 +1189,16 @@ function KpiBuilder({
   );
 }
 
+function BillingView() {
+  return (
+    <Panel className="flex min-h-[620px] flex-col items-center justify-center p-10 text-center">
+      <Calculator className="mb-4 text-blue-600" size={44} />
+      <h2 className="text-2xl font-black text-[#071b4d]">Facturación</h2>
+      <p className="mt-2 max-w-md text-sm font-semibold text-[#6b7d98]">Módulo de revisión y corrección de datos en preparación</p>
+    </Panel>
+  );
+}
+
 function SettingsView({
   kpiDraft,
   setKpiDraft,
@@ -1414,7 +1425,7 @@ function RouteMetricsSummary({
     const visibleSections = sortDesignSections(designSections).filter((section) => section.visible);
 
     return (
-      <div className="cc-dashboard-layout cc-executive-dashboard flex flex-col min-h-0 gap-5 pb-4">
+      <div className="cc-dashboard-layout cc-executive-dashboard cc-dashboard-premium flex flex-col min-h-0 gap-5 pb-4">
         {visibleSections.map((section) => {
           const sectionWidgets = sortDesignWidgets(widgets.filter((widget) => widget.visible && widget.section === section.id));
           const hasRouteSummary = section.id === 'bottom';
@@ -1473,10 +1484,10 @@ function RouteMetricsSummary({
   }
 
   return (
-    <div className="cc-dashboard-layout cc-executive-dashboard flex flex-col min-h-0 gap-5 pb-4">
-      <div className="flex-1 min-h-[480px] min-w-0">
-        <section className="cc-exec-map-row grid grid-cols-1 gap-4 xl:grid-cols-[280px_minmax(0,1fr)_300px] h-full min-h-0">
-          <aside className="cc-kpi-left-column flex flex-col gap-4 overflow-y-auto min-h-0">
+    <div className="cc-dashboard-layout cc-executive-dashboard cc-dashboard-premium flex flex-col min-h-0 gap-5 pb-4">
+      <div className="flex-1 min-h-[620px] min-w-0">
+        <section className="cc-exec-map-row grid h-full min-h-0 grid-cols-1 gap-4 xl:grid-cols-[300px_minmax(0,1fr)_320px]">
+          <aside className="cc-kpi-left-column flex min-h-0 flex-col gap-3 overflow-y-auto">
             <DashboardSlot widgets={widgets} id="kpiFacturacion" />
             <DashboardSlot widgets={widgets} id="kpiReclamos" />
             <DashboardSlot widgets={widgets} id="kpiPromedio" />
@@ -1487,7 +1498,7 @@ function RouteMetricsSummary({
               widgets={widgets}
               id="mapaReclamos"
               domId="dashboard-map-section"
-              className="flex-1 min-h-[400px]"
+              className="flex-1 min-h-[560px]"
             />
           </div>
 
@@ -1521,10 +1532,10 @@ function RouteMetricsSummary({
       </section>
 
       <section id="dashboard-charts-section" className="flex-shrink-0 grid grid-cols-1 gap-4 xl:grid-cols-4">
-        <DashboardSlot widgets={widgets} id="graficoFacturacionMensual" className="min-h-[240px]" />
-        <DashboardSlot widgets={widgets} id="topComunasReclamos" className="min-h-[240px]" />
-        <DashboardSlot widgets={widgets} id="topComunasFacturacion" className="min-h-[240px]" />
-        <DashboardSlot widgets={widgets} id="distribucionPrioridad" className="min-h-[240px]" />
+        <DashboardSlot widgets={widgets} id="graficoFacturacionMensual" className="min-h-[280px]" />
+        <DashboardSlot widgets={widgets} id="topComunasReclamos" className="min-h-[280px]" />
+        <DashboardSlot widgets={widgets} id="topComunasFacturacion" className="min-h-[280px]" />
+        <DashboardSlot widgets={widgets} id="distribucionPrioridad" className="min-h-[280px]" />
       </section>
 
       <section className="flex-shrink-0 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,1fr)]">
@@ -2488,8 +2499,8 @@ const dateFilterError = useMemo(() => {
       content: (
         <Panel className="cc-map-panel flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
           <div className="cc-map-header flex-shrink-0 border-b border-slate-200 px-4 py-2">
-            <h2 className="cc-section-title text-base font-black text-blue-900">{getDesignWidgetLabel('mapaReclamos', 'Mapa de reclamos')}</h2>
-            <p className="cc-muted mt-0.5 text-[11px] font-semibold text-slate-600">Intensidad territorial de reclamos en la Región Metropolitana</p>
+            <h2 className="cc-section-title text-base font-black text-blue-900">{getDesignWidgetLabel('mapaReclamos', viewMode === 'regiones' ? 'Mapa de reclamos Regiones' : 'Mapa de reclamos RM')}</h2>
+            <p className="cc-muted mt-0.5 text-[11px] font-semibold text-slate-600">Intensidad territorial de reclamos en {viewMode === 'regiones' ? 'Regiones' : 'Región Metropolitana'}</p>
           </div>
           <div className="cc-map-surface relative min-h-0 flex-1 overflow-hidden rounded-xl">
             {viewMode === 'rm' ? (
@@ -2869,6 +2880,67 @@ const dateFilterError = useMemo(() => {
         .cc-design-active .cc-sidebar-logo,
         .cc-design-active .cc-sidebar-action,
         .cc-design-active .cc-primary-tabs [aria-selected="true"] { background: var(--dc-primary) !important; }
+        .cc-dashboard-filter-panel {
+          background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
+          border-color: #22304d !important;
+          color: #e2e8f0 !important;
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.18);
+        }
+        .cc-dashboard-filter-panel h2,
+        .cc-dashboard-filter-panel h3 {
+          color: #f8fafc !important;
+        }
+        .cc-dashboard-filter-panel p,
+        .cc-dashboard-filter-panel .cc-muted {
+          color: #94a3b8 !important;
+        }
+        .cc-dashboard-filter-panel .cc-filter,
+        .cc-dashboard-filter-panel label {
+          background: rgba(15, 23, 42, 0.86) !important;
+          border-color: #22304d !important;
+          color: #94a3b8 !important;
+        }
+        .cc-dashboard-filter-panel select,
+        .cc-dashboard-filter-panel input {
+          color: #f8fafc !important;
+        }
+        .cc-dashboard-premium {
+          color: #e2e8f0;
+        }
+        .cc-dashboard-premium .cc-map-panel,
+        .cc-dashboard-premium .cc-chart-card,
+        .cc-dashboard-premium .cc-route-summary-card,
+        .cc-dashboard-premium #dashboard-evidence-section > section,
+        .cc-dashboard-premium .cc-kpi-card-pro,
+        .cc-dashboard-premium .cc-card {
+          background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
+          border-color: #22304d !important;
+          color: #e2e8f0 !important;
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
+        }
+        .cc-dashboard-premium .cc-map-header,
+        .cc-dashboard-premium #dashboard-evidence-section .border-b,
+        .cc-dashboard-premium #dashboard-evidence-section .border-t {
+          border-color: #22304d !important;
+        }
+        .cc-dashboard-premium .cc-section-title,
+        .cc-dashboard-premium .cc-chart-title,
+        .cc-dashboard-premium h2,
+        .cc-dashboard-premium h3,
+        .cc-dashboard-premium .cc-kpi-value-pro,
+        .cc-dashboard-premium .cc-text {
+          color: #f8fafc !important;
+        }
+        .cc-dashboard-premium .cc-muted,
+        .cc-dashboard-premium .cc-kpi-label-pro,
+        .cc-dashboard-premium .cc-kpi-meta-pro,
+        .cc-dashboard-premium .cc-text-secondary {
+          color: #94a3b8 !important;
+        }
+        .cc-dashboard-premium .cc-chart-card,
+        .cc-dashboard-premium .cc-map-panel {
+          border-radius: 16px;
+        }
         @media print {
           body { background: #ffffff; }
           .no-print { display: none !important; }
@@ -2882,7 +2954,7 @@ const dateFilterError = useMemo(() => {
         </div>
 
         <nav className="flex flex-col items-center gap-3">
-          {navItems.filter((item) => hasPermission(item.permission)).map((item) => {
+          {navItems.filter((item) => item.visible !== false && hasPermission(item.permission)).map((item) => {
             const Icon = item.icon;
 
             return (
@@ -2894,7 +2966,7 @@ const dateFilterError = useMemo(() => {
         </nav>
 
         <div className="mt-auto flex flex-col items-center gap-3">
-          {bottomNavItems.filter((item) => hasPermission(item.permission)).map((item) => {
+          {bottomNavItems.filter((item) => item.visible !== false && hasPermission(item.permission)).map((item) => {
             const Icon = item.icon;
 
             return (
@@ -2921,7 +2993,7 @@ const dateFilterError = useMemo(() => {
         </div>
       </aside>
 
-      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col bg-[#F8FAFC] h-screen overflow-hidden p-4 print:ml-0 print:h-auto print:overflow-visible">
+      <main className={`cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden p-4 print:ml-0 print:h-auto print:overflow-visible ${activeTab === 'dashboard' ? 'bg-[#070B14]' : 'bg-[#F8FAFC]'}`}>
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
           {isComponentVisible('header') ? (
           <TailAdminTopbar
@@ -2952,27 +3024,27 @@ const dateFilterError = useMemo(() => {
               <ProtectedView viewKey={viewMode}>
                 <>
                 <TailAdminSidePanel
-                  className="mb-2"
+                  className="cc-dashboard-filter-panel mb-3"
                   subtitle="Vista, periodo, prioridad, estado y comuna conservan la lógica actual."
-                  title="Filtros y capas territoriales"
+                  title="Dashboard territorial"
                 >
                 <section className="cc-primary-tabs mb-2" role="tablist" aria-label="Vista principal">
-                  <div className="flex gap-1 rounded-lg border border-slate-200 bg-white p-0.5 shadow-sm">
+                  <div className="flex gap-1 rounded-xl border border-[#22304D] bg-[#0B1020] p-1 shadow-sm">
                     {hasPermission('rm') ? (
                       <button
                         aria-selected={viewMode === 'rm'}
-                        className={`flex-1 rounded-md px-4 py-1.5 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#073B91] text-white shadow-sm' : 'text-[#466083] hover:bg-slate-100 hover:text-[#071b4d]'}`}
+                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[#94A3B8] hover:bg-white/5 hover:text-white'}`}
                         onClick={() => setViewMode('rm')}
                         role="tab"
                         type="button"
                       >
-                        RM
+                        Región Metropolitana
                       </button>
                     ) : null}
                     {hasPermission('regiones') ? (
                       <button
                         aria-selected={viewMode === 'regiones'}
-                        className={`flex-1 rounded-md px-4 py-1.5 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#073B91] text-white shadow-sm' : 'text-[#466083] hover:bg-slate-100 hover:text-[#071b4d]'}`}
+                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[#94A3B8] hover:bg-white/5 hover:text-white'}`}
                         onClick={() => setViewMode('regiones')}
                         role="tab"
                         type="button"
@@ -3128,6 +3200,8 @@ const dateFilterError = useMemo(() => {
             </ProtectedView>
           ) : activeTab === 'ruta' ? (
             <ProtectedView viewKey="ruta"><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></ProtectedView>
+          ) : activeTab === 'billing' ? (
+            <ProtectedView viewKey="dashboard"><BillingView /></ProtectedView>
           ) : activeTab === 'settings' ? (
             <ProtectedView viewKey="configuracion">
               <SettingsView
