@@ -49,6 +49,9 @@ services:
       GROQ_MODEL: "${GROQ_MODEL:-llama-3.3-70b-versatile}"
       OPENROUTER_API_KEY: "${OPENROUTER_API_KEY:-}"
       OPENROUTER_MODEL: "${OPENROUTER_MODEL:-}"
+      ENABLE_VECTOR_SEARCH: "${ENABLE_VECTOR_SEARCH:-false}"
+      NVIDIA_EMBEDDING_MODEL: "${NVIDIA_EMBEDDING_MODEL:-nvidia/llama-nemotron-embed-1b-v2}"
+      NVIDIA_RERANK_MODEL: "${NVIDIA_RERANK_MODEL:-nvidia/llama-nemotron-rerank-1b-v2}"
     restart: unless-stopped
     networks:
       - dashboard_net

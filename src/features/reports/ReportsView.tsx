@@ -5,6 +5,7 @@ import { buildChartData } from './chart-utils';
 import { ChartBuilder } from './ChartBuilder';
 import { useSavedCharts } from './useSavedCharts';
 import { MonthlyReportGenerator } from './MonthlyReportGenerator';
+import { SimilarClaimsPanel } from '../ai/SimilarClaimsPanel';
 
 type Props = {
   rmRows: Record<string, unknown>[];
@@ -42,6 +43,8 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
   return (
     <div className="grid gap-4">
       <MonthlyReportGenerator />
+
+      <SimilarClaimsPanel />
 
       <ChartBuilder value={draft} onChange={setDraft} onSave={saveDraft} />
 

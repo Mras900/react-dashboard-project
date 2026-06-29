@@ -1,17 +1,14 @@
 from __future__ import annotations
 
 import html
+from datetime import datetime
 from typing import Any
 
 from services.ai_provider import ask_ai
 from services.dashboard_context import MONTH_NAMES, get_dashboard_context, get_dashboard_metrics, sanitize_ai_context
+from services.reference_sources import get_source_references
 
-TERRITORY_LABELS = {
-    "rm": "Region Metropolitana",
-    "regiones": "Regiones",
-    "nacional": "Nacional",
-    "all": "Nacional",
-}
+TERRITORY_LABELS = {"rm": "Region Metropolitana", "regiones": "Regiones", "nacional": "Nacional", "all": "Nacional"}
 
 
 def _clean_filters(filters: dict[str, Any]) -> dict[str, Any]:
@@ -19,31 +16,25 @@ def _clean_filters(filters: dict[str, Any]) -> dict[str, Any]:
     if territorio not in {"rm", "regiones", "nacional", "all"}:
         territorio = "rm"
     year = int(filters.get("year") or 2026)
-    month = int(filters.get("month") or 1)
-    month = min(max(month, 1), 12)
-    return {
-        **filters,
-        "territorio": territorio,
-        "year": year,
-        "month": month,
-    }
+    month = min(max(int(filters.get("month") or 1), 1), 12)
+    return {**filters, "territorio": territorio, "year": year, "month": month}
 
 
 def build_monthly_report_data(filters: dict) -> dict[str, Any]:
     clean = _clean_filters(filters)
     metrics = get_dashboard_metrics(clean)
-    territorio = clean["territorio"]
-    year = clean["year"]
-    month = clean["month"]
-    month_name = MONTH_NAMES.get(month, str(month))
-    territory_label = TERRITORY_LABELS.get(territorio, territorio)
-    report_id = f"{territorio}-{year}-{month:02d}"
+    month_name = MONTH_NAMES.get(clean["month"], str(clean["month"]))
+    territory_label = TERRITORY_LABELS.get(clean["territorio"], clean["territorio"])
+    report_id = f"{clean['territorio']}-{clean['year']}-{clean['month']:02d}"
     return {
         "ok": True,
         "report_id": report_id,
-        "title": f"Informe mensual de reclamos - {territory_label} - {month_name} {year}",
+        "title": f"Informe mensual de reclamos - {territory_label} - {month_name} {clean['year']}",
         "filters": clean,
         "metrics": sanitize_ai_context(metrics),
+        "source_references": get_source_references(clean),
+        "warnings": metrics.get("warnings", []),
+        "generated_at": datetime.utcnow().isoformat(timespec="seconds") + "Z",
     }
 
 
@@ -67,13 +58,25 @@ def _bullet_communes(rows: Any) -> str:
     for row in rows[:8]:
         if not isinstance(row, dict):
             continue
-        lines.append(
-            f"- {row.get('comuna', 'Sin ubicacion')} ({row.get('region', 'Sin region')}): "
-            f"{_fmt_number(row.get('reclamos'))} reclamos, "
-            f"{_fmt_number(row.get('prioridad_alta'))} alta prioridad, "
-            f"facturacion estimada ${_fmt_number(row.get('facturacion'))}"
-        )
+        extra = ""
+        if row.get("claims_per_100k") is not None:
+            extra = f", tasa {_fmt_number(row.get('claims_per_100k'))} por 100.000 hab."
+        if row.get("red_zones") is not None:
+            extra = f", zonas rojas {_fmt_number(row.get('red_zones'))}, riesgo {row.get('risk_level')}"
+        lines.append(f"- {row.get('comuna', 'Sin ubicacion')} ({row.get('region', 'Sin region')}): {_fmt_number(row.get('reclamos'))} reclamos{extra}")
     return "\n".join(lines) if lines else "- Sin comunas con datos para el periodo."
+
+
+def _source_block(data: dict) -> str:
+    refs = data.get("source_references") or []
+    if not refs:
+        return "- campo no disponible"
+    return "\n".join(f"- {ref.get('title')}: {'disponible' if ref.get('available') else 'no disponible'} ({ref.get('used_for')})" for ref in refs)
+
+
+def _warnings_block(data: dict) -> str:
+    warnings = data.get("warnings") or []
+    return "\n".join(f"- {item}" for item in warnings) if warnings else "- Sin advertencias criticas de fuentes."
 
 
 def build_monthly_report_markdown(data: dict, ai_analysis: str | None = None) -> str:
@@ -82,10 +85,12 @@ def build_monthly_report_markdown(data: dict, ai_analysis: str | None = None) ->
     territory_label = TERRITORY_LABELS.get(str(filters.get("territorio") or "rm"), str(filters.get("territorio") or "rm"))
     month_name = MONTH_NAMES.get(int(filters.get("month") or 0), str(filters.get("month") or ""))
     year = filters.get("year") or "campo no disponible"
-    no_data_note = "\n> No hay datos disponibles para los filtros seleccionados.\n" if metrics.get("sin_datos") else ""
     observations = metrics.get("observaciones_agregadas")
     observation_block = "\n".join(f"- {item}" for item in observations) if isinstance(observations, list) and observations else "- campo no disponible"
     ai_block = ai_analysis or "Analisis IA no incluido."
+    no_data_note = "\n> No hay datos disponibles para los filtros seleccionados.\n" if metrics.get("sin_datos") else ""
+    population = metrics.get("population_rates", {}) if isinstance(metrics.get("population_rates"), dict) else {}
+    territorial_risk = metrics.get("territorial_risk", {}) if isinstance(metrics.get("territorial_risk"), dict) else {}
 
     return f"""# Informe mensual de reclamos
 
@@ -96,7 +101,7 @@ def build_monthly_report_markdown(data: dict, ai_analysis: str | None = None) ->
 {month_name} {year}{no_data_note}
 
 ## 1. Alcance y limitaciones
-Este informe usa solo datos disponibles en el backend del dashboard. Si un campo no existe o no tiene registros para el periodo, se declara como campo no disponible. No se incluyen datos personales cuando la vista se genera con ocultamiento de datos sensibles.
+Este informe usa solo datos disponibles en el backend. No inventa cifras, comunas, poblacion ni zonas rojas. Datos personales ocultos por defecto.
 
 ## 2. Resumen ejecutivo
 - Reclamos totales: {_fmt_number(metrics.get('reclamos_totales'))}
@@ -130,18 +135,30 @@ Este informe usa solo datos disponibles en el backend del dashboard. Si un campo
 {observation_block}
 
 ## 9. Reincidencia y patrones repetidos
-La reincidencia se aproxima con tickets unicos versus reclamos totales. Si se requiere detalle por cliente o domicilio, el campo se mantiene oculto por proteccion de datos personales.
+La reincidencia se aproxima con tickets unicos versus reclamos totales. Si se requiere detalle personal, se mantiene oculto por proteccion de datos.
 
 ## 10. Analisis geografico
 {_bullet_communes(metrics.get('comunas_con_mas_reclamos'))}
 
 ## 11. Conclusiones
-Las conclusiones deben interpretarse dentro del rango filtrado. No se infieren cifras fuera del periodo ni del territorio seleccionado.
+Conclusiones limitadas al periodo, territorio y fuentes disponibles.
 
 ## 12. Recomendaciones
 - Priorizar seguimiento en comunas con mayor volumen y alta prioridad.
 - Revisar causas de visitas no exitosas antes de reprogramar rutas.
 - Mantener control de facturacion estimada contra respaldo operativo.
+
+## Referencias territoriales utilizadas
+{_source_block(data)}
+
+## Advertencias de calidad de datos
+{_warnings_block(data)}
+
+## Tasa normalizada por poblacion
+{_bullet_communes(population.get('items')) if population.get('population_available') else '- No se calculo tasa normalizada: no hay fuente de poblacion/censo disponible.'}
+
+## Analisis de zonas rojas
+{_bullet_communes(territorial_risk.get('items')) if territorial_risk.get('red_zones_available') else '- No se calculo riesgo por zonas rojas: no hay capa disponible.'}
 """
 
 
@@ -149,13 +166,9 @@ def generate_monthly_report(filters: dict, include_ai_analysis: bool = True) -> 
     data = build_monthly_report_data(filters)
     ai_analysis = None
     if include_ai_analysis:
-        context = get_dashboard_context(data["filters"])
         result = ask_ai(
-            prompt=(
-                "Genera un analisis ejecutivo breve para un informe mensual operativo. "
-                "Usa solo el contexto, no inventes cifras. Incluye riesgos y recomendaciones."
-            ),
-            context=context,
+            prompt="Genera analisis ejecutivo breve para informe mensual. Usa solo contexto, no inventes cifras. Diferencia reclamos absolutos, tasas normalizadas y riesgo por zonas rojas.",
+            context=get_dashboard_context(data["filters"]),
             provider="auto",
         )
         ai_analysis = result.get("answer") or "Analisis IA no disponible."
@@ -211,13 +224,15 @@ def markdown_to_basic_html(markdown: str, title: str) -> str:
 <title>{html.escape(title)}</title>
 <style>
 body {{ font-family: Arial, sans-serif; margin: 32px; color: #172448; line-height: 1.55; }}
-h1 {{ color: #071b4d; }}
+h1 {{ color: #071b4d; border-bottom: 2px solid #073B91; padding-bottom: 12px; }}
 h2 {{ margin-top: 24px; color: #073B91; }}
 blockquote {{ border-left: 4px solid #f59e0b; background: #fff7ed; padding: 12px 16px; }}
 li {{ margin: 6px 0; }}
+footer {{ margin-top: 36px; color: #64748b; font-size: 12px; }}
 </style>
 </head>
 <body>
 {body}
+<footer>Informe generado automaticamente. Alcance limitado a fuentes disponibles y filtros seleccionados.</footer>
 </body>
 </html>"""

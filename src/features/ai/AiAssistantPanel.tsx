@@ -16,6 +16,9 @@ const quickActions = [
   'Generar informe mensual',
   'Revisar visitas no exitosas',
   'Sugerir prioridades de ruta',
+  'Buscar reclamos parecidos',
+  'Informe con Censo y zonas rojas',
+  'Analisis territorial',
 ];
 
 type AiAssistantPanelProps = {

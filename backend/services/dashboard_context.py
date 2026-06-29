@@ -9,6 +9,8 @@ from typing import Any
 from sqlalchemy import inspect, text
 from sqlalchemy.exc import SQLAlchemyError
 
+from services.reference_sources import calculate_population_rates, calculate_territorial_risk, get_red_zones_summary, get_source_references
+
 from database import engine
 
 SENSITIVE_KEYS = {

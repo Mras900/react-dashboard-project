@@ -42,6 +42,9 @@ export type MonthlyReportFilters = DashboardAiFilters & {
   month: number;
   include_ai_analysis?: boolean;
   include_sensitive_data?: boolean;
+  include_census?: boolean;
+  include_red_zones?: boolean;
+  include_source_references?: boolean;
 };
 
 export type MonthlyReportPreview = {
@@ -53,6 +56,8 @@ export type MonthlyReportPreview = {
   fallback?: boolean;
   provider?: string | null;
   model?: string | null;
+  source_references?: Array<Record<string, unknown>>;
+  warnings?: string[];
 };
 
 async function fetchJson<T>(path: string, init: RequestInit): Promise<T> {
@@ -119,4 +124,79 @@ export async function getMonthlyReportHtml(filters: MonthlyReportFilters): Promi
     throw new Error(body.detail ?? 'No se pudo generar el HTML del informe');
   }
   return response.text();
+}
+export type SimilarClaimsPayload = {
+  query: string;
+  limit?: number;
+  filters?: DashboardAiFilters & {
+    include_territorial_context?: boolean;
+    only_red_zone_communes?: boolean;
+    risk_level?: 'alto' | 'medio' | 'bajo' | '' | null;
+  };
+  provider?: AiProvider;
+};
+
+export type SimilarClaimsResponse = {
+  items: Array<Record<string, unknown>>;
+  count: number;
+  warnings: string[];
+  answer?: string;
+  provider?: string;
+  model?: string;
+  fallback?: boolean;
+};
+
+export type RagPayload = {
+  query: string;
+  limit?: number;
+  filters?: Record<string, unknown>;
+  provider?: AiProvider;
+};
+
+export async function findSimilarClaims(payload: SimilarClaimsPayload): Promise<SimilarClaimsResponse> {
+  return fetchJson<SimilarClaimsResponse>('/ai/similar-claims', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function summarizeSimilarClaims(payload: SimilarClaimsPayload): Promise<SimilarClaimsResponse> {
+  return fetchJson<SimilarClaimsResponse>('/ai/similar-claims-summary', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function ragSearch(payload: RagPayload): Promise<SimilarClaimsResponse> {
+  return fetchJson<SimilarClaimsResponse>('/ai/rag/search', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function ragChat(payload: RagPayload): Promise<DashboardAiResponse & { items?: Array<Record<string, unknown>> }> {
+  return fetchJson<DashboardAiResponse & { items?: Array<Record<string, unknown>> }>('/ai/rag/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(payload),
+  });
+}
+
+export async function indexClaimsForRag(): Promise<{ ok: boolean; indexed: number; skipped: number }> {
+  return fetchJson<{ ok: boolean; indexed: number; skipped: number }>('/ai/rag/index-claims', { method: 'POST' });
+}
+
+export async function indexReferenceSourcesForRag(): Promise<{ ok: boolean; indexed: number; skipped: number; sources: Array<Record<string, unknown>> }> {
+  return fetchJson<{ ok: boolean; indexed: number; skipped: number; sources: Array<Record<string, unknown>> }>('/ai/rag/index-reference-sources', { method: 'POST' });
+}
+
+export async function exportMonthlyReport(filters: MonthlyReportFilters & { format: 'html' | 'pdf' | 'docx' }): Promise<{ ok: boolean; report_id: string; format: string; download_url: string | null; warnings: string[] }> {
+  return fetchJson<{ ok: boolean; report_id: string; format: string; download_url: string | null; warnings: string[] }>('/reports/monthly/export', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(filters),
+  });
 }
