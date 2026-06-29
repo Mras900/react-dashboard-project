@@ -1,5 +1,5 @@
 @import "tailwindcss";
-@custom-variant dark (&:where([data-theme="dark-premium"], [data-theme="dark-premium"] *));
+@custom-variant dark (&:where(.dark, .dark *, [data-theme="dark-premium"], [data-theme="dark-premium"] *));
 
 :root {
   font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
@@ -21,6 +21,12 @@
   --chart-primary: #0072b2;
   --chart-primary-soft: rgba(0, 114, 178, 0.24);
   --chart-grid: #cbd5e1;
+  --cc-bg: #f8fafc;
+  --cc-surface: #ffffff;
+  --cc-surface-soft: #f1f5f9;
+  --cc-border: #e2e8f0;
+  --cc-text: #0f172a;
+  --cc-muted: #64748b;
 }
 
 html,
@@ -33,11 +39,43 @@ body {
   margin: 0;
   background: var(--bg-main);
 }
+.cc-page,
+.cc-main {
+  background: var(--cc-bg);
+  color: var(--cc-text);
+}
+
+.cc-sidebar,
+.cc-card-pro,
+.cc-kpi-card-pro,
+.cc-dashboard-filter-panel {
+  background: var(--cc-surface);
+  border-color: var(--cc-border);
+  color: var(--cc-text);
+}
+
+.cc-input-pro,
+.cc-table {
+  background: var(--cc-surface);
+  border-color: var(--cc-border);
+  color: var(--cc-text);
+}
+
+.cc-label-pro,
+.cc-kpi-label-pro,
+.cc-kpi-meta-pro {
+  color: var(--cc-muted);
+}
+
+.cc-kpi-value-pro {
+  color: var(--cc-text);
+}
 
 * {
   box-sizing: border-box;
 }
 
+.dark,
 [data-theme="dark-premium"] {
   color-scheme: dark;
   --bg-main: #0d1117;
@@ -58,6 +96,12 @@ body {
   --chart-primary: #56b4e9;
   --chart-primary-soft: rgba(86, 180, 233, 0.2);
   --chart-grid: #334155;
+  --cc-bg: #070b14;
+  --cc-surface: #0b1020;
+  --cc-surface-soft: #0f172a;
+  --cc-border: #22304d;
+  --cc-text: #e5edf8;
+  --cc-muted: #94a3b8;
 }
 
 [data-theme="dark-premium"] body {

@@ -2089,7 +2089,11 @@ function RouteMetricsSummary({
 export default function Dashboard() {
   const { hasPermission, isAdmin } = useAuth();
   const designConfig = useDesignConfig();
-  const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>('default');
+  const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>(() => {
+    if (typeof window === 'undefined') return 'default';
+    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
+    return storedTheme === 'dark-premium' ? 'dark-premium' : 'default';
+  });
   const [showImportModal, setShowImportModal] = useState(false);
   const [importedRows, setImportedRows] = useState<{ rm: ImportedDashboardRow[]; regiones: ImportedDashboardRow[] }>(loadImportedDashboardRows);
 
@@ -2244,7 +2248,11 @@ export default function Dashboard() {
   }, [hasPermission, viewMode]);
 
   useEffect(() => {
-    document.documentElement.dataset.theme = dashboardTheme;
+    const root = document.documentElement;
+    const isDarkPremium = dashboardTheme === 'dark-premium';
+
+    root.dataset.theme = dashboardTheme;
+    root.classList.toggle('dark', isDarkPremium);
     window.localStorage.setItem(THEME_STORAGE_KEY, dashboardTheme);
   }, [dashboardTheme]);
 
