@@ -2,6 +2,7 @@ fastapi
 uvicorn[standard]
 python-dotenv
 requests
+openai
 geopy
 geopandas
 shapely

@@ -43,6 +43,7 @@ import { ProtectedView } from '../features/auth/ProtectedView';
 import type { AppViewKey } from '../features/auth/authTypes';
 import { useAuth } from '../features/auth/useAuth';
 import { UserManagementView } from '../features/users/UserManagementView';
+import { AiAssistantPanel } from '../features/ai/AiAssistantPanel';
 import { loadRegionalGeoLayer } from '../features/maps/loadRegionalGeoLayer';
 import { normalizeMapJoinKey } from '../features/maps/normalizeMapJoinKey';
 import { RegionClaimsLayer } from '../features/maps/RegionClaimsLayer';
@@ -3071,6 +3072,19 @@ const dateFilterError = useMemo(() => {
                   onViewRoutePending={openRoutePending}
                   designSections={hasActiveDesignConfig ? activeDesignConfig?.sections : undefined}
                 />
+                <div className="mt-4">
+                  <AiAssistantPanel
+                    context={`Vista: ${viewMode}. Periodo: ${
+                      dateFilterMode === 'month'
+                        ? selectedMonthLabel
+                        : dateFilterMode === 'week'
+                          ? formatWeekLabel(selectedWeek)
+                          : dateFilterMode === 'day'
+                            ? selectedDay || 'Dia sin seleccionar'
+                            : `${rangeStart || 'Inicio'} - ${rangeEnd || 'Fin'}`
+                    }. Prioridad: ${selectedPriorityLabel}. Estado: ${selectedStatusLabel}. Ubicacion: ${selectedLocationLabel}. Reclamos: ${formatInt(totals.visitas)}. Facturacion: ${formatCurrency(totals.facturacion)}. Comunas: ${formatInt(tableRows.length)}.`}
+                  />
+                </div>
                 {showTerritorialExplanation ? (
                   <TerritorialExplanationModal
                     comunaCritica={territorialMetrics.comunaCritica}
