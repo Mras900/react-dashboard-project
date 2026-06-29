@@ -4,11 +4,15 @@ from decimal import Decimal, InvalidOperation
 from typing import Any
 import logging
 
-from fastapi import APIRouter, Body, HTTPException, Query
-from sqlalchemy import inspect, text
+from fastapi import APIRouter, Body, Depends, HTTPException, Query
+from sqlalchemy import desc, inspect, select, text
 from sqlalchemy.exc import SQLAlchemyError
+from sqlalchemy.orm import Session
 
-from database import engine
+from auth.models import User
+from auth.security import get_current_user, require_admin
+from database import engine, get_db
+from models.dashboard_config import DashboardVisualConfig
 
 
 router = APIRouter()
@@ -513,5 +517,268 @@ def import_claims(payload: Any = Body(...)) -> dict[str, Any]:
 @router.post("/api/import/reclamos")
 def import_claims_alias(payload: Any = Body(...)) -> dict[str, Any]:
     return _import_claims_impl(payload)
+
+
+# ---------------------------------------------------------------------------
+# Dashboard Visual Config endpoints
+# ---------------------------------------------------------------------------
+
+def _serialize_config(config: DashboardVisualConfig) -> dict[str, Any]:
+    return {
+        "id": config.id,
+        "name": config.name,
+        "config": config.config_json,
+        "isActive": config.is_active,
+        "isDraft": config.is_draft,
+        "version": config.version,
+        "createdBy": config.created_by,
+        "createdAt": config.created_at.isoformat() if config.created_at else None,
+        "updatedAt": config.updated_at.isoformat() if config.updated_at else None,
+    }
+
+
+def _next_version(db: Session) -> int:
+    latest = db.scalar(select(DashboardVisualConfig.version).order_by(desc(DashboardVisualConfig.version)).limit(1))
+    return (latest or 0) + 1
+
+
+@router.get("/api/config/dashboard-visual")
+def get_active_config(
+    db: Session = Depends(get_db),
+    _: User = Depends(get_current_user),
+) -> dict[str, Any] | dict[str, None]:
+    """Return active published config, or null marker if none exists."""
+    active = db.scalar(
+        select(DashboardVisualConfig).where(
+            DashboardVisualConfig.is_active.is_(True)
+        ).limit(1)
+    )
+    if active is None:
+        return {"active": None}
+    return {"active": _serialize_config(active)}
+
+
+@router.post("/api/config/dashboard-visual/draft")
+def save_draft(
+    name: str = "",
+    config: dict = Body(...),
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> dict[str, Any]:
+    """Save draft config. Admin only."""
+    validated = _validate_config_body(config)
+    draft = DashboardVisualConfig(
+        name=name or "Borrador",
+        config_json=validated,
+        is_active=False,
+        is_draft=True,
+        version=_next_version(db),
+        created_by=admin.username,
+    )
+    db.add(draft)
+    db.commit()
+    db.refresh(draft)
+    return _serialize_config(draft)
+
+
+@router.post("/api/config/dashboard-visual/publish")
+def publish_config(
+    name: str = "",
+    config: dict = Body(...),
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> dict[str, Any]:
+    """Validate, deactivate previous active, create new active version. Admin only."""
+    validated = _validate_config_body(config)
+
+    current_active = db.scalar(
+        select(DashboardVisualConfig).where(
+            DashboardVisualConfig.is_active.is_(True)
+        ).limit(1)
+    )
+    if current_active is not None:
+        current_active.is_active = False
+
+    published = DashboardVisualConfig(
+        name=name or "Configuracion publicada",
+        config_json=validated,
+        is_active=True,
+        is_draft=False,
+        version=_next_version(db),
+        created_by=admin.username,
+    )
+    db.add(published)
+    db.commit()
+    db.refresh(published)
+    return _serialize_config(published)
+
+
+@router.post("/api/config/dashboard-visual/reset")
+def reset_config(
+    db: Session = Depends(get_db),
+    _admin: User = Depends(require_admin),
+) -> dict[str, str]:
+    """Deactivate active config so dashboard falls back to localStorage/default. Admin only.
+    Does not delete history."""
+    current_active = db.scalar(
+        select(DashboardVisualConfig).where(
+            DashboardVisualConfig.is_active.is_(True)
+        ).limit(1)
+    )
+    if current_active is not None:
+        current_active.is_active = False
+        db.commit()
+    return {"status": "reset", "message": "Configuracion activa desactivada. Dashboard usara localStorage/default."}
+
+
+@router.get("/api/config/dashboard-visual/history")
+def get_history(
+    db: Session = Depends(get_db),
+    _: User = Depends(require_admin),
+) -> list[dict[str, Any]]:
+    """Return version list. Admin only. Full JSON omitted from listing."""
+    configs = db.scalars(
+        select(DashboardVisualConfig).order_by(desc(DashboardVisualConfig.version))
+    ).all()
+    return [_serialize_config(c) for c in configs]
+
+
+@router.post("/api/config/dashboard-visual/restore/{config_id}")
+def restore_config(
+    config_id: int,
+    db: Session = Depends(get_db),
+    admin: User = Depends(require_admin),
+) -> dict[str, Any]:
+    """Restore previous config by publishing its JSON as new active version. Admin only."""
+    source = db.get(DashboardVisualConfig, config_id)
+    if source is None:
+        raise HTTPException(status_code=404, detail="Configuracion no encontrada.")
+
+    current_active = db.scalar(
+        select(DashboardVisualConfig).where(
+            DashboardVisualConfig.is_active.is_(True)
+        ).limit(1)
+    )
+    if current_active is not None:
+        current_active.is_active = False
+
+    restored = DashboardVisualConfig(
+        name=f"Restaurado: {source.name}",
+        config_json=source.config_json,
+        is_active=True,
+        is_draft=False,
+        version=_next_version(db),
+        created_by=admin.username,
+    )
+    db.add(restored)
+    db.commit()
+    db.refresh(restored)
+    return _serialize_config(restored)
+
+
+def _validate_config_body(config: dict) -> dict:
+    """Validate config shape before persisting. Reject unsafe patterns."""
+    if not isinstance(config, dict):
+        raise HTTPException(status_code=422, detail="config debe ser un objeto JSON.")
+
+    dangerous_keys = {"__proto__", "constructor", "prototype"}
+    for key in config:
+        if key in dangerous_keys:
+            raise HTTPException(status_code=422, detail=f"Clave no permitida: {key}")
+
+    version = config.get("version")
+    if version is None or not isinstance(version, int):
+        raise HTTPException(status_code=422, detail="config.version es requerido y debe ser entero.")
+
+    _validate_texts(config.get("texts"))
+    _validate_sections(config.get("sections"))
+    _validate_widgets(config.get("widgets"))
+    _validate_kpis_list(config.get("kpis"))
+    _validate_charts_list(config.get("charts"))
+
+    return config
+
+
+def _validate_texts(texts: Any) -> None:
+    if texts is None or not isinstance(texts, dict):
+        return
+    for key in texts:
+        if not isinstance(texts[key], str):
+            raise HTTPException(status_code=422, detail=f"texts.{key} debe ser string.")
+
+
+_ALLOWED_SECTIONS = {"hero", "main", "side", "bottom"}
+_ALLOWED_SIZES = {"small", "medium", "large"}
+
+
+def _validate_sections(sections: Any) -> None:
+    if sections is None or not isinstance(sections, list):
+        return
+    for s in sections:
+        if not isinstance(s, dict):
+            raise HTTPException(status_code=422, detail="Cada seccion debe ser objeto.")
+        if "id" in s and s["id"] not in _ALLOWED_SECTIONS:
+            raise HTTPException(status_code=422, detail=f"Seccion no permitida: {s.get('id')}")
+        if "visible" in s and not isinstance(s["visible"], bool):
+            raise HTTPException(status_code=422, detail="section.visible debe ser boolean.")
+
+
+def _validate_widgets(widgets: Any) -> None:
+    if widgets is None or not isinstance(widgets, list):
+        return
+    for w in widgets:
+        if not isinstance(w, dict):
+            raise HTTPException(status_code=422, detail="Cada widget debe ser objeto.")
+        if "section" in w and w["section"] not in _ALLOWED_SECTIONS:
+            raise HTTPException(status_code=422, detail=f"Widget seccion no permitida: {w.get('section')}")
+        if "size" in w and w["size"] not in _ALLOWED_SIZES:
+            raise HTTPException(status_code=422, detail=f"Widget tamano no permitido: {w.get('size')}")
+
+
+_ALLOWED_KPI_SOURCES = {"dashboard_resumen", "dashboard_comunas", "dashboard_reclamos", "dashboard_visitas"}
+_ALLOWED_KPI_AGGREGATIONS = {"count", "sum", "average", "max", "min"}
+_ALLOWED_KPI_DATASET_SCOPES = {"all", "rm", "regiones"}
+_ALLOWED_KPI_ICONS = {"file", "alert", "users", "map", "shield", "chart"}
+_ALLOWED_KPI_ACCENTS = {"blue", "red", "cyan", "green", "amber", "slate"}
+_ALLOWED_CHART_TYPES = {"bar", "line", "pie"}
+
+
+def _validate_kpis_list(kpis: Any) -> None:
+    if kpis is None or not isinstance(kpis, list):
+        return
+    for kpi in kpis:
+        if not isinstance(kpi, dict):
+            raise HTTPException(status_code=422, detail="Cada KPI debe ser objeto.")
+        if "source" in kpi and kpi["source"] not in _ALLOWED_KPI_SOURCES:
+            raise HTTPException(status_code=422, detail=f"KPI source no permitido: {kpi.get('source')}")
+        if "aggregation" in kpi and kpi["aggregation"] not in _ALLOWED_KPI_AGGREGATIONS:
+            raise HTTPException(status_code=422, detail=f"KPI aggregation no permitida: {kpi.get('aggregation')}")
+        if "datasetScope" in kpi and kpi["datasetScope"] not in _ALLOWED_KPI_DATASET_SCOPES:
+            raise HTTPException(status_code=422, detail=f"KPI datasetScope no permitido: {kpi.get('datasetScope')}")
+        if "icon" in kpi and kpi["icon"] not in _ALLOWED_KPI_ICONS:
+            raise HTTPException(status_code=422, detail=f"KPI icon no permitido: {kpi.get('icon')}")
+        if "accent" in kpi and kpi["accent"] not in _ALLOWED_KPI_ACCENTS:
+            raise HTTPException(status_code=422, detail=f"KPI accent no permitido: {kpi.get('accent')}")
+
+
+_ALLOWED_CHART_SOURCES = _ALLOWED_KPI_SOURCES
+
+
+def _validate_charts_list(charts: Any) -> None:
+    if charts is None or not isinstance(charts, list):
+        return
+    for chart in charts:
+        if not isinstance(chart, dict):
+            raise HTTPException(status_code=422, detail="Cada grafico debe ser objeto.")
+        if "type" in chart and chart["type"] not in _ALLOWED_CHART_TYPES:
+            raise HTTPException(status_code=422, detail=f"Chart type no permitido: {chart.get('type')}")
+        if "source" in chart and chart["source"] not in _ALLOWED_CHART_SOURCES:
+            raise HTTPException(status_code=422, detail=f"Chart source no permitido: {chart.get('source')}")
+        if "aggregation" in chart and chart["aggregation"] not in _ALLOWED_KPI_AGGREGATIONS:
+            raise HTTPException(status_code=422, detail=f"Chart aggregation no permitida: {chart.get('aggregation')}")
+        if "datasetScope" in chart and chart["datasetScope"] not in _ALLOWED_KPI_DATASET_SCOPES:
+            raise HTTPException(status_code=422, detail=f"Chart datasetScope no permitido: {chart.get('datasetScope')}")
+        if "accent" in chart and chart["accent"] not in _ALLOWED_KPI_ACCENTS:
+            raise HTTPException(status_code=422, detail=f"Chart accent no permitido: {chart.get('accent')}")
 
 

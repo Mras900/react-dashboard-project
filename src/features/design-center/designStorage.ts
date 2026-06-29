@@ -13,6 +13,9 @@ import {
   type DesignWidgetConfig,
   type DesignWidgetId,
 } from './designTypes';
+import { fetchActiveConfig } from './designConfigApi';
+
+export type ConfigSource = 'backend' | 'localStorage' | 'default';
 import {
   isDesignColorOption,
   isDesignRadiusOption,
@@ -297,4 +300,53 @@ export function saveDesignConfig(config: DesignConfig) {
 export function clearDesignConfig() {
   if (typeof window === 'undefined') return;
   window.localStorage.removeItem(DESIGN_STORAGE_KEY);
+}
+
+export type BackendMeta = {
+  id: number;
+  name: string;
+  version: number;
+  createdBy: string;
+  createdAt: string;
+  updatedAt: string;
+};
+
+export async function loadDesignConfigFromBackend(): Promise<{
+  config: DesignConfig | null;
+  source: ConfigSource;
+  backendMeta: BackendMeta | null;
+}> {
+  const apiResult = await fetchActiveConfig();
+  if (!apiResult.ok) {
+    const local = loadDesignConfig();
+    if (local) return { config: local, source: 'localStorage', backendMeta: null };
+    return { config: null, source: 'default', backendMeta: null };
+  }
+
+  const active = apiResult.data.active;
+  if (!active || !active.config) {
+    const local = loadDesignConfig();
+    if (local) return { config: local, source: 'localStorage', backendMeta: null };
+    return { config: null, source: 'default', backendMeta: null };
+  }
+
+  const normalized = normalizeDesignConfig(active.config);
+  if (!normalized) {
+    const local = loadDesignConfig();
+    if (local) return { config: local, source: 'localStorage', backendMeta: null };
+    return { config: null, source: 'default', backendMeta: null };
+  }
+
+  return {
+    config: normalized,
+    source: 'backend',
+    backendMeta: {
+      id: active.id,
+      name: active.name,
+      version: active.version,
+      createdBy: active.createdBy,
+      createdAt: active.createdAt,
+      updatedAt: active.updatedAt,
+    },
+  };
 }
