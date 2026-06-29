@@ -82,45 +82,98 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
   return (
     <div className="reports-ai-premium grid gap-5">
       <style>{`
-        .reports-ai-premium { color: #e2e8f0; }
+        .reports-ai-premium { color: #0f172a; }
+        .dark .reports-ai-premium { color: #e2e8f0; }
         .reports-ai-premium .report-card,
         .reports-ai-premium > section,
         .reports-ai-premium section.rounded-lg {
+          background: #ffffff !important;
+          border-color: #e2e8f0 !important;
+          color: #0f172a !important;
+          border-radius: 16px !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+        .dark .reports-ai-premium .report-card,
+        .dark .reports-ai-premium > section,
+        .dark .reports-ai-premium section.rounded-lg {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98)) !important;
           border-color: #22304d !important;
           color: #e2e8f0 !important;
-          border-radius: 16px !important;
           box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
         }
         .reports-ai-premium h2,
         .reports-ai-premium h3,
         .reports-ai-premium h4,
         .reports-ai-premium label,
+        .reports-ai-premium .text-white,
+        .reports-ai-premium .text-slate-100,
         .reports-ai-premium .text-\[\#071b4d\],
         .reports-ai-premium .text-slate-700 {
+          color: #0f172a !important;
+        }
+        .dark .reports-ai-premium h2,
+        .dark .reports-ai-premium h3,
+        .dark .reports-ai-premium h4,
+        .dark .reports-ai-premium label,
+        .dark .reports-ai-premium .text-white,
+        .dark .reports-ai-premium .text-slate-100,
+        .dark .reports-ai-premium .text-\[\#071b4d\],
+        .dark .reports-ai-premium .text-slate-700 {
           color: #f8fafc !important;
         }
         .reports-ai-premium p,
+        .reports-ai-premium .text-slate-400,
         .reports-ai-premium .text-slate-500,
         .reports-ai-premium .text-slate-600,
         .reports-ai-premium .text-\[\#7A90A8\],
         .reports-ai-premium .text-\[\#C8D7EA\] {
+          color: #64748b !important;
+        }
+        .dark .reports-ai-premium p,
+        .dark .reports-ai-premium .text-slate-400,
+        .dark .reports-ai-premium .text-slate-500,
+        .dark .reports-ai-premium .text-slate-600,
+        .dark .reports-ai-premium .text-\[\#7A90A8\],
+        .dark .reports-ai-premium .text-\[\#C8D7EA\] {
           color: #94a3b8 !important;
         }
         .reports-ai-premium input,
         .reports-ai-premium textarea,
         .reports-ai-premium select {
+          background: #ffffff !important;
+          border-color: #cbd5e1 !important;
+          color: #0f172a !important;
+        }
+        .dark .reports-ai-premium input,
+        .dark .reports-ai-premium textarea,
+        .dark .reports-ai-premium select {
           background: rgba(15, 23, 42, 0.9) !important;
           border-color: #22304d !important;
           color: #f8fafc !important;
         }
         .reports-ai-premium input::placeholder,
-        .reports-ai-premium textarea::placeholder { color: #64748b !important; }
+        .reports-ai-premium textarea::placeholder { color: #94a3b8 !important; }
+        .dark .reports-ai-premium input::placeholder,
+        .dark .reports-ai-premium textarea::placeholder { color: #64748b !important; }
         .reports-ai-premium .bg-white,
-        .reports-ai-premium .bg-slate-50 { background-color: rgba(15, 23, 42, 0.68) !important; }
-        .reports-ai-premium .border-slate-200 { border-color: #22304d !important; }
+        .reports-ai-premium .bg-slate-50,
+        .reports-ai-premium .bg-slate-950\/60,
+        .reports-ai-premium .bg-slate-950\/70 { background-color: #f8fafc !important; }
+        .dark .reports-ai-premium .bg-white,
+        .dark .reports-ai-premium .bg-slate-50,
+        .dark .reports-ai-premium .bg-slate-950\/60,
+        .dark .reports-ai-premium .bg-slate-950\/70 { background-color: rgba(15, 23, 42, 0.68) !important; }
+        .reports-ai-premium .border-slate-200,
+        .reports-ai-premium .border-slate-700,
+        .reports-ai-premium .border-slate-800 { border-color: #cbd5e1 !important; }
+        .dark .reports-ai-premium .border-slate-200,
+        .dark .reports-ai-premium .border-slate-700,
+        .dark .reports-ai-premium .border-slate-800 { border-color: #22304d !important; }
         .reports-ai-premium button { border-radius: 10px; }
-        .reports-ai-premium .recharts-wrapper text { fill: #94a3b8; }
+        .reports-ai-premium .recharts-wrapper text { fill: #64748b; }
+        .dark .reports-ai-premium .recharts-wrapper text { fill: #94a3b8; }
+        .reports-ai-premium button.text-white,
+        .reports-ai-premium a.text-white { color: #ffffff !important; }
       `}</style>
 
       <section className="report-card overflow-hidden rounded-xl border p-5">

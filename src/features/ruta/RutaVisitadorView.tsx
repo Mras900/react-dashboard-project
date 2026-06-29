@@ -56,10 +56,10 @@ const createEmptyRedZoneDraft = (): RedZoneDraft => ({
 });
 
 const redZoneInputClass =
-  'h-9 rounded-lg border border-slate-700 bg-slate-900 px-3 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30';
+  'h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500';
 
 const redZoneTextareaClass =
-  'min-h-16 rounded-lg border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-slate-100 outline-none placeholder:text-slate-500 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30';
+  'min-h-16 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500';
 
 const CHILE_COMUNAS_LAYER_PATH = '/data/map-layers/chile_comunas_simplified.geojson';
 
@@ -975,45 +975,106 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   return (
     <div className="cc-route-daily-premium grid gap-4">
       <style>{`
-        .cc-route-daily-premium { color: #e2e8f0; }
+        .cc-route-daily-premium { color: #0f172a; }
+        .dark .cc-route-daily-premium { color: #e2e8f0; }
         .cc-route-daily-premium .cc-route-card,
         .cc-route-daily-premium .route-daily-shell-pro,
         .cc-route-daily-premium .route-territory-toolbar-pro,
         .cc-route-daily-premium .route-territory-concentration-pro,
         .cc-route-daily-premium .route-territory-layer-panel-pro {
+          background: #ffffff !important;
+          border-color: #e2e8f0 !important;
+          color: #0f172a !important;
+          border-radius: 16px !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+        .dark .cc-route-daily-premium .cc-route-card,
+        .dark .cc-route-daily-premium .route-daily-shell-pro,
+        .dark .cc-route-daily-premium .route-territory-toolbar-pro,
+        .dark .cc-route-daily-premium .route-territory-concentration-pro,
+        .dark .cc-route-daily-premium .route-territory-layer-panel-pro {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
           border-color: #22304d !important;
           color: #e2e8f0 !important;
-          border-radius: 16px !important;
           box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
         }
         .cc-route-daily-premium h2,
         .cc-route-daily-premium h3,
         .cc-route-daily-premium h4,
+        .cc-route-daily-premium .text-white,
+        .cc-route-daily-premium .text-slate-100,
         .cc-route-daily-premium .cc-text,
         .cc-route-daily-premium .cc-route-ticket-header,
         .cc-route-daily-premium .cc-route-weather-condition {
+          color: #0f172a !important;
+        }
+        .dark .cc-route-daily-premium h2,
+        .dark .cc-route-daily-premium h3,
+        .dark .cc-route-daily-premium h4,
+        .dark .cc-route-daily-premium .text-white,
+        .dark .cc-route-daily-premium .text-slate-100,
+        .dark .cc-route-daily-premium .cc-text,
+        .dark .cc-route-daily-premium .cc-route-ticket-header,
+        .dark .cc-route-daily-premium .cc-route-weather-condition {
           color: #f8fafc !important;
         }
         .cc-route-daily-premium p,
+        .cc-route-daily-premium .text-slate-300,
+        .cc-route-daily-premium .text-slate-400,
         .cc-route-daily-premium .cc-route-subtitle,
         .cc-route-daily-premium .cc-route-stop-meta,
         .cc-route-daily-premium .cc-text-secondary {
+          color: #64748b !important;
+        }
+        .dark .cc-route-daily-premium p,
+        .dark .cc-route-daily-premium .text-slate-300,
+        .dark .cc-route-daily-premium .text-slate-400,
+        .dark .cc-route-daily-premium .cc-route-subtitle,
+        .dark .cc-route-daily-premium .cc-route-stop-meta,
+        .dark .cc-route-daily-premium .cc-text-secondary {
           color: #94a3b8 !important;
         }
         .cc-route-daily-premium input,
         .cc-route-daily-premium textarea,
         .cc-route-daily-premium select,
         .cc-route-daily-premium .cc-route-input {
+          background: #ffffff !important;
+          border-color: #cbd5e1 !important;
+          color: #0f172a !important;
+        }
+        .dark .cc-route-daily-premium input,
+        .dark .cc-route-daily-premium textarea,
+        .dark .cc-route-daily-premium select,
+        .dark .cc-route-daily-premium .cc-route-input {
           background: rgba(15, 23, 42, 0.86) !important;
           border-color: #22304d !important;
           color: #f8fafc !important;
         }
         .cc-route-daily-premium input::placeholder,
-        .cc-route-daily-premium textarea::placeholder { color: #64748b !important; }
+        .cc-route-daily-premium textarea::placeholder { color: #94a3b8 !important; }
+        .dark .cc-route-daily-premium input::placeholder,
+        .dark .cc-route-daily-premium textarea::placeholder { color: #64748b !important; }
         .cc-route-daily-premium .route-map-section-pro .cc-route-map-compact { min-height: 560px; }
-        .cc-route-daily-premium table thead { background: rgba(2, 6, 23, 0.58); }
-        .cc-route-daily-premium .cc-list-card-pro { background: rgba(15, 23, 42, 0.38); }
+        .cc-route-daily-premium table thead { background: #f1f5f9; }
+        .dark .cc-route-daily-premium table thead { background: rgba(2, 6, 23, 0.58); }
+        .cc-route-daily-premium .cc-list-card-pro { background: #f8fafc; }
+        .dark .cc-route-daily-premium .cc-list-card-pro { background: rgba(15, 23, 42, 0.38); }
+        .cc-route-daily-premium .bg-slate-950\/70,
+        .cc-route-daily-premium .bg-slate-950\/80,
+        .cc-route-daily-premium .bg-slate-950\/95,
+        .cc-route-daily-premium .bg-slate-900\/80 { background: #f8fafc !important; }
+        .dark .cc-route-daily-premium .bg-slate-950\/70,
+        .dark .cc-route-daily-premium .bg-slate-950\/80,
+        .dark .cc-route-daily-premium .bg-slate-950\/95,
+        .dark .cc-route-daily-premium .bg-slate-900\/80 { background: rgba(15, 23, 42, 0.82) !important; }
+        .cc-route-daily-premium .border-slate-700,
+        .cc-route-daily-premium .border-slate-800,
+        .cc-route-daily-premium .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #cbd5e1 !important; }
+        .dark .cc-route-daily-premium .border-slate-700,
+        .dark .cc-route-daily-premium .border-slate-800,
+        .dark .cc-route-daily-premium .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
+        .cc-route-daily-premium button.text-white,
+        .cc-route-daily-premium a.text-white { color: #ffffff !important; }
       `}</style>
       <RutaPanel className="route-daily-shell-pro rounded-xl border p-4">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
@@ -1030,7 +1091,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               <button
                 key={tab.id}
                 aria-pressed={activeRouteTab === tab.id}
-                className={`h-11 rounded-lg border px-4 text-sm font-black transition ${activeRouteTab === tab.id ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-950/30' : 'border-slate-700 bg-slate-950/70 text-slate-300 hover:bg-slate-900 hover:text-white'}`}
+                className={`h-11 rounded-lg border px-4 text-sm font-black transition ${activeRouteTab === tab.id ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-950/30' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white'}`}
                 onClick={() => setActiveRouteTab(tab.id)}
                 type="button"
               >

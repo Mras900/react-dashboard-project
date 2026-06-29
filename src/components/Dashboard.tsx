@@ -1331,29 +1331,68 @@ function BillingView({
   const totalBilling = billingRows.reduce((sum, row) => sum + row.facturacion, 0) || totals.facturacion;
 
   const issueBadgeClass = (tone: 'critical' | 'warning' | 'ok') => {
-    if (tone === 'critical') return 'border-red-400/30 bg-red-500/10 text-red-200';
-    if (tone === 'warning') return 'border-amber-400/30 bg-amber-500/10 text-amber-200';
-    return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200';
+    if (tone === 'critical') return 'border-red-200 bg-red-50 text-red-700 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-200';
+    if (tone === 'warning') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-200';
+    return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-200';
   };
 
   return (
     <div className="billing-review-premium grid gap-5">
       <style>{`
-        .billing-review-premium { color: #e2e8f0; }
+        .billing-review-premium { color: #0f172a; }
+        .dark .billing-review-premium { color: #e2e8f0; }
         .billing-review-premium .billing-card {
+          background: #ffffff;
+          border-color: #e2e8f0;
+          color: #0f172a;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+        .dark .billing-review-premium .billing-card {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98));
           border-color: #22304d;
+          color: #e2e8f0;
           box-shadow: 0 18px 44px rgba(2, 6, 23, 0.22);
         }
         .billing-review-premium input,
         .billing-review-premium select {
+          background: #ffffff;
+          border-color: #cbd5e1;
+          color: #0f172a;
+        }
+        .dark .billing-review-premium input,
+        .dark .billing-review-premium select {
           background: rgba(15, 23, 42, 0.9);
           border-color: #22304d;
           color: #f8fafc;
         }
-        .billing-review-premium input::placeholder { color: #64748b; }
-        .billing-review-premium table thead { background: rgba(2, 6, 23, 0.58); }
-        .billing-review-premium table tbody tr:hover { background: rgba(30, 41, 59, 0.56); }
+        .billing-review-premium input::placeholder { color: #94a3b8; }
+        .dark .billing-review-premium input::placeholder { color: #64748b; }
+        .billing-review-premium table thead { background: #f1f5f9; }
+        .dark .billing-review-premium table thead { background: rgba(2, 6, 23, 0.58); }
+        .billing-review-premium table tbody tr:hover { background: #f8fafc; }
+        .dark .billing-review-premium table tbody tr:hover { background: rgba(30, 41, 59, 0.56); }
+        .billing-review-premium .text-white,
+        .billing-review-premium .text-slate-100 { color: #0f172a !important; }
+        .billing-review-premium .text-slate-300,
+        .billing-review-premium .text-slate-400,
+        .billing-review-premium .text-slate-500 { color: #64748b !important; }
+        .dark .billing-review-premium .text-white,
+        .dark .billing-review-premium .text-slate-100 { color: #f8fafc !important; }
+        .dark .billing-review-premium .text-slate-300 { color: #cbd5e1 !important; }
+        .dark .billing-review-premium .text-slate-400 { color: #94a3b8 !important; }
+        .dark .billing-review-premium .text-slate-500 { color: #64748b !important; }
+        .billing-review-premium .bg-slate-950\/60,
+        .billing-review-premium .bg-slate-950\/70,
+        .billing-review-premium .bg-slate-950\/80 { background: #f8fafc !important; }
+        .dark .billing-review-premium .bg-slate-950\/60,
+        .dark .billing-review-premium .bg-slate-950\/70,
+        .dark .billing-review-premium .bg-slate-950\/80 { background: rgba(15, 23, 42, 0.7) !important; }
+        .billing-review-premium .border-slate-700,
+        .billing-review-premium .border-slate-800 { border-color: #cbd5e1 !important; }
+        .dark .billing-review-premium .border-slate-700,
+        .dark .billing-review-premium .border-slate-800 { border-color: #334155 !important; }
+        .billing-review-premium button.text-white,
+        .billing-review-premium a.text-white { color: #ffffff !important; }
       `}</style>
 
       <section className="billing-card rounded-xl border p-5">
@@ -1365,7 +1404,7 @@ function BillingView({
           </div>
           <div className="flex flex-wrap gap-2">
             <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 text-sm font-black text-slate-100 disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Download size={16} /> Exportar revisión</button>
-            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 text-sm font-black text-amber-100" onClick={() => setBillingOnlyErrors(true)} type="button"><AlertTriangle size={16} /> Ver inconsistencias</button>
+            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 text-sm font-black text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100" onClick={() => setBillingOnlyErrors(true)} type="button"><AlertTriangle size={16} /> Ver inconsistencias</button>
             <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Pen size={16} /> Actualizar datos</button>
           </div>
         </div>
@@ -1520,10 +1559,19 @@ function SettingsView({
 
   const settingsPremiumStyles = (
     <style>{`
-      .settings-control-premium { color: #e2e8f0; }
+      .settings-control-premium { color: #0f172a; }
+      .dark .settings-control-premium { color: #e2e8f0; }
       .settings-control-premium .settings-control-card,
       .settings-control-premium > section,
       .settings-control-premium section.rounded-lg {
+        background: #ffffff !important;
+        border-color: #e2e8f0 !important;
+        color: #0f172a !important;
+        box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+      }
+      .dark .settings-control-premium .settings-control-card,
+      .dark .settings-control-premium > section,
+      .dark .settings-control-premium section.rounded-lg {
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98)) !important;
         border-color: #22304d !important;
         color: #e2e8f0 !important;
@@ -1531,16 +1579,40 @@ function SettingsView({
       }
       .settings-control-premium h2,
       .settings-control-premium h3,
-      .settings-control-premium .text-\[\#071b4d\] { color: #f8fafc !important; }
+      .settings-control-premium .text-white,
+      .settings-control-premium .text-slate-100,
+      .settings-control-premium .text-\[\#071b4d\] { color: #0f172a !important; }
+      .dark .settings-control-premium h2,
+      .dark .settings-control-premium h3,
+      .dark .settings-control-premium .text-white,
+      .dark .settings-control-premium .text-slate-100,
+      .dark .settings-control-premium .text-\[\#071b4d\] { color: #f8fafc !important; }
       .settings-control-premium p,
+      .settings-control-premium .text-slate-300,
+      .settings-control-premium .text-slate-400,
       .settings-control-premium .text-slate-600,
-      .settings-control-premium .text-\[\#6b7d98\] { color: #94a3b8 !important; }
+      .settings-control-premium .text-\[\#6b7d98\] { color: #64748b !important; }
+      .dark .settings-control-premium p,
+      .dark .settings-control-premium .text-slate-300,
+      .dark .settings-control-premium .text-slate-400,
+      .dark .settings-control-premium .text-slate-600,
+      .dark .settings-control-premium .text-\[\#6b7d98\] { color: #94a3b8 !important; }
+      .settings-control-premium .bg-slate-950\/60,
+      .settings-control-premium .bg-slate-950\/70 { background: #f8fafc !important; }
+      .dark .settings-control-premium .bg-slate-950\/60,
+      .dark .settings-control-premium .bg-slate-950\/70 { background: rgba(15, 23, 42, 0.7) !important; }
+      .settings-control-premium .border-slate-700,
+      .settings-control-premium .border-slate-800 { border-color: #cbd5e1 !important; }
+      .dark .settings-control-premium .border-slate-700,
+      .dark .settings-control-premium .border-slate-800 { border-color: #334155 !important; }
+      .settings-control-premium button.text-white,
+      .settings-control-premium a.text-white { color: #ffffff !important; }
     `}</style>
   );
 
   const BackButton = ({ label = 'Volver a Configuraciones' }: { label?: string }) => (
     <button
-      className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 text-sm font-black text-slate-100 transition hover:bg-slate-900"
+      className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-100 dark:hover:bg-slate-900"
       onClick={() => setActiveSettingsSection('home')}
       type="button"
     >
@@ -3341,14 +3413,21 @@ const dateFilterError = useMemo(() => {
         .cc-design-active .cc-primary-tabs [aria-selected="true"] { background: var(--dc-primary) !important; }
         .cc-sidebar-item-pro {
           border: 1px solid transparent;
-          color: #94a3b8;
+          color: #64748b;
         }
         .cc-sidebar-item-pro:hover,
         .cc-sidebar-item-pro:focus-visible {
+          background: rgba(37, 99, 235, 0.08);
+          border-color: #bfdbfe;
+          color: #1d4ed8;
+          outline: none;
+        }
+        .dark .cc-sidebar-item-pro { color: #94a3b8; }
+        .dark .cc-sidebar-item-pro:hover,
+        .dark .cc-sidebar-item-pro:focus-visible {
           background: rgba(37, 99, 235, 0.12);
           border-color: #22304d;
           color: #f8fafc;
-          outline: none;
         }
         .cc-sidebar-item-active {
           background: #2563eb;
@@ -3357,6 +3436,12 @@ const dateFilterError = useMemo(() => {
           box-shadow: 0 12px 28px rgba(37, 99, 235, 0.32);
         }
         .cc-dashboard-filter-panel {
+          background: #ffffff !important;
+          border-color: #e2e8f0 !important;
+          color: #0f172a !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+        .dark .cc-dashboard-filter-panel {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
           border-color: #22304d !important;
           color: #e2e8f0 !important;
@@ -3364,23 +3449,44 @@ const dateFilterError = useMemo(() => {
         }
         .cc-dashboard-filter-panel h2,
         .cc-dashboard-filter-panel h3 {
+          color: #0f172a !important;
+        }
+        .dark .cc-dashboard-filter-panel h2,
+        .dark .cc-dashboard-filter-panel h3 {
           color: #f8fafc !important;
         }
         .cc-dashboard-filter-panel p,
         .cc-dashboard-filter-panel .cc-muted {
+          color: #64748b !important;
+        }
+        .dark .cc-dashboard-filter-panel p,
+        .dark .cc-dashboard-filter-panel .cc-muted {
           color: #94a3b8 !important;
         }
         .cc-dashboard-filter-panel .cc-filter,
         .cc-dashboard-filter-panel label {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+          color: #64748b !important;
+        }
+        .dark .cc-dashboard-filter-panel .cc-filter,
+        .dark .cc-dashboard-filter-panel label {
           background: rgba(15, 23, 42, 0.86) !important;
           border-color: #22304d !important;
           color: #94a3b8 !important;
         }
         .cc-dashboard-filter-panel select,
         .cc-dashboard-filter-panel input {
+          color: #0f172a !important;
+        }
+        .dark .cc-dashboard-filter-panel select,
+        .dark .cc-dashboard-filter-panel input {
           color: #f8fafc !important;
         }
         .cc-dashboard-premium {
+          color: #0f172a;
+        }
+        .dark .cc-dashboard-premium {
           color: #e2e8f0;
         }
         .cc-dashboard-premium .cc-map-panel,
@@ -3389,6 +3495,17 @@ const dateFilterError = useMemo(() => {
         .cc-dashboard-premium #dashboard-evidence-section > section,
         .cc-dashboard-premium .cc-kpi-card-pro,
         .cc-dashboard-premium .cc-card {
+          background: #ffffff !important;
+          border-color: #e2e8f0 !important;
+          color: #0f172a !important;
+          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+        }
+        .dark .cc-dashboard-premium .cc-map-panel,
+        .dark .cc-dashboard-premium .cc-chart-card,
+        .dark .cc-dashboard-premium .cc-route-summary-card,
+        .dark .cc-dashboard-premium #dashboard-evidence-section > section,
+        .dark .cc-dashboard-premium .cc-kpi-card-pro,
+        .dark .cc-dashboard-premium .cc-card {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
           border-color: #22304d !important;
           color: #e2e8f0 !important;
@@ -3397,6 +3514,11 @@ const dateFilterError = useMemo(() => {
         .cc-dashboard-premium .cc-map-header,
         .cc-dashboard-premium #dashboard-evidence-section .border-b,
         .cc-dashboard-premium #dashboard-evidence-section .border-t {
+          border-color: #e2e8f0 !important;
+        }
+        .dark .cc-dashboard-premium .cc-map-header,
+        .dark .cc-dashboard-premium #dashboard-evidence-section .border-b,
+        .dark .cc-dashboard-premium #dashboard-evidence-section .border-t {
           border-color: #22304d !important;
         }
         .cc-dashboard-premium .cc-section-title,
@@ -3405,12 +3527,26 @@ const dateFilterError = useMemo(() => {
         .cc-dashboard-premium h3,
         .cc-dashboard-premium .cc-kpi-value-pro,
         .cc-dashboard-premium .cc-text {
+          color: #0f172a !important;
+        }
+        .dark .cc-dashboard-premium .cc-section-title,
+        .dark .cc-dashboard-premium .cc-chart-title,
+        .dark .cc-dashboard-premium h2,
+        .dark .cc-dashboard-premium h3,
+        .dark .cc-dashboard-premium .cc-kpi-value-pro,
+        .dark .cc-dashboard-premium .cc-text {
           color: #f8fafc !important;
         }
         .cc-dashboard-premium .cc-muted,
         .cc-dashboard-premium .cc-kpi-label-pro,
         .cc-dashboard-premium .cc-kpi-meta-pro,
         .cc-dashboard-premium .cc-text-secondary {
+          color: #64748b !important;
+        }
+        .dark .cc-dashboard-premium .cc-muted,
+        .dark .cc-dashboard-premium .cc-kpi-label-pro,
+        .dark .cc-dashboard-premium .cc-kpi-meta-pro,
+        .dark .cc-dashboard-premium .cc-text-secondary {
           color: #94a3b8 !important;
         }
         .cc-dashboard-premium .cc-chart-card,
@@ -3424,7 +3560,7 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-[#22304D] bg-[#0B1020] py-4">
+      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-slate-200 bg-white py-4 dark:border-[#22304D] dark:bg-[#0B1020]">
         <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
           <Navigation size={22} />
         </div>
@@ -3454,7 +3590,7 @@ const dateFilterError = useMemo(() => {
           {isAdmin ? (
             <button
               className={`mt-1 flex h-10 w-10 items-center justify-center rounded-full border-2 transition ${
-                editMode ? 'border-blue-500 bg-blue-100 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
+                editMode ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-200' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-200'
               }`}
               onClick={() => editMode ? exitEditMode() : enterEditMode()}
               title={editMode ? 'Salir modo edicion' : 'Editar dashboard'}
@@ -3469,7 +3605,7 @@ const dateFilterError = useMemo(() => {
         </div>
       </aside>
 
-      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[#070B14] p-4 print:ml-0 print:h-auto print:overflow-visible">
+      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-slate-50 p-4 text-slate-900 dark:bg-[#070B14] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible">
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
           {isComponentVisible('header') ? (
           <TailAdminTopbar
@@ -3505,11 +3641,11 @@ const dateFilterError = useMemo(() => {
                   title="Dashboard territorial"
                 >
                 <section className="cc-primary-tabs mb-2" role="tablist" aria-label="Vista principal">
-                  <div className="flex gap-1 rounded-xl border border-[#22304D] bg-[#0B1020] p-1 shadow-sm">
+                  <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-[#22304D] dark:bg-[#0B1020]">
                     {hasPermission('rm') ? (
                       <button
                         aria-selected={viewMode === 'rm'}
-                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[#94A3B8] hover:bg-white/5 hover:text-white'}`}
+                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
                         onClick={() => setViewMode('rm')}
                         role="tab"
                         type="button"
@@ -3520,7 +3656,7 @@ const dateFilterError = useMemo(() => {
                     {hasPermission('regiones') ? (
                       <button
                         aria-selected={viewMode === 'regiones'}
-                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[#94A3B8] hover:bg-white/5 hover:text-white'}`}
+                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
                         onClick={() => setViewMode('regiones')}
                         role="tab"
                         type="button"
