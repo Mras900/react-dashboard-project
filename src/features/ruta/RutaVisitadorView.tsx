@@ -17,6 +17,7 @@ import { fetchRouteWeather, getWeatherPresentation, KNOWN_COMUNAS } from './rout
 import type { RouteWeatherSummary } from './routeWeatherTypes';
 
 type SearchMode = 'ticket' | 'rut';
+type RouteSubTab = 'operation' | 'territory';
 type RouteVisitDayCount = { total: number; exitosas: number; noExitosas: number; pendientes: number };
 
 const STATUS_LABELS: Record<RutaVisitStatus, string> = {
@@ -349,6 +350,8 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const [fuelEfficiency, setFuelEfficiency] = useState(12);
   const [fuelPrice, setFuelPrice] = useState(1050);
   const [searchMode, setSearchMode] = useState<SearchMode>('ticket');
+  const [activeRouteTab, setActiveRouteTab] = useState<RouteSubTab>('operation');
+  const [territorialSearch, setTerritorialSearch] = useState('');
   const [searchValue, setSearchValue] = useState('');
   const [bulkTicketIds, setBulkTicketIds] = useState('');
   const [stops, setStops] = useState<RutaStop[]>([]);
@@ -457,6 +460,32 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   }, [activeRedZones, redZones]);
 
   const summary = useMemo(() => buildRutaSummary(stops), [stops]);
+  const routeCompletionPct = summary.ticketsToday > 0 ? Math.round((summary.successful / summary.ticketsToday) * 100) : 0;
+  const routeClaimsToday = useMemo(() => stops.reduce((sum, stop) => sum + stop.claimsCount, 0), [stops]);
+  const territorialConcentration = useMemo(() => {
+    const grouped = new Map<string, { comuna: string; visitas: number; completadas: number; pendientes: number; zonasRojas: number }>();
+
+    stops.forEach((stop) => {
+      const location = Number.isFinite(stop.lat) && Number.isFinite(stop.lng)
+        ? findComunaRegionByPoint(stop.lat as number, stop.lng as number, chileComunasGeoJson)
+        : null;
+      const comuna = location?.comuna || 'Sin comuna';
+      const current = grouped.get(comuna) ?? { comuna, visitas: 0, completadas: 0, pendientes: 0, zonasRojas: 0 };
+
+      current.visitas += 1;
+      if (stop.status === 'exitosa') current.completadas += 1;
+      if (stop.status === 'pendiente') current.pendientes += 1;
+      if (stop.isRedZone) current.zonasRojas += 1;
+      grouped.set(comuna, current);
+    });
+
+    return [...grouped.values()].sort((a, b) => b.visitas - a.visitas);
+  }, [chileComunasGeoJson, stops]);
+  const visibleTerritorialConcentration = useMemo(() => {
+    const search = normalizeName(territorialSearch);
+    if (!search) return territorialConcentration;
+    return territorialConcentration.filter((item) => normalizeName(item.comuna).includes(search));
+  }, [territorialConcentration, territorialSearch]);
   const fares = useMemo(() => getFareTable(stops.length), [stops.length]);
   const visitsByDate = useMemo(() => {
     const grouped: Record<string, RouteVisitDayCount> = {};
@@ -944,7 +973,73 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   };
 
   return (
-    <div className="grid gap-4">
+    <div className="cc-route-daily-premium grid gap-4">
+      <style>{`
+        .cc-route-daily-premium { color: #e2e8f0; }
+        .cc-route-daily-premium .cc-route-card,
+        .cc-route-daily-premium .route-daily-shell-pro,
+        .cc-route-daily-premium .route-territory-toolbar-pro,
+        .cc-route-daily-premium .route-territory-concentration-pro,
+        .cc-route-daily-premium .route-territory-layer-panel-pro {
+          background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
+          border-color: #22304d !important;
+          color: #e2e8f0 !important;
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
+        }
+        .cc-route-daily-premium h2,
+        .cc-route-daily-premium h3,
+        .cc-route-daily-premium h4,
+        .cc-route-daily-premium .cc-text,
+        .cc-route-daily-premium .cc-route-ticket-header,
+        .cc-route-daily-premium .cc-route-weather-condition {
+          color: #f8fafc !important;
+        }
+        .cc-route-daily-premium p,
+        .cc-route-daily-premium .cc-route-subtitle,
+        .cc-route-daily-premium .cc-route-stop-meta,
+        .cc-route-daily-premium .cc-text-secondary {
+          color: #94a3b8 !important;
+        }
+        .cc-route-daily-premium input,
+        .cc-route-daily-premium textarea,
+        .cc-route-daily-premium select,
+        .cc-route-daily-premium .cc-route-input {
+          background: rgba(15, 23, 42, 0.86) !important;
+          border-color: #22304d !important;
+          color: #f8fafc !important;
+        }
+        .cc-route-daily-premium input::placeholder,
+        .cc-route-daily-premium textarea::placeholder { color: #64748b !important; }
+        .cc-route-daily-premium .route-map-section-pro .cc-route-map-compact { min-height: 560px; }
+      `}</style>
+      <RutaPanel className="route-daily-shell-pro rounded-xl border p-4">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div>
+            <p className="cc-route-label text-xs">Ruta diaria</p>
+            <h2 className="mt-1 text-2xl font-black text-white">Ruta diaria</h2>
+            <p className="mt-1 text-sm font-semibold text-slate-400">Planificación operativa, visitas y seguimiento en terreno</p>
+          </div>
+          <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[360px]">
+            {([
+              { id: 'operation' as const, label: 'Operación diaria' },
+              { id: 'territory' as const, label: 'Mapa territorial' },
+            ]).map((tab) => (
+              <button
+                key={tab.id}
+                aria-pressed={activeRouteTab === tab.id}
+                className={`h-11 rounded-lg border px-4 text-sm font-black transition ${activeRouteTab === tab.id ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-950/30' : 'border-slate-700 bg-slate-950/70 text-slate-300 hover:bg-slate-900 hover:text-white'}`}
+                onClick={() => setActiveRouteTab(tab.id)}
+                type="button"
+              >
+                {tab.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      </RutaPanel>
+
+      {activeRouteTab === 'operation' ? (
+        <>
       {/* TOP GRID */}
       <div className="cc-route-top-grid-v2">
         <RutaPanel className="route-calendar-card-pro cc-route-calendar-zone rounded-xl border p-4">
@@ -1170,21 +1265,22 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             <label className="grid gap-2">
-              <span className="cc-route-label text-xs">{searchMode === 'ticket' ? 'Ticket' : 'RUT'}</span>
+              <span className="cc-route-label text-xs">Ingresar ticket de visita</span>
               <div className="flex gap-2">
                 <input
                   className="cc-route-input h-10 min-w-0 flex-1 px-3 text-sm font-medium"
                   aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'}
+                  placeholder={searchMode === 'ticket' ? 'Ej: FAC-4821' : 'Ej: 12.345.678-9'}
                   onChange={(event) => setSearchValue(event.target.value)}
                   value={searchValue}
                 />
                 <button
-                  className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg bg-[#0f5fcf] text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
+                  className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#0f5fcf] px-4 text-sm font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
                   disabled={loading}
                   type="submit"
                   aria-label="Buscar"
                 >
-                  {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}
+                  {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}<span>Agregar</span>
                 </button>
               </div>
             </label>
@@ -1243,10 +1339,10 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
       {/* BOTTOM: KPIs + Map + Stops + Valuation */}
         <section className="route-kpi-strip-pro cc-route-kpi-grid" style={{marginTop:"0"}}>
-          <RutaMetricCard label="Tickets del día" value={summary.ticketsToday.toLocaleString('es-CL')} />
-          <RutaMetricCard label="Exitosas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
-          <RutaMetricCard label="No exitosas" value={summary.unsuccessful.toLocaleString('es-CL')} tone="red" />
-          <RutaMetricCard label="Pendientes" value={summary.pending.toLocaleString('es-CL')} tone="amber" />
+          <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString('es-CL')} />
+          <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
+          <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString('es-CL')}%`} tone="blue" />
+          <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString('es-CL')} tone="amber" />
           <RutaMetricCard label="Zonas rojas" value={summary.redZones.toLocaleString('es-CL')} tone="red" />
           <RutaMetricCard label="Total valorizado" value={summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })} tone="green" />
           <RutaMetricCard label="Proyectado máximo" value={summary.projectedMax.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })} tone="blue" />
@@ -1261,8 +1357,40 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </p>
             ) : null}
             {redZonesError ? <p className="mt-1 text-xs font-semibold cc-orange">{redZonesError}. La vista sigue funcionando con el estado de zona roja informado por backend.</p> : null}
-          </RutaPanel>
-        ) : null}
+          </RutaPanel>        ) : null}
+        </>
+      ) : (
+        <RutaPanel className="route-territory-toolbar-pro rounded-xl border p-4">
+          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
+            <div>
+              <p className="cc-route-label text-xs">Mapa territorial</p>
+              <h3 className="mt-1 text-xl font-black text-white">Cobertura territorial de visitas</h3>
+              <p className="mt-1 text-sm font-semibold text-slate-400">Busca y revisa concentración por comuna con las visitas cargadas.</p>
+              <label className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-slate-700 bg-slate-950/80 px-4">
+                <Search size={18} className="text-slate-400" />
+                <input
+                  aria-label="Buscar dirección, ticket o comuna"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-white outline-none placeholder:text-slate-500"
+                  onChange={(event) => setTerritorialSearch(event.target.value)}
+                  placeholder="Buscar dirección, ticket o comuna..."
+                  value={territorialSearch}
+                />
+              </label>
+            </div>
+            <div className="grid gap-3">
+              <p className="cc-route-label text-xs">Capas activas</p>
+              <div className="grid grid-cols-2 gap-2">
+                {['Visitas', 'Heatmap', 'Zonas rojas', 'Comunas'].map((layer) => (
+                  <span key={layer} className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs font-black text-slate-200">
+                    {layer}
+                  </span>
+                ))}
+              </div>
+              <p className="text-xs font-semibold text-slate-500">Heatmap usa soporte disponible de puntos/capas existentes; sin datos cargados no dibuja puntos.</p>
+            </div>
+          </div>
+        </RutaPanel>
+      )}
 
         <RutaPanel className="route-map-section-pro overflow-hidden">
           <div className="border-b border-slate-200 px-4 py-3">
@@ -1493,10 +1621,11 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
         </RutaPanel>
 
+        {activeRouteTab === 'operation' ? (
         <section className="route-bottom-grid-pro grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <RutaPanel className="route-stops-panel-pro overflow-hidden">
             <div className="border-b border-slate-200 px-4 py-3">
-              <h3 className="text-base font-bold text-[#071b4d]">Lista de paradas</h3>
+              <h3 className="text-base font-bold text-[#071b4d]">Visitas planificadas</h3>
               <p className="text-xs font-medium text-slate-500">Marca resultado de visita, observación y revisión territorial.</p>
             </div>
 
@@ -1605,7 +1734,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </RutaPanel>
 
           <RutaPanel className="route-totals-panel-pro self-start p-4">
-            <h3 className="text-base font-bold text-[#071b4d]">Totales de valorización</h3>
+            <h3 className="text-base font-bold text-[#071b4d]">Valorización del día</h3>
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="font-medium text-slate-600">Tramo actual</span>
@@ -1660,6 +1789,39 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
           </RutaPanel>
         </section>
+        ) : (
+          <section className="route-territory-panels-pro grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
+            <RutaPanel className="route-territory-concentration-pro overflow-hidden rounded-xl border">
+              <div className="border-b border-slate-800 px-4 py-3">
+                <h3 className="text-base font-bold text-white">Panel de concentración por comuna</h3>
+                <p className="text-xs font-medium text-slate-400">Derivado desde coordenadas y capa comunal existente.</p>
+              </div>
+              <div className="divide-y divide-slate-800">
+                {visibleTerritorialConcentration.length > 0 ? visibleTerritorialConcentration.map((item) => (
+                  <article key={item.comuna} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                    <div className="min-w-0">
+                      <h4 className="truncate text-sm font-black text-white">{item.comuna}</h4>
+                      <p className="mt-1 text-xs font-semibold text-slate-400">{item.completadas} completadas · {item.pendientes} pendientes · {item.zonasRojas} zonas rojas</p>
+                    </div>
+                    <span className="rounded-lg bg-blue-500/15 px-3 py-2 text-sm font-black text-blue-200">{item.visitas}</span>
+                  </article>
+                )) : (
+                  <div className="p-6 text-center text-sm font-bold text-slate-400">Sin visitas georreferenciadas para mostrar concentración.</div>
+                )}
+              </div>
+            </RutaPanel>
+
+            <RutaPanel className="route-territory-layer-panel-pro self-start rounded-xl border p-4">
+              <h3 className="text-base font-bold text-white">Panel de capas activas</h3>
+              <div className="mt-4 grid gap-2 text-sm">
+                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Visitas cargadas</span><span className="font-black text-white">{stops.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Con coordenadas</span><span className="font-black text-white">{stopPoints.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Zonas rojas activas</span><span className="font-black text-red-300">{activeRedZones.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Comunas detectadas</span><span className="font-black text-white">{territorialConcentration.length.toLocaleString('es-CL')}</span></div>
+              </div>
+            </RutaPanel>
+          </section>
+        )}
       {/* END main (removed in restructure) */}
     </div>
   );
