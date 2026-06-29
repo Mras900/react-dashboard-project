@@ -36,7 +36,7 @@ export function normalizeRegionRows(rows: RawImportedRow[], sourceFileName: stri
     const validation = buildValidationMessage(row);
     const regionWarning = regionOriginal && regionNormalizada === regionOriginal ? 'Región sin normalización confirmada' : '';
     const ciudad = getAliasField(row, 'ciudad');
-    const comuna = getAliasField(row, 'comuna') || ciudad;
+    const comuna = getAliasField(row, 'comuna');
     const estadoVisita = getAliasField(row, 'estadoVisita');
 
     return {

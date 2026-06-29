@@ -24,6 +24,13 @@ function getRmComuna(row: RawImportedRow) {
   return getAliasField(row, 'comuna');
 }
 
+function inferStatusFromFacturacion(facturacion: number): string | null {
+  if (facturacion >= 21000 || facturacion === 17000) return 'Exitosa';
+  if (facturacion >= 10500 || facturacion === 8500) return 'No exitosa';
+  if (facturacion === 0) return 'Sin cobro';
+  return null;
+}
+
 function buildValidationMessage(row: RawImportedRow) {
   const messages: string[] = [];
   if (!getRmTicket(row)) messages.push('Falta Ticket');
@@ -35,16 +42,27 @@ function buildValidationMessage(row: RawImportedRow) {
 export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, importMode: ImportMode = 'rm'): ImportedDashboardRow[] {
   const normalizedRows = rows.map((row, index) => {
     const ticket = getRmTicket(row);
-    const estadoVisita = getAliasField(row, 'estadoVisita');
+    const estadoVisitaRaw = getAliasField(row, 'estadoVisita');
     const validationMessages = buildValidationMessage(row);
     const comuna = getRmComuna(row);
     const factura = getAliasField(row, 'factura');
     const facturaInformada = factura !== '';
     const precioNeto = parseMoney(getAliasField(row, 'precioNeto'));
     const traslado = parseMoney(getAliasField(row, 'traslado'));
-    const precioNetoTraslado = parseMoney(getAliasField(row, 'precioNetoTraslado')) || precioNeto + traslado;
+    const precioNetoTraslado = parseMoney(getAliasField(row, 'precioNetoTraslado')) || (precioNeto > 0 || traslado > 0 ? precioNeto + traslado : 0);
     const facturacionTotal = facturaInformada ? parseMoney(factura) : precioNetoTraslado;
     const regionOriginal = getAliasField(row, 'region') || 'Región Metropolitana';
+    const ciudad = getAliasField(row, 'ciudad') || 'Santiago';
+
+    // Infer estadoVisita from facturacion if not provided
+    const inferredStatus = !estadoVisitaRaw && facturacionTotal > 0 ? inferStatusFromFacturacion(facturacionTotal) : null;
+    const estadoVisita = estadoVisitaRaw || inferredStatus || '';
+    const finalStatusNormalized = estadoVisitaRaw ? normalizeVisitStatus(estadoVisitaRaw) : (inferredStatus ? normalizeVisitStatus(inferredStatus) : 'sin_estado');
+
+    // Warn if no factura detected but precioNeto/traslado also missing
+    if (!facturaInformada && precioNeto === 0 && traslado === 0 && facturacionTotal === 0) {
+      validationMessages.push('Facturacion no detectada');
+    }
 
     return {
       importRowId: `${sourceFileName}-${importMode}-rm-${index}`,
@@ -54,11 +72,11 @@ export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, 
       fechaEnvioMuestras: formatImportedDate(getRawAliasField(row, 'fechaEnvio')),
       prioridad: normalizePriority(getAliasField(row, 'prioridad')),
       estadoVisita,
-      estadoVisitaNormalizado: normalizeVisitStatus(estadoVisita),
+      estadoVisitaNormalizado: finalStatusNormalized,
       regionOriginal,
       regionNormalizada: normalizeRegionName(regionOriginal),
       comuna,
-      ciudad: getAliasField(row, 'ciudad') || comuna,
+      ciudad,
       calle: getAliasField(row, 'calle'),
       numeroDireccion: getAliasField(row, 'numero'),
       cliente: getAliasField(row, 'cliente'),
@@ -74,8 +92,8 @@ export function normalizeRmRows(rows: RawImportedRow[], sourceFileName: string, 
       valorEnvioBulto: parseMoney(getAliasField(row, 'valorEnvio')),
       retiroMuestra: parseBooleanValue(getAliasField(row, 'retiroMuestra')),
       trackingStarken: getAliasField(row, 'tracking'),
-      scope: detectDatasetScope({ region: regionOriginal, comuna, ciudad: getAliasField(row, 'ciudad'), importScope: 'rm' }),
-      datasetScope: detectDatasetScope({ region: regionOriginal, comuna, ciudad: getAliasField(row, 'ciudad'), importScope: 'rm' }),
+      scope: detectDatasetScope({ region: regionOriginal, comuna, ciudad, importScope: 'rm' }),
+      datasetScope: detectDatasetScope({ region: regionOriginal, comuna, ciudad, importScope: 'rm' }),
       sourceFileName,
       importMode,
       validationStatus: validationMessages.length > 0 ? ('warning' as const) : ('valid' as const),

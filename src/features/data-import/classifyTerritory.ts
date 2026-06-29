@@ -60,7 +60,7 @@ const rmComunas = new Set(
 
 export function classifyTerritory(row: RawImportedRow): TerritoryScope | null {
   const region = normalizeHeader(getField(row, ['REGION_KUT', 'Región', 'Region']));
-  const comuna = normalizeHeader(getField(row, ['Descripción Comuna', 'Comuna', 'Ciudad']));
+  const comuna = normalizeHeader(getField(row, ['Comuna', 'COMUNA', 'comuna', 'Descripción Comuna', 'Descripcion Comuna']));
   const hasConsolidadoRmBilling = Boolean(getField(row, ['FACTURA'])) && Boolean(getField(row, ['Comuna']));
 
   if (hasConsolidadoRmBilling && rmComunas.has(comuna)) return 'rm';
