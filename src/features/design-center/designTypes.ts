@@ -1,5 +1,6 @@
 export const DESIGN_STORAGE_KEY = 'dashboard-visual-config-v1';
 export const DESIGN_CONFIG_VERSION = 1;
+export const CURRENT_DESIGN_CONFIG_VERSION = 1;
 
 export type DesignColorOption = 'default' | 'blue' | 'emerald' | 'slate' | 'white' | 'soft';
 export type DesignRadiusOption = 'default' | 'compact' | 'rounded';

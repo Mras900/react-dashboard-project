@@ -135,6 +135,9 @@ export function useDesignConfig() {
   const saveDraftToBackend = useCallback(async (name?: string): Promise<{ ok: boolean; error?: string }> => {
     const normalized = normalizeDesignConfig(draftConfig);
     if (!normalized) return { ok: false, error: 'Configuracion invalida' };
+    if (!Number.isInteger(normalized.version)) {
+      return { ok: false, error: 'Error interno: config.version no es entero' };
+    }
     const result = await apiSaveDraftConfig(normalized as unknown as Record<string, unknown>, name);
     if (result.ok) return { ok: true };
     return { ok: false, error: result.error };
@@ -143,6 +146,9 @@ export function useDesignConfig() {
   const publishToBackend = useCallback(async (name?: string): Promise<{ ok: boolean; error?: string; meta?: BackendMeta }> => {
     const normalized = normalizeDesignConfig(draftConfig);
     if (!normalized) return { ok: false, error: 'Configuracion invalida' };
+    if (!Number.isInteger(normalized.version)) {
+      return { ok: false, error: 'Error interno: config.version no es entero' };
+    }
     const result = await apiPublishConfig(normalized as unknown as Record<string, unknown>, name);
     if (!result.ok) return { ok: false, error: result.error };
     saveDesignConfig(normalized);

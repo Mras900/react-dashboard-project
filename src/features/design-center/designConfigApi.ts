@@ -58,16 +58,18 @@ export function fetchActiveConfig(): Promise<ConfigApiResult<BackendConfigRespon
 }
 
 export function saveDraftConfig(config: Record<string, unknown>, name?: string): Promise<ConfigApiResult<BackendConfigVersion>> {
-  return fetchJson<BackendConfigVersion>('/api/config/dashboard-visual/draft', {
+  const qs = name ? `?name=${encodeURIComponent(name)}` : '';
+  return fetchJson<BackendConfigVersion>(`/api/config/dashboard-visual/draft${qs}`, {
     method: 'POST',
-    body: JSON.stringify({ name: name ?? 'Borrador', config }),
+    body: JSON.stringify(config),
   });
 }
 
 export function publishConfig(config: Record<string, unknown>, name?: string): Promise<ConfigApiResult<BackendConfigVersion>> {
-  return fetchJson<BackendConfigVersion>('/api/config/dashboard-visual/publish', {
+  const qs = name ? `?name=${encodeURIComponent(name)}` : '';
+  return fetchJson<BackendConfigVersion>(`/api/config/dashboard-visual/publish${qs}`, {
     method: 'POST',
-    body: JSON.stringify({ name: name ?? 'Configuracion publicada', config }),
+    body: JSON.stringify(config),
   });
 }
 

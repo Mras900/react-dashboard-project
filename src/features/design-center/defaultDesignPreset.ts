@@ -1,10 +1,11 @@
 import type { DesignPreset } from './designTypes';
+import { CURRENT_DESIGN_CONFIG_VERSION } from './designTypes';
 
 export const DEFAULT_DESIGN_PRESET = {
   id: 'default-v1',
   name: 'Diseno actual protegido',
   protected: true,
-  version: 1,
+  version: CURRENT_DESIGN_CONFIG_VERSION,
   texts: {
     dashboardTitle: 'Visor de Facturacion y Reclamos - RM/Regiones',
     dashboardSubtitle: 'Inteligencia operativa para decisiones estrategicas',
