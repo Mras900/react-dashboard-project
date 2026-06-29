@@ -22,6 +22,7 @@ import {
   ShieldCheck,
   Siren,
   Trash2,
+  Pen,
   Users,
   UserCog,
 } from 'lucide-react';
@@ -66,6 +67,9 @@ import { useDesignConfig } from '../features/design-center/useDesignConfig';
 import { designTokenValues } from '../features/design-center/safeOptions';
 import { ConfigurableKpiCard } from '../features/design-center/ConfigurableKpiCard';
 import { ConfigurableChartCard } from '../features/design-center/ConfigurableChartCard';
+import { EditableDashboardWrapper } from '../features/design-center/EditableDashboardWrapper';
+import { InlineEditToolbar } from '../features/design-center/InlineEditToolbar';
+import { ComponentEditPanel } from '../features/design-center/ComponentEditPanel';
 import type { KpiDataSources } from '../features/design-center/kpiCalculations';
 import type { DesignComponentConfig, DesignComponentId, DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
@@ -1540,7 +1544,7 @@ function RouteMetricsSummary({
   );
 }
 export default function Dashboard() {
-  const { hasPermission } = useAuth();
+  const { hasPermission, isAdmin } = useAuth();
   const designConfig = useDesignConfig();
   const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>('default');
   const [showImportModal, setShowImportModal] = useState(false);
@@ -2369,6 +2373,27 @@ const dateFilterError = useMemo(() => {
     hasActiveDesignConfig ? (designComponentById.get(id)?.visible ?? defaultVisible) : defaultVisible;
   const getComponentTitle = (id: DesignComponentId, fallback: string) =>
     hasActiveDesignConfig ? (designComponentById.get(id)?.title || fallback) : fallback;
+
+  const widgetToComponentId: Record<string, DesignComponentId> = {
+    kpiFacturacion: 'left-kpi-facturacion',
+    kpiReclamos: 'left-kpi-reclamos',
+    kpiPromedio: 'left-kpi-promedio',
+    mapaReclamos: 'main-map',
+    kpiComunaTop: 'right-summary',
+    kpiFacturacionTop: 'right-summary',
+    kpiCoberturaComunas: 'right-summary',
+    statTotalComunas: 'card-total-comunas',
+    statAltaPrioridad: 'card-alta-prioridad',
+    statVariacionMensual: 'card-periodo',
+    statTicketsUnicos: 'card-tickets',
+    graficoFacturacionMensual: 'chart-facturacion-mensual',
+    topComunasReclamos: 'chart-top-reclamos',
+    topComunasFacturacion: 'chart-top-facturacion',
+    distribucionPrioridad: 'chart-prioridad',
+    tablaComunas: 'table-evidencia',
+  };
+
+  const { editMode, enterEditMode, exitEditMode, selectedComponentId, setSelectedComponentId, updateComponentInDraft } = designConfig;
   const designCssVariables = useMemo<React.CSSProperties | undefined>(() => {
     if (!activeDesignConfig || !hasActiveDesignConfig) return undefined;
     const tokens = activeDesignConfig.tokens;
@@ -2780,6 +2805,53 @@ const dateFilterError = useMemo(() => {
     ]
     : dashboardWidgets;
 
+  const editModeWidgets = editMode
+    ? configuredDashboardWidgets.map((widget: Record<string, unknown>) => {
+        const compId = widgetToComponentId[widget.id as string] ?? null;
+        if (!compId) return widget as typeof configuredDashboardWidgets[number];
+        const compConfig = designComponentById.get(compId);
+        const safeOrder = (widget.order as number) ?? 0;
+        return {
+          ...widget,
+          content: (
+            <EditableDashboardWrapper
+              componentId={compId}
+              componentConfig={compConfig}
+              onMoveUp={() => {
+                const sorted = [...configuredDashboardWidgets].filter((w: Record<string, unknown>) => widgetToComponentId[w.id as string]).sort((a, b) => (((a as Record<string, unknown>).order as number) ?? 0) - (((b as Record<string, unknown>).order as number) ?? 0));
+                const idx = sorted.findIndex((w: Record<string, unknown>) => w.id === widget.id);
+                if (idx <= 0) return;
+                const prev = sorted[idx - 1];
+                const prevCompId = widgetToComponentId[prev.id as string];
+                if (!prevCompId) return;
+                const prevOrder = designComponentById.get(prevCompId)?.order ?? ((prev as Record<string, unknown>).order as number) ?? 0;
+                const curOrder = compConfig?.order ?? safeOrder;
+                updateComponentInDraft(compId, (c) => ({ ...c, order: prevOrder }));
+                updateComponentInDraft(prevCompId, (c) => ({ ...c, order: curOrder }));
+              }}
+              onMoveDown={() => {
+                const sorted = [...configuredDashboardWidgets].filter((w: Record<string, unknown>) => widgetToComponentId[w.id as string]).sort((a, b) => (((a as Record<string, unknown>).order as number) ?? 0) - (((b as Record<string, unknown>).order as number) ?? 0));
+                const idx = sorted.findIndex((w: Record<string, unknown>) => w.id === widget.id);
+                if (idx < 0 || idx >= sorted.length - 1) return;
+                const next = sorted[idx + 1];
+                const nextCompId = widgetToComponentId[next.id as string];
+                if (!nextCompId) return;
+                const nextOrder = designComponentById.get(nextCompId)?.order ?? ((next as Record<string, unknown>).order as number) ?? 0;
+                const curOrder = compConfig?.order ?? safeOrder;
+                updateComponentInDraft(compId, (c) => ({ ...c, order: nextOrder }));
+                updateComponentInDraft(nextCompId, (c) => ({ ...c, order: curOrder }));
+              }}
+              onToggleVisibility={() => updateComponentInDraft(compId, (c) => ({ ...c, visible: !c.visible }))}
+              onChangeSize={(size) => updateComponentInDraft(compId, (c) => ({ ...c, size }))}
+              onOpenEdit={() => setSelectedComponentId(compId)}
+            >
+              {(widget as any).content}
+            </EditableDashboardWrapper>
+          ),
+        } as typeof configuredDashboardWidgets[number];
+      })
+    : configuredDashboardWidgets;
+
   return (
     <div className={`cc-shell flex h-screen font-sans text-[#172448] ${hasActiveDesignConfig ? 'cc-design-active' : ''}`} style={designCssVariables}>
       <style>{`
@@ -2830,6 +2902,18 @@ const dateFilterError = useMemo(() => {
               </SidebarIcon>
             );
           })}
+          {isAdmin ? (
+            <button
+              className={`mt-1 flex h-10 w-10 items-center justify-center rounded-full border-2 transition ${
+                editMode ? 'border-blue-500 bg-blue-100 text-blue-700' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600'
+              }`}
+              onClick={() => editMode ? exitEditMode() : enterEditMode()}
+              title={editMode ? 'Salir modo edicion' : 'Editar dashboard'}
+              type="button"
+            >
+              <Pen size={18} />
+            </button>
+          ) : null}
           <button className="cc-sidebar-action mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#073B91] text-white shadow-lg shadow-blue-900/25" type="button" title="Contraer menú lateral" aria-label="Contraer menú lateral">
             <ChevronsLeft size={19} />
           </button>
@@ -2961,8 +3045,17 @@ const dateFilterError = useMemo(() => {
                   ) : null}
                 </section>
                 </TailAdminSidePanel>
+                {editMode ? (
+                  <InlineEditToolbar
+                    onSaveDraft={() => designConfig.saveDraftToBackend()}
+                    onPublish={() => designConfig.publishToBackend()}
+                    onCancel={exitEditMode}
+                    onReset={() => { designConfig.resetConfig(); exitEditMode(); }}
+                    hasUnsavedChanges={designConfig.isPreviewActive}
+                  />
+                ) : null}
                 <ExecutiveDashboardLayout
-                  widgets={configuredDashboardWidgets}
+                  widgets={editModeWidgets}
                   routeMetrics={routeMetrics}
                   routePeriod={routePeriod}
                   setRoutePeriod={setRoutePeriod}
@@ -3052,6 +3145,13 @@ const dateFilterError = useMemo(() => {
         </div>
 
         {showImportModal && hasPermission('importaciones') ? <DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /> : null}
+        {editMode && selectedComponentId ? (
+          <ComponentEditPanel
+            component={activeDesignConfig?.components.find((c) => c.id === selectedComponentId) ?? activeDesignConfig?.components[0]!}
+            onUpdate={(updater) => updateComponentInDraft(selectedComponentId, updater)}
+            onClose={() => setSelectedComponentId(null)}
+          />
+        ) : null}
       </main>
     </div>
   );

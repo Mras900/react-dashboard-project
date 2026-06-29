@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { DEFAULT_DESIGN_PRESET } from './defaultDesignPreset';
-import type { DesignConfig } from './designTypes';
+import type { DesignComponentConfig, DesignComponentId, DesignConfig } from './designTypes';
 import {
   clearDesignConfig,
   createDefaultDesignConfig,
@@ -26,6 +26,8 @@ export function useDesignConfig() {
   const [configSource, setConfigSource] = useState<ConfigSource>('default');
   const [backendMeta, setBackendMeta] = useState<BackendMeta | null>(null);
   const [backendInitialized, setBackendInitialized] = useState(false);
+  const [editMode, setEditMode] = useState(false);
+  const [selectedComponentId, setSelectedComponentId] = useState<DesignComponentId | null>(null);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,6 +75,28 @@ export function useDesignConfig() {
     setIsPreviewActive(false);
     setDraftConfig(savedConfig ?? createDefaultDesignConfig());
   }, [savedConfig]);
+
+  const enterEditMode = useCallback(() => {
+    setEditMode(true);
+    setSelectedComponentId(null);
+    setDraftConfig(savedConfig ?? createDefaultDesignConfig());
+    setIsPreviewActive(true);
+  }, [savedConfig]);
+
+  const exitEditMode = useCallback(() => {
+    setEditMode(false);
+    setSelectedComponentId(null);
+    setIsPreviewActive(false);
+    setDraftConfig(savedConfig ?? createDefaultDesignConfig());
+  }, [savedConfig]);
+
+  const updateComponentInDraft = useCallback((componentId: DesignComponentId, updater: (comp: DesignComponentConfig) => DesignComponentConfig) => {
+    setDraftConfig((current) => {
+      const nextComponents = current.components.map((c) => (c.id === componentId ? updater(c) : c));
+      const next = normalizeDesignConfig({ ...current, components: nextComponents });
+      return next ?? current;
+    });
+  }, []);
 
   const resetConfig = useCallback(() => {
     clearDesignConfig();
@@ -189,10 +213,16 @@ export function useDesignConfig() {
       configSource,
       backendMeta,
       backendInitialized,
+      editMode,
+      selectedComponentId,
       updateDraft,
       saveDraft,
       previewDraft,
       stopPreview,
+      enterEditMode,
+      exitEditMode,
+      updateComponentInDraft,
+      setSelectedComponentId,
       resetConfig,
       resetLayout,
       resetKpis,
@@ -207,8 +237,10 @@ export function useDesignConfig() {
     [
       activeConfig, draftConfig, hasActiveConfig, isPreviewActive,
       configSource, backendMeta, backendInitialized,
+      editMode, selectedComponentId,
       previewDraft, resetConfig, resetLayout, resetKpis, resetCharts,
       saveDraft, savedConfig, stopPreview, updateDraft,
+      enterEditMode, exitEditMode, updateComponentInDraft, setSelectedComponentId,
       saveDraftToBackend, publishToBackend, resetOnBackend, restoreVersion, refetchFromBackend,
     ],
   );
