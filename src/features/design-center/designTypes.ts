@@ -6,6 +6,7 @@ export type DesignRadiusOption = 'default' | 'compact' | 'rounded';
 export type DesignSpacingMode = 'compact' | 'comfortable';
 export type DesignSectionId = 'hero' | 'main' | 'side' | 'bottom';
 export type DesignWidgetSize = 'small' | 'medium' | 'large';
+export type DesignComponentSize = 'small' | 'medium' | 'large' | 'full';
 export type DesignKpiSource = 'dashboard_resumen' | 'dashboard_comunas' | 'dashboard_reclamos' | 'dashboard_visitas';
 export type DesignKpiAggregation = 'count' | 'sum' | 'average' | 'max' | 'min';
 export type DesignKpiDatasetScope = 'all' | 'rm' | 'regiones';
@@ -36,6 +37,36 @@ export type DesignChartConfig = {
   size: DesignWidgetSize;
   accent: DesignKpiAccent;
   protected: boolean;
+};
+
+export type DesignComponentId =
+  | 'header'
+  | 'filters'
+  | 'left-kpi-facturacion'
+  | 'left-kpi-reclamos'
+  | 'left-kpi-promedio'
+  | 'main-map'
+  | 'right-summary'
+  | 'card-total-comunas'
+  | 'card-alta-prioridad'
+  | 'card-periodo'
+  | 'card-tickets'
+  | 'chart-facturacion-mensual'
+  | 'chart-top-reclamos'
+  | 'chart-top-facturacion'
+  | 'chart-prioridad'
+  | 'table-evidencia'
+  | 'route-visitador';
+
+export type DesignComponentConfig = {
+  id: DesignComponentId;
+  title: string;
+  subtitle?: string;
+  visible: boolean;
+  order: number;
+  section: DesignSectionId;
+  size: DesignComponentSize;
+  accent?: DesignKpiAccent;
 };
 
 export type DesignWidgetId =
@@ -117,6 +148,7 @@ export type DesignPreset = {
   widgets: DesignWidgetConfig[];
   kpis: DesignKpiConfig[];
   charts: DesignChartConfig[];
+  components: DesignComponentConfig[];
 };
 
 export type DesignConfig = {
@@ -127,4 +159,5 @@ export type DesignConfig = {
   widgets: DesignWidgetConfig[];
   kpis: DesignKpiConfig[];
   charts: DesignChartConfig[];
+  components: DesignComponentConfig[];
 };

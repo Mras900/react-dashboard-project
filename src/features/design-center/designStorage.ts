@@ -4,7 +4,10 @@ import {
   DESIGN_STORAGE_KEY,
   type DesignChartConfig,
   type DesignChartId,
+  type DesignComponentConfig,
+  type DesignComponentId,
   type DesignConfig,
+  type DesignKpiAccent,
   type DesignKpiConfig,
   type DesignKpiId,
   type DesignSectionConfig,
@@ -18,6 +21,7 @@ import { fetchActiveConfig } from './designConfigApi';
 export type ConfigSource = 'backend' | 'localStorage' | 'default';
 import {
   isDesignColorOption,
+  isDesignComponentSize,
   isDesignRadiusOption,
   isDesignSectionId,
   isDesignSpacingMode,
@@ -42,6 +46,7 @@ const widgetIds = new Set<DesignWidgetId>(DEFAULT_DESIGN_PRESET.widgets.map((wid
 const sectionIds = new Set<DesignSectionId>(DEFAULT_DESIGN_PRESET.sections.map((section) => section.id));
 const protectedKpiIds = new Set<DesignKpiId>(DEFAULT_DESIGN_PRESET.kpis.map((kpi) => kpi.id));
 const protectedChartIds = new Set<DesignChartId>(DEFAULT_DESIGN_PRESET.charts.map((chart) => chart.id));
+const componentIds = new Set<DesignComponentId>(DEFAULT_DESIGN_PRESET.components.map((c) => c.id));
 const maxTextLength = 90;
 
 function cleanText(value: unknown, fallback: string) {
@@ -203,6 +208,36 @@ function validateCharts(value: unknown): DesignChartConfig[] | null {
   return [...protectedCharts, ...customCharts];
 }
 
+function validateComponents(value: unknown): DesignComponentConfig[] | null {
+  if (value === undefined) return DEFAULT_DESIGN_PRESET.components.map((c) => ({ ...c }));
+  if (!Array.isArray(value)) return null;
+  const byId = new Map<DesignComponentId, DesignComponentConfig>();
+
+  for (const item of value) {
+    if (!item || typeof item !== 'object') return null;
+    const comp = item as Record<string, unknown>;
+    const id = comp.id as DesignComponentId;
+    if (!componentIds.has(id)) return null;
+
+    const fallback = DEFAULT_DESIGN_PRESET.components.find((pc) => pc.id === id);
+    if (!fallback) return null;
+    const fallbackAccent = 'accent' in fallback ? (fallback as { accent?: string }).accent : undefined;
+
+    byId.set(id, {
+      id,
+      title: cleanText(comp.title, fallback.title),
+      subtitle: typeof comp.subtitle === 'string' ? cleanText(comp.subtitle, fallback.subtitle ?? '') : fallback.subtitle,
+      visible: typeof comp.visible === 'boolean' ? comp.visible : fallback.visible,
+      order: cleanOrder(comp.order, fallback.order),
+      section: isDesignSectionId(comp.section) ? comp.section : fallback.section,
+      size: isDesignComponentSize(comp.size) ? comp.size : fallback.size,
+      accent: isAllowedKpiAccent(comp.accent) ? comp.accent : (fallbackAccent as DesignKpiAccent | undefined),
+    });
+  }
+
+  return DEFAULT_DESIGN_PRESET.components.map((pc) => byId.get(pc.id) ?? { ...pc });
+}
+
 function validateWidgets(value: unknown): DesignWidgetConfig[] | null {
   if (!Array.isArray(value)) return null;
   const byId = new Map<DesignWidgetId, DesignWidgetConfig>();
@@ -241,7 +276,8 @@ export function normalizeDesignConfig(value: unknown): DesignConfig | null {
   const widgets = validateWidgets(config.widgets);
   const kpis = validateKpis(config.kpis);
   const charts = validateCharts(config.charts);
-  if (!tokens || !sections || !widgets || !kpis || !charts) return null;
+  const components = validateComponents(config.components);
+  if (!tokens || !sections || !widgets || !kpis || !charts || !components) return null;
 
   return {
     version: DESIGN_CONFIG_VERSION,
@@ -254,6 +290,7 @@ export function normalizeDesignConfig(value: unknown): DesignConfig | null {
     widgets,
     kpis,
     charts,
+    components,
   };
 }
 
@@ -266,6 +303,7 @@ export function createDefaultDesignConfig(): DesignConfig {
     widgets: DEFAULT_DESIGN_PRESET.widgets.map((widget) => ({ ...widget })),
     kpis: DEFAULT_DESIGN_PRESET.kpis.map((kpi) => ({ ...kpi })),
     charts: DEFAULT_DESIGN_PRESET.charts.map((chart) => ({ ...chart })),
+    components: DEFAULT_DESIGN_PRESET.components.map((c) => ({ ...c })),
   };
 }
 

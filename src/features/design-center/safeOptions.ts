@@ -1,4 +1,4 @@
-import type { DesignColorOption, DesignRadiusOption, DesignSectionId, DesignSpacingMode, DesignWidgetSize } from './designTypes';
+import type { DesignColorOption, DesignComponentSize, DesignRadiusOption, DesignSectionId, DesignSpacingMode, DesignWidgetSize } from './designTypes';
 
 export const sectionOptions: Array<{ value: DesignSectionId; label: string }> = [
   { value: 'hero', label: 'Indicadores principales' },
@@ -11,6 +11,13 @@ export const widgetSizeOptions: Array<{ value: DesignWidgetSize; label: string }
   { value: 'small', label: 'Pequena' },
   { value: 'medium', label: 'Mediana' },
   { value: 'large', label: 'Grande' },
+];
+
+export const componentSizeOptions: Array<{ value: DesignComponentSize; label: string }> = [
+  { value: 'small', label: 'Pequena' },
+  { value: 'medium', label: 'Mediana' },
+  { value: 'large', label: 'Grande' },
+  { value: 'full', label: 'Completo' },
 ];
 
 export const colorOptions: Array<{ value: DesignColorOption; label: string; hex: string }> = [
@@ -100,4 +107,8 @@ export function isDesignSectionId(value: unknown): value is DesignSectionId {
 
 export function isDesignWidgetSize(value: unknown): value is DesignWidgetSize {
   return typeof value === 'string' && widgetSizeOptions.some((option) => option.value === value);
+}
+
+export function isDesignComponentSize(value: unknown): value is DesignComponentSize {
+  return typeof value === 'string' && componentSizeOptions.some((option) => option.value === value);
 }

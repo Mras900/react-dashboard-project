@@ -67,7 +67,7 @@ import { designTokenValues } from '../features/design-center/safeOptions';
 import { ConfigurableKpiCard } from '../features/design-center/ConfigurableKpiCard';
 import { ConfigurableChartCard } from '../features/design-center/ConfigurableChartCard';
 import type { KpiDataSources } from '../features/design-center/kpiCalculations';
-import type { DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
+import type { DesignComponentConfig, DesignComponentId, DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'arqueo' | 'alerts' | 'map' | 'settings' | 'reports' | 'users' | 'help';
@@ -2361,6 +2361,14 @@ const dateFilterError = useMemo(() => {
   }, [activeDesignConfig]);
   const getDesignWidgetLabel = (id: DesignWidgetId, fallback: string) =>
     hasActiveDesignConfig ? (designKpiById.get(id)?.title || designWidgetById.get(id)?.title || fallback) : fallback;
+  const designComponentById = useMemo(() => {
+    if (!activeDesignConfig) return new Map<DesignComponentId, DesignComponentConfig>();
+    return new Map(activeDesignConfig.components.map((c) => [c.id, c]));
+  }, [activeDesignConfig]);
+  const isComponentVisible = (id: DesignComponentId, defaultVisible = true) =>
+    hasActiveDesignConfig ? (designComponentById.get(id)?.visible ?? defaultVisible) : defaultVisible;
+  const getComponentTitle = (id: DesignComponentId, fallback: string) =>
+    hasActiveDesignConfig ? (designComponentById.get(id)?.title || fallback) : fallback;
   const designCssVariables = useMemo<React.CSSProperties | undefined>(() => {
     if (!activeDesignConfig || !hasActiveDesignConfig) return undefined;
     const tokens = activeDesignConfig.tokens;
@@ -2830,6 +2838,7 @@ const dateFilterError = useMemo(() => {
 
       <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col bg-[#F8FAFC] h-screen overflow-hidden p-4 print:ml-0 print:h-auto print:overflow-visible">
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
+          {isComponentVisible('header') ? (
           <TailAdminTopbar
             emptyViewMessage={emptyViewMessage}
             isDarkPremium={dashboardTheme === 'dark-premium'}
@@ -2838,7 +2847,7 @@ const dateFilterError = useMemo(() => {
             onPrintDashboard={printDashboardView}
             onToggleTheme={() => setDashboardTheme((current) => (current === 'dark-premium' ? 'default' : 'dark-premium'))}
             subtitle={activeTab === 'dashboard' && hasActiveDesignConfig ? activeDesignConfig?.texts.dashboardSubtitle ?? 'Inteligencia operativa para decisiones estratégicas' : activeTab === 'dashboard' ? 'Inteligencia operativa para decisiones estratégicas' : 'Gestión del módulo activo'}
-            title={activeTab === 'dashboard' && hasActiveDesignConfig ? activeDesignConfig?.texts.dashboardTitle ?? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : activeTab === 'dashboard' ? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : (navItems.find((item) => item.id === activeTab)?.label ?? 'Visor de Facturación y Reclamos')}
+            title={activeTab === 'dashboard' && hasActiveDesignConfig ? (getComponentTitle('header', activeDesignConfig?.texts.dashboardTitle ?? '') || `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}`) : activeTab === 'dashboard' ? `Visor de Facturación y Reclamos - ${viewMode === 'rm' ? 'RM' : 'Regiones'}` : (navItems.find((item) => item.id === activeTab)?.label ?? 'Visor de Facturación y Reclamos')}
             userMenu={(
               <UserMenu
                 isDarkPremium={dashboardTheme === 'dark-premium'}
@@ -2850,6 +2859,7 @@ const dateFilterError = useMemo(() => {
             )}
             viewMode={viewMode}
           />
+          ) : null}
 
           <div className="flex-1 overflow-y-auto min-h-0 pr-0.5">
           {activeTab === 'dashboard' ? (

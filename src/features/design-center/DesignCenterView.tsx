@@ -1,6 +1,7 @@
 import { useState, type ReactNode } from 'react';
 import { CardSettings } from './CardSettings';
 import { ChartSettings } from './ChartSettings';
+import { ComponentSettings } from './ComponentSettings';
 import { LayoutSettings } from './LayoutSettings';
 import { KpiSettings } from './KpiSettings';
 import type { KpiDataSources } from './kpiCalculations';
@@ -91,6 +92,23 @@ function SourceBadge({ source }: { source: string }) {
   return <span className={`rounded border px-2 py-0.5 text-[10px] font-black uppercase ${cls}`}>{labels[source] ?? source}</span>;
 }
 
+function CollapsibleSection({ title, defaultOpen, children }: { title: string; defaultOpen?: boolean; children: ReactNode }) {
+  const [open, setOpen] = useState(defaultOpen ?? false);
+  return (
+    <div className="rounded-lg border border-slate-200 bg-white">
+      <button
+        className="flex w-full items-center justify-between px-4 py-3 text-left text-xs font-black uppercase text-[#466083] hover:bg-slate-50"
+        onClick={() => setOpen(!open)}
+        type="button"
+      >
+        <span>{title}</span>
+        <span className="text-slate-400">{open ? '▲' : '▼'}</span>
+      </button>
+      {open ? <div className="border-t border-slate-200 p-4">{children}</div> : null}
+    </div>
+  );
+}
+
 export function DesignCenterView({ designConfig, configurableKpiDataSources }: DesignCenterViewProps) {
   const { isAdmin } = useAuth();
   const {
@@ -173,7 +191,7 @@ export function DesignCenterView({ designConfig, configurableKpiDataSources }: D
         <div className="flex flex-wrap items-center justify-between gap-2">
           <div>
             <p className="cc-label-pro">Centro de diseno</p>
-            <h2 className="cc-page-title-pro mt-1">Configuracion visual segura</h2>
+            <h2 className="cc-page-title-pro mt-1">Editor del dashboard real</h2>
           </div>
           {backendInitialized ? (
             <div className="flex items-center gap-2">
@@ -222,10 +240,16 @@ export function DesignCenterView({ designConfig, configurableKpiDataSources }: D
           <SelectField label="Espaciado" onChange={(value) => updateDraft((current) => ({ ...current, tokens: { ...current.tokens, spacingMode: value } }))} options={spacingOptions} value={draftConfig.tokens.spacingMode} />
         </div>
 
-        <KpiSettings designConfig={designConfig} />
-        <ChartSettings designConfig={designConfig} dataSources={configurableKpiDataSources ?? {}} />
+        <ComponentSettings designConfig={designConfig} />
         <LayoutSettings designConfig={designConfig} />
         <CardSettings designConfig={designConfig} />
+
+        <CollapsibleSection title="Avanzado — Constructores de KPI y grafico">
+          <KpiSettings designConfig={designConfig} />
+          <div className="mt-4">
+            <ChartSettings designConfig={designConfig} dataSources={configurableKpiDataSources ?? {}} />
+          </div>
+        </CollapsibleSection>
       </div>
 
       <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4">
