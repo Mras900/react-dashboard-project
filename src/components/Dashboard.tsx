@@ -1189,16 +1189,302 @@ function KpiBuilder({
   );
 }
 
-function BillingView() {
+function BillingView({
+  tableRows,
+  claims,
+  totals,
+  regionByComuna,
+}: {
+  tableRows: TableRow[];
+  claims: DashboardClaim[];
+  totals: { visitas: number; facturacion: number; ticketsUnicos: number };
+  regionByComuna: Map<string, string>;
+}) {
+  type BillingReviewRow = {
+    id: string;
+    ticket: string;
+    cliente: string;
+    comuna: string;
+    region: string;
+    facturacion: number;
+    estado: string;
+    prioridad: string;
+    observacion: string;
+    fecha: string;
+    source: 'detalle' | 'agregado';
+  };
+
+  const [billingSearch, setBillingSearch] = useState('');
+  const [billingPeriod, setBillingPeriod] = useState('all');
+  const [billingRegion, setBillingRegion] = useState('all');
+  const [billingComuna, setBillingComuna] = useState('all');
+  const [billingEstado, setBillingEstado] = useState('all');
+  const [billingPriority, setBillingPriority] = useState('all');
+  const [billingOnlyErrors, setBillingOnlyErrors] = useState(false);
+  const [selectedBillingRow, setSelectedBillingRow] = useState<BillingReviewRow | null>(null);
+
+  const billingRows = useMemo<BillingReviewRow[]>(() => {
+    if (claims.length > 0) {
+      return claims.map((claim, index) => ({
+        id: `${claim.ticket ?? 'sin-ticket'}-${index}`,
+        ticket: claim.ticket?.trim() || `SIN-TICKET-${index + 1}`,
+        cliente: claim.cliente?.trim() || 'Sin cliente',
+        comuna: claim.comuna?.trim() || claim.ciudad?.trim() || '',
+        region: claim.region?.trim() || '',
+        facturacion: Number(claim.facturacion ?? 0),
+        estado: claim.estado_visita?.trim() || '',
+        prioridad: claim.prioridad?.trim() || '',
+        observacion: claim.observacion?.trim() || '',
+        fecha: claim.fecha_visita?.trim() || claim.fecha_recepcion?.trim() || claim.mes?.trim() || '',
+        source: 'detalle',
+      }));
+    }
+
+    return tableRows.map((row, index) => ({
+      id: `agregado-${row.comuna}-${index}`,
+      ticket: `AGREGADO-${index + 1}`,
+      cliente: 'Agregado comunal',
+      comuna: row.comuna,
+      region: regionByComuna.get(normalizeName(row.comuna)) ?? 'Sin región',
+      facturacion: row.facturacion,
+      estado: 'Agregado',
+      prioridad: row.alta > 0 ? 'Alta' : row.media > 0 ? 'Media' : row.baja > 0 ? 'Baja' : '',
+      observacion: `${formatInt(row.visitas)} reclamos agregados`,
+      fecha: 'Periodo filtrado',
+      source: 'agregado',
+    }));
+  }, [claims, regionByComuna, tableRows]);
+
+  const ticketCounts = useMemo(() => {
+    const counts = new Map<string, number>();
+    billingRows.forEach((row) => {
+      const key = normalizeName(row.ticket);
+      if (key && !key.startsWith('agregado-')) counts.set(key, (counts.get(key) ?? 0) + 1);
+    });
+    return counts;
+  }, [billingRows]);
+
+  const positiveBillingValues = billingRows.map((row) => row.facturacion).filter((value) => value > 0);
+  const averagePositiveBilling = positiveBillingValues.length > 0
+    ? positiveBillingValues.reduce((sum, value) => sum + value, 0) / positiveBillingValues.length
+    : 0;
+
+  const getBillingIssues = useCallback((row: BillingReviewRow) => {
+    const issues: Array<{ label: string; tone: 'critical' | 'warning' | 'ok' }> = [];
+    const normalizedStatus = normalizeName(row.estado);
+    const knownStatus = ['pendiente', 'exitosa', 'no_exitosa', 'no exitosa', 'completada', 'completado', 'cerrado', 'cerrada', 'abierto', 'abierta', 'agregado'];
+
+    if (!row.comuna.trim()) issues.push({ label: 'Comuna faltante', tone: 'critical' });
+    if (!row.region.trim() || normalizeName(row.region) === 'sin region' || normalizeName(row.region) === 'sin región') issues.push({ label: 'Región faltante', tone: 'critical' });
+    if (row.facturacion <= 0) issues.push({ label: 'Facturación cero', tone: 'warning' });
+    if (averagePositiveBilling > 0 && row.facturacion > averagePositiveBilling * 5) issues.push({ label: 'Facturación sospechosa', tone: 'warning' });
+    if ((ticketCounts.get(normalizeName(row.ticket)) ?? 0) > 1) issues.push({ label: 'Ticket duplicado', tone: 'critical' });
+    if (!row.prioridad.trim()) issues.push({ label: 'Prioridad faltante', tone: 'warning' });
+    if (row.estado.trim() && !knownStatus.some((status) => normalizedStatus.includes(status))) issues.push({ label: 'Estado inconsistente', tone: 'warning' });
+    if (!row.fecha.trim()) issues.push({ label: 'Registro sin fecha', tone: 'warning' });
+
+    return issues;
+  }, [averagePositiveBilling, ticketCounts]);
+
+  const enrichedRows = useMemo(() => billingRows.map((row) => ({ ...row, issues: getBillingIssues(row) })), [billingRows, getBillingIssues]);
+
+  const filterOptions = useMemo(() => ({
+    periods: ['all', ...new Set(billingRows.map((row) => row.fecha).filter(Boolean))],
+    regions: ['all', ...new Set(billingRows.map((row) => row.region).filter(Boolean))],
+    comunas: ['all', ...new Set(billingRows.map((row) => row.comuna).filter(Boolean))],
+    estados: ['all', ...new Set(billingRows.map((row) => row.estado).filter(Boolean))],
+    prioridades: ['all', ...new Set(billingRows.map((row) => row.prioridad).filter(Boolean))],
+  }), [billingRows]);
+
+  const filteredBillingRows = useMemo(() => {
+    const search = normalizeName(billingSearch);
+    return enrichedRows.filter((row) => {
+      const matchesSearch = !search || [row.ticket, row.cliente, row.comuna, row.region, String(row.facturacion), row.observacion].some((value) => normalizeName(value).includes(search));
+      const matchesPeriod = billingPeriod === 'all' || row.fecha === billingPeriod;
+      const matchesRegion = billingRegion === 'all' || row.region === billingRegion;
+      const matchesComuna = billingComuna === 'all' || row.comuna === billingComuna;
+      const matchesEstado = billingEstado === 'all' || row.estado === billingEstado;
+      const matchesPriority = billingPriority === 'all' || row.prioridad === billingPriority;
+      const matchesErrors = !billingOnlyErrors || row.issues.length > 0;
+      return matchesSearch && matchesPeriod && matchesRegion && matchesComuna && matchesEstado && matchesPriority && matchesErrors;
+    });
+  }, [billingComuna, billingEstado, billingOnlyErrors, billingPeriod, billingPriority, billingRegion, billingSearch, enrichedRows]);
+
+  const qualitySummary = useMemo(() => {
+    const rowsWithWarnings = enrichedRows.filter((row) => row.issues.some((issue) => issue.tone === 'warning')).length;
+    const rowsCritical = enrichedRows.filter((row) => row.issues.some((issue) => issue.tone === 'critical')).length;
+    const duplicateCount = enrichedRows.filter((row) => row.issues.some((issue) => issue.label === 'Ticket duplicado')).length;
+    const missingFields = enrichedRows.reduce((sum, row) => sum + row.issues.filter((issue) => issue.label.includes('faltante') || issue.label === 'Registro sin fecha').length, 0);
+    return {
+      reviewed: enrichedRows.length,
+      ok: enrichedRows.filter((row) => row.issues.length === 0).length,
+      warnings: rowsWithWarnings,
+      critical: rowsCritical,
+      duplicates: duplicateCount,
+      missingFields,
+    };
+  }, [enrichedRows]);
+
+  const billingWithAmount = billingRows.filter((row) => row.facturacion > 0).length;
+  const rowsWithObservation = billingRows.filter((row) => row.observacion.trim()).length;
+  const uniqueTickets = new Set(billingRows.map((row) => normalizeName(row.ticket)).filter(Boolean)).size || totals.ticketsUnicos;
+  const totalBilling = billingRows.reduce((sum, row) => sum + row.facturacion, 0) || totals.facturacion;
+
+  const issueBadgeClass = (tone: 'critical' | 'warning' | 'ok') => {
+    if (tone === 'critical') return 'border-red-400/30 bg-red-500/10 text-red-200';
+    if (tone === 'warning') return 'border-amber-400/30 bg-amber-500/10 text-amber-200';
+    return 'border-emerald-400/30 bg-emerald-500/10 text-emerald-200';
+  };
+
   return (
-    <Panel className="flex min-h-[620px] flex-col items-center justify-center p-10 text-center">
-      <Calculator className="mb-4 text-blue-600" size={44} />
-      <h2 className="text-2xl font-black text-[#071b4d]">Facturación</h2>
-      <p className="mt-2 max-w-md text-sm font-semibold text-[#6b7d98]">Módulo de revisión y corrección de datos en preparación</p>
-    </Panel>
+    <div className="billing-review-premium grid gap-5">
+      <style>{`
+        .billing-review-premium { color: #e2e8f0; }
+        .billing-review-premium .billing-card {
+          background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98));
+          border-color: #22304d;
+          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.22);
+        }
+        .billing-review-premium input,
+        .billing-review-premium select {
+          background: rgba(15, 23, 42, 0.9);
+          border-color: #22304d;
+          color: #f8fafc;
+        }
+        .billing-review-premium input::placeholder { color: #64748b; }
+      `}</style>
+
+      <section className="billing-card rounded-xl border p-5">
+        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
+          <div>
+            <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Facturación</p>
+            <h2 className="mt-2 text-3xl font-black text-white">Facturación</h2>
+            <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">Revisión, validación y corrección de datos cargados</p>
+          </div>
+          <div className="flex flex-wrap gap-2">
+            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 text-sm font-black text-slate-100 disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Download size={16} /> Exportar revisión</button>
+            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-400/30 bg-amber-500/10 px-4 text-sm font-black text-amber-100" onClick={() => setBillingOnlyErrors(true)} type="button"><AlertTriangle size={16} /> Ver inconsistencias</button>
+            <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Pen size={16} /> Actualizar datos</button>
+          </div>
+        </div>
+      </section>
+
+      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-5">
+        {[
+          ['Facturación total', formatCurrency(totalBilling), Calculator],
+          ['Reclamos con facturación', formatInt(billingWithAmount), FileBarChart],
+          ['Registros con observación', formatInt(rowsWithObservation), Eye],
+          ['Posibles inconsistencias', formatInt(qualitySummary.warnings + qualitySummary.critical), AlertTriangle],
+          ['Tickets únicos', formatInt(uniqueTickets), Users],
+        ].map(([label, value, Icon]) => (
+          <article key={String(label)} className="billing-card rounded-xl border p-4">
+            <div className="flex items-center justify-between gap-3">
+              <p className="text-xs font-black uppercase tracking-wide text-slate-400">{String(label)}</p>
+              {React.createElement(Icon as typeof Calculator, { className: 'text-cyan-300', size: 18 })}
+            </div>
+            <p className="mt-3 text-2xl font-black text-white">{String(value)}</p>
+          </article>
+        ))}
+      </section>
+
+      <section className="billing-card rounded-xl border p-4">
+        <div className="grid gap-3 xl:grid-cols-[minmax(260px,1.4fr)_repeat(6,minmax(140px,1fr))]">
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
+            Buscar
+            <input className="h-10 rounded-lg border px-3 text-sm font-semibold" onChange={(event) => setBillingSearch(event.target.value)} placeholder="Ticket, cliente, comuna, región o monto" value={billingSearch} />
+          </label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Periodo<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPeriod(event.target.value)} value={billingPeriod}>{filterOptions.periods.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Región<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingRegion(event.target.value)} value={billingRegion}>{filterOptions.regions.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Comuna<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingComuna(event.target.value)} value={billingComuna}>{filterOptions.comunas.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Estado<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingEstado(event.target.value)} value={billingEstado}>{filterOptions.estados.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Prioridad<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPriority(event.target.value)} value={billingPriority}>{filterOptions.prioridades.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
+          <label className="flex items-end gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs font-black uppercase tracking-wide text-slate-300"><input checked={billingOnlyErrors} onChange={(event) => setBillingOnlyErrors(event.target.checked)} type="checkbox" /> Solo con errores</label>
+        </div>
+      </section>
+
+      {billingRows.length === 0 ? (
+        <section className="billing-card flex min-h-[320px] flex-col items-center justify-center rounded-xl border p-10 text-center">
+          <Calculator className="mb-4 text-cyan-300" size={44} />
+          <h3 className="text-2xl font-black text-white">No hay datos cargados para revisar</h3>
+          <p className="mt-2 max-w-md text-sm font-semibold text-slate-400">Importa datos desde el menú de usuario para habilitar la revisión de facturación</p>
+        </section>
+      ) : (
+        <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
+          <div className="billing-card overflow-hidden rounded-xl border">
+            <div className="border-b border-slate-800 px-4 py-3">
+              <h3 className="text-lg font-black text-white">Registros de facturación</h3>
+              <p className="mt-1 text-xs font-semibold text-slate-400">Vista segura: no guarda cambios ni llama endpoints de escritura.</p>
+            </div>
+            <div className="overflow-x-auto">
+              <table className="w-full min-w-[1180px] text-left text-xs">
+                <thead className="bg-slate-950/80 text-[11px] uppercase text-slate-400">
+                  <tr>{['Ticket', 'Cliente', 'Comuna', 'Región', 'Facturación', 'Estado', 'Prioridad', 'Observación', 'Validación', 'Acción'].map((head) => <th key={head} className="px-4 py-3 font-black">{head}</th>)}</tr>
+                </thead>
+                <tbody className="divide-y divide-slate-800">
+                  {filteredBillingRows.map((row) => (
+                    <tr key={row.id} className="hover:bg-slate-800/50">
+                      <td className="px-4 py-3 font-black text-white">{row.ticket}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-300">{row.cliente}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-300">{row.comuna || 'Sin comuna'}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-300">{row.region || 'Sin región'}</td>
+                      <td className="px-4 py-3 font-black text-cyan-100">{formatCurrency(row.facturacion)}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-300">{row.estado || 'Sin estado'}</td>
+                      <td className="px-4 py-3 font-semibold text-slate-300">{row.prioridad || 'Sin prioridad'}</td>
+                      <td className="max-w-[220px] truncate px-4 py-3 font-semibold text-slate-400">{row.observacion || 'Sin observación'}</td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-1.5">
+                          {row.issues.length > 0 ? row.issues.map((issue) => <span key={issue.label} className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass(issue.tone)}`}>{issue.label}</span>) : <span className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass('ok')}`}>OK</span>}
+                        </div>
+                      </td>
+                      <td className="px-4 py-3">
+                        <div className="flex flex-wrap gap-2">
+                          <button className="rounded-md border border-slate-700 px-2 py-1 text-[11px] font-black text-slate-100" onClick={() => setSelectedBillingRow(row)} type="button">Revisar</button>
+                          <button className="rounded-md border border-slate-800 px-2 py-1 text-[11px] font-black text-slate-500" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver dashboard</button>
+                          <button className="rounded-md border border-slate-800 px-2 py-1 text-[11px] font-black text-slate-500" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver mapa</button>
+                          <button className="rounded-md border border-slate-800 px-2 py-1 text-[11px] font-black text-slate-500" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Pendiente</button>
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {filteredBillingRows.length === 0 ? <div className="p-8 text-center text-sm font-bold text-slate-400">Sin registros para filtros actuales.</div> : null}
+            </div>
+          </div>
+
+          <aside className="grid gap-4 self-start">
+            <section className="billing-card rounded-xl border p-4">
+              <h3 className="text-lg font-black text-white">Calidad de datos</h3>
+              <div className="mt-4 grid gap-3 text-sm">
+                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Total revisados</span><span className="font-black text-white">{formatInt(qualitySummary.reviewed)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Registros OK</span><span className="font-black text-emerald-200">{formatInt(qualitySummary.ok)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Advertencias</span><span className="font-black text-amber-200">{formatInt(qualitySummary.warnings)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Críticos</span><span className="font-black text-red-200">{formatInt(qualitySummary.critical)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Duplicados</span><span className="font-black text-red-200">{formatInt(qualitySummary.duplicates)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Campos faltantes</span><span className="font-black text-amber-200">{formatInt(qualitySummary.missingFields)}</span></div>
+              </div>
+            </section>
+
+            <section className="billing-card rounded-xl border p-4">
+              <h3 className="text-lg font-black text-white">Detalle seguro</h3>
+              {selectedBillingRow ? (
+                <div className="mt-3 grid gap-2 text-sm font-semibold text-slate-300">
+                  <p><span className="text-slate-500">Ticket:</span> {selectedBillingRow.ticket}</p>
+                  <p><span className="text-slate-500">Cliente:</span> {selectedBillingRow.cliente}</p>
+                  <p><span className="text-slate-500">Ubicación:</span> {selectedBillingRow.comuna || 'Sin comuna'} · {selectedBillingRow.region || 'Sin región'}</p>
+                  <p><span className="text-slate-500">Facturación:</span> {formatCurrency(selectedBillingRow.facturacion)}</p>
+                  <p className="rounded-lg border border-blue-400/20 bg-blue-500/10 p-3 text-xs font-black text-blue-100">Corrección persistente pendiente de endpoint seguro</p>
+                </div>
+              ) : (
+                <p className="mt-3 text-sm font-semibold text-slate-400">Selecciona Revisar en una fila para ver detalle visual.</p>
+              )}
+            </section>
+          </aside>
+        </section>
+      )}
+    </div>
   );
 }
-
 function SettingsView({
   kpiDraft,
   setKpiDraft,
@@ -3201,7 +3487,7 @@ const dateFilterError = useMemo(() => {
           ) : activeTab === 'ruta' ? (
             <ProtectedView viewKey="ruta"><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></ProtectedView>
           ) : activeTab === 'billing' ? (
-            <ProtectedView viewKey="dashboard"><BillingView /></ProtectedView>
+            <ProtectedView viewKey="dashboard"><BillingView tableRows={tableRows} claims={databaseDashboardData?.reclamos ?? []} totals={totals} regionByComuna={regionByComuna} /></ProtectedView>
           ) : activeTab === 'settings' ? (
             <ProtectedView viewKey="configuracion">
               <SettingsView
@@ -3253,6 +3539,8 @@ function TrendingUpIcon() {
     </svg>
   );
 }
+
+
 
 
 
