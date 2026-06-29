@@ -1493,9 +1493,11 @@ function SettingsView({
   setCustomKpis,
   tableRows,
   totals,
-  canViewReports,
   designConfig,
   configurableKpiDataSources,
+  onOpenImport,
+  canOpenImport,
+  canManageUsers,
 }: {
   kpiDraft: Omit<CustomKpi, 'id'>;
   setKpiDraft: React.Dispatch<React.SetStateAction<Omit<CustomKpi, 'id'>>>;
@@ -1504,36 +1506,205 @@ function SettingsView({
   setCustomKpis: React.Dispatch<React.SetStateAction<CustomKpi[]>>;
   tableRows: TableRow[];
   totals: { visitas: number; facturacion: number };
-  canViewReports: boolean;
   designConfig: ReturnType<typeof useDesignConfig>;
   configurableKpiDataSources?: KpiDataSources;
+  onOpenImport: () => void;
+  canOpenImport: boolean;
+  canManageUsers: boolean;
 }) {
+  type SettingsSection = 'home' | 'design' | 'kpis' | 'charts' | 'import' | 'users' | 'preferences';
+  const [activeSettingsSection, setActiveSettingsSection] = useState<SettingsSection>('home');
+  const openSection = (section: SettingsSection) => setActiveSettingsSection(section);
+
+  const settingsPremiumStyles = (
+    <style>{`
+      .settings-control-premium { color: #e2e8f0; }
+      .settings-control-premium .settings-control-card,
+      .settings-control-premium > section,
+      .settings-control-premium section.rounded-lg {
+        background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98)) !important;
+        border-color: #22304d !important;
+        color: #e2e8f0 !important;
+        box-shadow: 0 18px 44px rgba(2, 6, 23, 0.22);
+      }
+      .settings-control-premium h2,
+      .settings-control-premium h3,
+      .settings-control-premium .text-\[\#071b4d\] { color: #f8fafc !important; }
+      .settings-control-premium p,
+      .settings-control-premium .text-slate-600,
+      .settings-control-premium .text-\[\#6b7d98\] { color: #94a3b8 !important; }
+    `}</style>
+  );
+
+  const BackButton = ({ label = 'Volver a Configuraciones' }: { label?: string }) => (
+    <button
+      className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 text-sm font-black text-slate-100 transition hover:bg-slate-900"
+      onClick={() => setActiveSettingsSection('home')}
+      type="button"
+    >
+      <ChevronsLeft size={16} />
+      {label}
+    </button>
+  );
+
+  const settingsCards: Array<{ id: SettingsSection; title: string; description: string; icon: typeof Grid2X2; accent: string; enabled: boolean; badge?: string }> = [
+    { id: 'design', title: 'Centro de diseño', description: 'Apariencia, textos y layout del dashboard', icon: Grid2X2, accent: 'text-cyan-300 bg-cyan-400/10 border-cyan-400/20', enabled: true },
+    { id: 'kpis', title: 'KPIs personalizados', description: 'Crear, editar y ordenar indicadores', icon: Calculator, accent: 'text-emerald-300 bg-emerald-400/10 border-emerald-400/20', enabled: true },
+    { id: 'charts', title: 'Gráficos personalizados', description: 'Constructor y biblioteca de gráficos', icon: FileBarChart, accent: 'text-blue-300 bg-blue-400/10 border-blue-400/20', enabled: true, badge: 'Centro de diseño' },
+    { id: 'import', title: 'Importador de datos', description: 'Carga Excel / CSV para RM y Regiones', icon: Download, accent: 'text-amber-300 bg-amber-400/10 border-amber-400/20', enabled: canOpenImport, badge: canOpenImport ? undefined : 'Sin permiso' },
+    { id: 'users', title: 'Usuarios y permisos', description: 'Administración de accesos del sistema', icon: UserCog, accent: 'text-violet-300 bg-violet-400/10 border-violet-400/20', enabled: canManageUsers, badge: canManageUsers ? undefined : 'Sin permiso' },
+    { id: 'preferences', title: 'Preferencias del sistema', description: 'Configuración visual y comportamiento general', icon: ShieldCheck, accent: 'text-slate-200 bg-slate-400/10 border-slate-400/20', enabled: true },
+  ];
+
+  const renderSectionHeader = (title: string, description: string) => (
+    <Panel className="settings-control-card rounded-xl border p-5">
+      <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Configuraciones</p>
+          <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
+          <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">{description}</p>
+        </div>
+        <BackButton />
+      </div>
+    </Panel>
+  );
+
+  if (activeSettingsSection === 'design') {
+    return (
+      <div className="settings-control-premium grid gap-4">
+        {settingsPremiumStyles}
+        {renderSectionHeader('Centro de diseño', 'Apariencia, textos y layout del dashboard')}
+        <DesignCenterView designConfig={designConfig} configurableKpiDataSources={configurableKpiDataSources} />
+      </div>
+    );
+  }
+
+  if (activeSettingsSection === 'kpis') {
+    return (
+      <div className="settings-control-premium grid gap-4">
+        {settingsPremiumStyles}
+        {renderSectionHeader('KPIs personalizados', 'Crear, editar y ordenar indicadores')}
+        <KpiBuilder
+          kpiDraft={kpiDraft}
+          setKpiDraft={setKpiDraft}
+          customKpis={customKpis}
+          addCustomKpi={addCustomKpi}
+          setCustomKpis={setCustomKpis}
+          tableRows={tableRows}
+          totals={totals}
+        />
+      </div>
+    );
+  }
+
+  if (activeSettingsSection === 'charts') {
+    return (
+      <div className="settings-control-premium grid gap-4">
+        {settingsPremiumStyles}
+        {renderSectionHeader('Gráficos personalizados', 'Constructor y biblioteca de gráficos disponibles desde configuración visual')}
+        <Panel className="settings-control-card rounded-xl border p-6">
+          <div className="flex items-start gap-4">
+            <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10 text-blue-300"><FileBarChart size={24} /></span>
+            <div>
+              <h3 className="text-xl font-black text-white">Configuración de gráficos</h3>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-400">Los gráficos configurables existentes se administran desde Centro de diseño. No se crea constructor nuevo ni se mueve Reportes a Configuraciones.</p>
+              <button className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white" onClick={() => openSection('design')} type="button">Abrir Centro de diseño</button>
+            </div>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+
+  if (activeSettingsSection === 'import') {
+    return (
+      <div className="settings-control-premium grid gap-4">
+        {settingsPremiumStyles}
+        {renderSectionHeader('Importador de datos', 'Carga Excel / CSV para RM y Regiones')}
+        <Panel className="settings-control-card rounded-xl border p-6">
+          <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
+            <div>
+              <h3 className="text-xl font-black text-white">Importador existente</h3>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-400">La carga sigue usando el modal actual del menú de usuario. No se toca DataImportModal ni normalizadores.</p>
+            </div>
+            <button className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!canOpenImport} onClick={onOpenImport} type="button">
+              <Download size={16} /> Abrir importador
+            </button>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+
+  if (activeSettingsSection === 'users' && canManageUsers) {
+    return (
+      <div className="settings-control-premium grid gap-4">
+        {settingsPremiumStyles}
+        {renderSectionHeader('Usuarios y permisos', 'Administración de accesos del sistema')}
+        <UserManagementView />
+      </div>
+    );
+  }
+
+  if (activeSettingsSection === 'preferences') {
+    return (
+      <div className="settings-control-premium grid gap-4">
+        {settingsPremiumStyles}
+        {renderSectionHeader('Preferencias del sistema', 'Configuración visual y comportamiento general')}
+        <Panel className="settings-control-card rounded-xl border p-6">
+          <div className="grid gap-4 md:grid-cols-2">
+            <article className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+              <h3 className="text-lg font-black text-white">Apariencia</h3>
+              <p className="mt-2 text-sm font-semibold text-slate-400">Tema, textos, widgets y layout se gestionan en Centro de diseño.</p>
+              <button className="mt-4 rounded-lg border border-slate-700 px-4 py-2 text-sm font-black text-slate-100" onClick={() => openSection('design')} type="button">Abrir diseño</button>
+            </article>
+            <article className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
+              <h3 className="text-lg font-black text-white">Indicadores</h3>
+              <p className="mt-2 text-sm font-semibold text-slate-400">KPIs personalizados se mantienen en su constructor actual.</p>
+              <button className="mt-4 rounded-lg border border-slate-700 px-4 py-2 text-sm font-black text-slate-100" onClick={() => openSection('kpis')} type="button">Abrir KPIs</button>
+            </article>
+          </div>
+        </Panel>
+      </div>
+    );
+  }
+
   return (
-    <div className="grid gap-4">
-      <Panel className="p-4">
-        <h2 className="text-xl font-bold text-[#071b4d]">Configuraciones</h2>
-        <p className="mt-1 text-sm font-medium text-slate-600">
-          Administra indicadores personalizados y vistas guardadas sin alterar el dashboard principal.
-        </p>
+    <div className="settings-control-premium grid gap-5">
+      {settingsPremiumStyles}
+      <Panel className="settings-control-card rounded-xl border p-5">
+        <div>
+          <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Centro de control</p>
+          <h2 className="mt-2 text-3xl font-black text-white">Configuraciones</h2>
+          <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">Centro de control del sistema</p>
+          <p className="mt-2 max-w-4xl text-sm font-medium text-slate-500">Administra apariencia, KPIs, gráficos, importación y preferencias del dashboard.</p>
+        </div>
       </Panel>
 
-      <DesignCenterView designConfig={designConfig} configurableKpiDataSources={configurableKpiDataSources} />
-
-      <KpiBuilder
-        kpiDraft={kpiDraft}
-        setKpiDraft={setKpiDraft}
-        customKpis={customKpis}
-        addCustomKpi={addCustomKpi}
-        setCustomKpis={setCustomKpis}
-        tableRows={tableRows}
-        totals={totals}
-      />
-
-      {canViewReports ? <ReportsView rmRows={tableRows} /> : null}
+      <section className="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
+        {settingsCards.filter((card) => card.enabled || card.id === 'import' || card.id === 'users').map((card) => {
+          const Icon = card.icon;
+          return (
+            <button
+              key={card.id}
+              className={`settings-control-card min-h-[190px] rounded-xl border p-5 text-left transition hover:-translate-y-0.5 hover:border-blue-500/60 disabled:cursor-not-allowed disabled:opacity-60 ${card.enabled ? '' : 'grayscale'}`}
+              disabled={!card.enabled}
+              onClick={() => openSection(card.id)}
+              type="button"
+            >
+              <div className="flex items-start justify-between gap-3">
+                <span className={`flex h-12 w-12 items-center justify-center rounded-xl border ${card.accent}`}><Icon size={23} /></span>
+                {card.badge ? <span className="rounded-full border border-slate-700 bg-slate-950/70 px-2.5 py-1 text-[10px] font-black uppercase text-slate-400">{card.badge}</span> : null}
+              </div>
+              <h3 className="mt-5 text-xl font-black text-white">{card.title}</h3>
+              <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-400">{card.description}</p>
+            </button>
+          );
+        })}
+      </section>
     </div>
   );
 }
-
 function DashboardSlot({
   widgets,
   id,
@@ -3498,9 +3669,11 @@ const dateFilterError = useMemo(() => {
                 setCustomKpis={setCustomKpis}
                 tableRows={tableRows}
                 totals={totals}
-                canViewReports={hasPermission('reportes')}
                 designConfig={designConfig}
                 configurableKpiDataSources={configurableKpiDataSources}
+                onOpenImport={() => setShowImportModal(true)}
+                canOpenImport={hasPermission('importaciones')}
+                canManageUsers={hasPermission('usuarios')}
               />
             </ProtectedView>
           ) : activeTab === 'reports' ? (
@@ -3539,6 +3712,11 @@ function TrendingUpIcon() {
     </svg>
   );
 }
+
+
+
+
+
 
 
 
