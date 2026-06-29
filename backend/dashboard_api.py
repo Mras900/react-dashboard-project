@@ -542,6 +542,34 @@ def _next_version(db: Session) -> int:
     return (latest or 0) + 1
 
 
+def extract_visual_config(payload: dict) -> dict:
+    """Extract visual config from payload supporting multiple formats.
+
+    Accepts:
+    - {"name": "...", "config": {...}}        → wrapper format
+    - {"name": "...", "config_json": {...}}   → legacy format
+    - {"version": 1, "texts": {...}, ...}      → direct config format
+    """
+    if isinstance(payload.get("config"), dict):
+        config = payload["config"]
+    elif isinstance(payload.get("config_json"), dict):
+        config = payload["config_json"]
+    elif isinstance(payload.get("version"), int):
+        config = payload
+    elif isinstance(payload, dict) and "version" not in payload and "texts" not in payload:
+        raise HTTPException(status_code=422, detail="config es requerido (como campo 'config', 'config_json' o directamente)")
+    else:
+        config = payload
+
+    if not isinstance(config, dict):
+        raise HTTPException(status_code=422, detail="config debe ser un objeto JSON")
+
+    if not isinstance(config.get("version"), int):
+        config["version"] = 1
+
+    return config
+
+
 @router.get("/api/config/dashboard-visual")
 def get_active_config(
     db: Session = Depends(get_db),
@@ -560,15 +588,16 @@ def get_active_config(
 
 @router.post("/api/config/dashboard-visual/draft")
 def save_draft(
-    name: str = "",
-    config: dict = Body(...),
+    payload: dict = Body(...),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     """Save draft config. Admin only."""
+    config = extract_visual_config(payload)
     validated = _validate_config_body(config)
+    name = payload.get("name", "") or "Borrador"
     draft = DashboardVisualConfig(
-        name=name or "Borrador",
+        name=name,
         config_json=validated,
         is_active=False,
         is_draft=True,
@@ -583,12 +612,12 @@ def save_draft(
 
 @router.post("/api/config/dashboard-visual/publish")
 def publish_config(
-    name: str = "",
-    config: dict = Body(...),
+    payload: dict = Body(...),
     db: Session = Depends(get_db),
     admin: User = Depends(require_admin),
 ) -> dict[str, Any]:
     """Validate, deactivate previous active, create new active version. Admin only."""
+    config = extract_visual_config(payload)
     validated = _validate_config_body(config)
 
     current_active = db.scalar(
@@ -599,8 +628,9 @@ def publish_config(
     if current_active is not None:
         current_active.is_active = False
 
+    name = payload.get("name", "") or "Configuracion publicada"
     published = DashboardVisualConfig(
-        name=name or "Configuracion publicada",
+        name=name,
         config_json=validated,
         is_active=True,
         is_draft=False,
@@ -687,8 +717,8 @@ def _validate_config_body(config: dict) -> dict:
             raise HTTPException(status_code=422, detail=f"Clave no permitida: {key}")
 
     version = config.get("version")
-    if version is None or not isinstance(version, int):
-        raise HTTPException(status_code=422, detail="config.version es requerido y debe ser entero.")
+    if not isinstance(version, int):
+        config["version"] = 1
 
     _validate_texts(config.get("texts"))
     _validate_sections(config.get("sections"))

@@ -57,19 +57,27 @@ export function fetchActiveConfig(): Promise<ConfigApiResult<BackendConfigRespon
   return fetchJson<BackendConfigResponse>('/api/config/dashboard-visual');
 }
 
+function normalizeForBackend(config: Record<string, unknown>): Record<string, unknown> {
+  const normalized = { ...config };
+  if (!Number.isInteger(normalized.version)) {
+    normalized.version = 1;
+  }
+  return normalized;
+}
+
 export function saveDraftConfig(config: Record<string, unknown>, name?: string): Promise<ConfigApiResult<BackendConfigVersion>> {
-  const qs = name ? `?name=${encodeURIComponent(name)}` : '';
-  return fetchJson<BackendConfigVersion>(`/api/config/dashboard-visual/draft${qs}`, {
+  const safeConfig = normalizeForBackend(config);
+  return fetchJson<BackendConfigVersion>('/api/config/dashboard-visual/draft', {
     method: 'POST',
-    body: JSON.stringify(config),
+    body: JSON.stringify({ name: name ?? 'Borrador', config: safeConfig }),
   });
 }
 
 export function publishConfig(config: Record<string, unknown>, name?: string): Promise<ConfigApiResult<BackendConfigVersion>> {
-  const qs = name ? `?name=${encodeURIComponent(name)}` : '';
-  return fetchJson<BackendConfigVersion>(`/api/config/dashboard-visual/publish${qs}`, {
+  const safeConfig = normalizeForBackend(config);
+  return fetchJson<BackendConfigVersion>('/api/config/dashboard-visual/publish', {
     method: 'POST',
-    body: JSON.stringify(config),
+    body: JSON.stringify({ name: name ?? 'Dashboard visual', config: safeConfig }),
   });
 }
 
