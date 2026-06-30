@@ -160,6 +160,7 @@ const DEFAULT_FILTERS: DashboardFilters = {
   status: 'todos',
   location: 'all',
 };
+const SIDEBAR_COLLAPSED_STORAGE_KEY = 'dashboard-sidebar-collapsed';
 // THEME_STORAGE_KEY moved to src/lib/theme.ts as THEME_KEY — import from there
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
@@ -1574,7 +1575,7 @@ function SettingsView({
       .dark .settings-control-premium > section,
       .dark .settings-control-premium section.rounded-lg {
         background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98)) !important;
-        border-color: #22304d !important;
+        border-color: rgba(148, 163, 184, 0.14) !important;
         color: #e2e8f0 !important;
         box-shadow: 0 18px 44px rgba(2, 6, 23, 0.22);
       }
@@ -1860,7 +1861,7 @@ function DailyOperationSummary({
         </button>
       </div>
 
-      <div className="cc-stat-grid grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
+      <div className="cc-stat-grid grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4">
         {routeKpis.map((item) => {
           const content = (
             <>
@@ -1870,7 +1871,7 @@ function DailyOperationSummary({
           );
           return item.action ? (
             <button
-              className="cc-kpi-card cc-card rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:border-blue-400/60"
+              className="cc-daily-kpi-card cc-kpi-card cc-card min-h-[82px] rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-blue-400/60"
               key={item.label}
               onClick={item.action}
               type="button"
@@ -1878,7 +1879,7 @@ function DailyOperationSummary({
               {content}
             </button>
           ) : (
-            <div className="cc-kpi-card cc-card rounded-xl border p-3" key={item.label}>
+            <div className="cc-daily-kpi-card cc-kpi-card cc-card min-h-[82px] rounded-xl border p-4" key={item.label}>
               {content}
             </div>
           );
@@ -2068,6 +2069,10 @@ export default function Dashboard() {
   const [importedRows, setImportedRows] = useState<{ rm: ImportedDashboardRow[]; regiones: ImportedDashboardRow[] }>(loadImportedDashboardRows);
 
   const [activeTab, setActiveTab] = useState<ActiveTab>('dashboard');
+  const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    return window.localStorage.getItem(SIDEBAR_COLLAPSED_STORAGE_KEY) === 'true';
+  });
   const [viewMode, setViewMode] = useState<'rm' | 'regiones'>('rm');
   const [filters, setFilters] = useState<DashboardFilters>(DEFAULT_FILTERS);
   const [dateFilterMode, setDateFilterMode] = useState<DateFilterMode>('month');
@@ -2222,7 +2227,11 @@ export default function Dashboard() {
     applyDashboardTheme(dashboardTheme);
   }, [dashboardTheme]);
 
-useEffect(() => {
+  useEffect(() => {
+    window.localStorage.setItem(SIDEBAR_COLLAPSED_STORAGE_KEY, String(isSidebarCollapsed));
+  }, [isSidebarCollapsed]);
+
+  useEffect(() => {
     const controller = new AbortController();
 
     Promise.all(
@@ -3369,6 +3378,9 @@ const dateFilterError = useMemo(() => {
       })
     : configuredDashboardWidgets;
 
+  const sidebarWidthClass = isSidebarCollapsed ? 'w-20' : 'w-64';
+  const mainOffsetClass = isSidebarCollapsed ? 'ml-20' : 'ml-64';
+
   return (
     <div className={`cc-shell flex h-screen font-sans text-[var(--text-main)] ${hasActiveDesignConfig ? 'cc-design-active' : ''}`} style={designCssVariables}>
       <style>{`
@@ -3417,7 +3429,7 @@ const dateFilterError = useMemo(() => {
         }
         .dark .cc-dashboard-filter-panel {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
-          border-color: #22304d !important;
+          border-color: rgba(148, 163, 184, 0.14) !important;
           color: #e2e8f0 !important;
           box-shadow: 0 18px 44px rgba(2, 6, 23, 0.18);
         }
@@ -3446,7 +3458,7 @@ const dateFilterError = useMemo(() => {
         .dark .cc-dashboard-filter-panel .cc-filter,
         .dark .cc-dashboard-filter-panel label {
           background: rgba(15, 23, 42, 0.86) !important;
-          border-color: #22304d !important;
+          border-color: rgba(148, 163, 184, 0.14) !important;
           color: #94a3b8 !important;
         }
         .cc-dashboard-filter-panel select,
@@ -3481,7 +3493,7 @@ const dateFilterError = useMemo(() => {
         .dark .cc-dashboard-premium .cc-kpi-card-pro,
         .dark .cc-dashboard-premium .cc-card {
           background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
-          border-color: #22304d !important;
+          border-color: rgba(148, 163, 184, 0.14) !important;
           color: #e2e8f0 !important;
           box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
         }
@@ -3493,7 +3505,7 @@ const dateFilterError = useMemo(() => {
         .dark .cc-dashboard-premium .cc-map-header,
         .dark .cc-dashboard-premium #dashboard-evidence-section .border-b,
         .dark .cc-dashboard-premium #dashboard-evidence-section .border-t {
-          border-color: #22304d !important;
+          border-color: rgba(148, 163, 184, 0.14) !important;
         }
         .cc-dashboard-premium .cc-section-title,
         .cc-dashboard-premium .cc-chart-title,
@@ -3527,6 +3539,32 @@ const dateFilterError = useMemo(() => {
         .cc-dashboard-premium .cc-map-panel {
           border-radius: 16px;
         }
+        .dark .cc-shell,
+        .dark .cc-main {
+          background: #07111f !important;
+        }
+        .cc-dashboard-premium .cc-daily-kpi-card {
+          background: #f8fafc !important;
+          border-color: #cbd5e1 !important;
+        }
+        .dark .cc-dashboard-premium .cc-daily-kpi-card {
+          background: rgba(15, 23, 42, 0.82) !important;
+          border-color: rgba(148, 163, 184, 0.14) !important;
+          box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03), 0 14px 30px rgba(2, 6, 23, 0.18) !important;
+        }
+        .cc-dashboard-premium .cc-daily-kpi-card .cc-kpi-label {
+          color: #64748b !important;
+          line-height: 1.2;
+          white-space: normal;
+        }
+        .dark .cc-dashboard-premium .cc-daily-kpi-card .cc-kpi-label {
+          color: #93a4b8 !important;
+        }
+        .cc-dashboard-premium .cc-daily-kpi-card .cc-kpi-value {
+          font-size: clamp(1.05rem, 1.4vw, 1.35rem);
+          line-height: 1.15;
+          word-break: break-word;
+        }
         @media print {
           body { background: #ffffff; }
           .no-print { display: none !important; }
@@ -3534,15 +3572,17 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-main)] bg-[var(--bg-card)] py-4 dark:border-[#22304D] dark:bg-[#0B1020]">
-        <div className="flex items-center gap-3 px-4 mb-8">
+      <aside className={`cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex ${sidebarWidthClass} flex-col border-r border-[rgba(148,163,184,0.14)] bg-[#07111f] py-4 text-slate-100 shadow-2xl shadow-black/25 transition-[width] duration-300 ease-out`}>
+        <div className={`mb-6 flex items-center gap-3 px-4 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
             <Navigation size={22} />
           </div>
-          <div className="min-w-0">
-            <p className="text-sm font-black text-[var(--text-main)]">Visor</p>
-            <p className="truncate text-[10px] font-semibold text-[var(--cc-muted)]">Facturacion y Reclamos</p>
-          </div>
+          {!isSidebarCollapsed ? (
+            <div className="min-w-0">
+              <p className="text-sm font-black text-[#e5edf8]">Visor</p>
+              <p className="truncate text-[10px] font-semibold text-[#93a4b8]">Facturacion y Reclamos</p>
+            </div>
+          ) : null}
         </div>
 
         <nav className="flex flex-col gap-1 px-3">
@@ -3553,18 +3593,20 @@ const dateFilterError = useMemo(() => {
               <button
                 key={item.id}
                 aria-label={item.label}
+                title={isSidebarCollapsed ? item.label : undefined}
                 data-active={activeTab === item.id ? "true" : "false"}
-                className={"flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-bold transition " + (
+                className={`relative flex h-10 items-center rounded-lg text-sm font-bold transition ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${
                   activeTab === item.id
-                    ? "bg-[#2563EB]/10 text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-300"
-                    : "text-[var(--cc-muted)] hover:bg-[var(--bg-main)] hover:text-[var(--text-main)]"
-                )}
+                    ? 'bg-blue-600/20 text-[#e5edf8] ring-1 ring-blue-400/35 shadow-lg shadow-blue-950/20'
+                    : 'text-[#93a4b8] hover:bg-white/[0.06] hover:text-[#e5edf8]'
+                }`}
                 onClick={() => setActiveTab(item.id)}
                 type="button"
               >
                 <Icon size={19} className="shrink-0" />
-                <span className="truncate">{item.label}</span>
-                {item.badge ? <span className="ml-auto h-2 w-2 rounded-full bg-red-500" /> : null}
+                {!isSidebarCollapsed ? <span className="truncate">{item.label}</span> : null}
+                {!isSidebarCollapsed && item.badge ? <span className="ml-auto h-2 w-2 rounded-full bg-red-500" /> : null}
+                {isSidebarCollapsed && item.badge ? <span className="absolute right-2 top-2 h-2 w-2 rounded-full bg-red-500" /> : null}
               </button>
             );
           })}
@@ -3578,38 +3620,50 @@ const dateFilterError = useMemo(() => {
               <button
                 key={item.id}
                 aria-label={item.label}
+                title={isSidebarCollapsed ? item.label : undefined}
                 data-active={activeTab === item.id ? "true" : "false"}
-                className={"flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-bold transition " + (
+                className={`flex h-10 items-center rounded-lg text-sm font-bold transition ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${
                   activeTab === item.id
-                    ? "bg-[#2563EB]/10 text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-300"
-                    : "text-[var(--cc-muted)] hover:bg-[var(--bg-main)] hover:text-[var(--text-main)]"
-                )}
+                    ? 'bg-blue-600/20 text-[#e5edf8] ring-1 ring-blue-400/35'
+                    : 'text-[#93a4b8] hover:bg-white/[0.06] hover:text-[#e5edf8]'
+                }`}
                 onClick={() => setActiveTab(item.id)}
                 type="button"
               >
                 <Icon size={19} className="shrink-0" />
-                <span className="truncate">{item.label}</span>
+                {!isSidebarCollapsed ? <span className="truncate">{item.label}</span> : null}
               </button>
             );
           })}
+          <button
+            aria-label={isSidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+            className={`mt-2 flex h-10 items-center rounded-lg border border-white/10 bg-white/[0.04] text-sm font-black text-[#93a4b8] transition hover:border-blue-400/35 hover:bg-blue-500/10 hover:text-[#e5edf8] ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'}`}
+            onClick={() => setIsSidebarCollapsed((current) => !current)}
+            title={isSidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
+            type="button"
+          >
+            <ChevronsLeft className={`shrink-0 transition-transform ${isSidebarCollapsed ? 'rotate-180' : ''}`} size={19} />
+            {!isSidebarCollapsed ? <span>Colapsar</span> : null}
+          </button>
           {isAdmin ? (
             <button
-              className={"mt-1 flex h-10 w-10 items-center justify-center rounded-full border-2 transition " + (
-                activeTab === "settings"
-                  ? "border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-200"
-                  : "border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] hover:border-blue-300 hover:text-blue-600 dark:border-[var(--border-main)] dark:bg-slate-900 dark:text-[var(--text-main)] dark:hover:border-blue-500 dark:hover:text-blue-200"
-              )}
-              onClick={() => setActiveTab("settings")}
+              className={`mt-1 flex h-10 items-center rounded-lg border border-white/10 text-sm font-bold transition ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${
+                activeTab === 'settings'
+                  ? 'bg-blue-600/20 text-[#e5edf8] ring-1 ring-blue-400/35'
+                  : 'bg-white/[0.04] text-[#93a4b8] hover:bg-white/[0.06] hover:text-[#e5edf8]'
+              }`}
+              onClick={() => setActiveTab('settings')}
               type="button"
               aria-label="Configuracion"
+              title={isSidebarCollapsed ? 'Configuracion' : undefined}
             >
-              <UserCog size={19} />
+              <UserCog size={19} className="shrink-0" />
+              {!isSidebarCollapsed ? <span>Configuracion</span> : null}
             </button>
           ) : null}
         </div>
       </aside>
-
-      <main className="cc-main cc-page print-full ml-64 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[var(--bg-main)] p-4 text-[var(--text-main)] dark:bg-[#070B14] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible">
+      <main className={`cc-main cc-page print-full ${mainOffsetClass} flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[var(--bg-main)] p-4 text-[var(--text-main)] transition-[margin-left] duration-300 ease-out dark:bg-[#07111f] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible`}>
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
           {activeTab !== 'ruta' && isComponentVisible('header') ? (
           <TailAdminTopbar
