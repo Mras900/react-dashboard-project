@@ -7,6 +7,7 @@ import { ChartBuilder } from './ChartBuilder';
 import { useSavedCharts } from './useSavedCharts';
 import { MonthlyReportGenerator } from './MonthlyReportGenerator';
 import { SimilarClaimsPanel } from '../ai/SimilarClaimsPanel';
+import { AiAssistantPanel } from '../ai/AiAssistantPanel';
 
 type Props = {
   rmRows: Record<string, unknown>[];
@@ -274,6 +275,18 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
             </div>
           </div>
         </article>
+      </section>
+
+      <section className="grid gap-3">
+        <div>
+          <p className="text-xs font-black uppercase tracking-wide text-cyan-300">Asistente IA</p>
+          <h3 className="text-xl font-black text-white">Asistente IA de reportes</h3>
+        </div>
+        <AiAssistantPanel
+          title="Asistente IA de reportes"
+          subtitle="Genera análisis, resúmenes e informes usando la información filtrada del dashboard"
+          context={`Reportes. Reclamos analizados: ${formatNumber(reportStats.totalClaims)}. RM: ${formatNumber(reportStats.rmClaims)}. Regiones: ${formatNumber(reportStats.regionClaims)}. Alertas: ${formatNumber(reportStats.territorialAlerts + reportStats.highPriority)}. Comunas: ${formatNumber(reportStats.communes)}. Facturación total: ${formatCurrency(reportStats.totalBilling)}.`}
+        />
       </section>
 
       <section id="informe-ejecutivo" className="grid gap-3">

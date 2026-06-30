@@ -32,7 +32,7 @@ export function TailAdminRightPanel({
         </div>
       </div>
 
-      <div className={`${compact ? 'max-h-[28rem] gap-3 p-3' : 'max-h-[38rem] gap-4 p-4'} flex flex-col overflow-y-auto`}>
+      <div className={`${compact ? 'gap-3 p-3' : 'gap-4 p-4'} flex flex-col`}>
         {children}
       </div>
 

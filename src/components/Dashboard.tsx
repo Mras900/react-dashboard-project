@@ -43,7 +43,6 @@ import { ProtectedView } from '../features/auth/ProtectedView';
 import type { AppViewKey } from '../features/auth/authTypes';
 import { useAuth } from '../features/auth/useAuth';
 import { UserManagementView } from '../features/users/UserManagementView';
-import { AiAssistantPanel } from '../features/ai/AiAssistantPanel';
 import { loadRegionalGeoLayer } from '../features/maps/loadRegionalGeoLayer';
 import { normalizeMapJoinKey } from '../features/maps/normalizeMapJoinKey';
 import { RegionClaimsLayer } from '../features/maps/RegionClaimsLayer';
@@ -1837,10 +1836,21 @@ function DailyOperationSummary({
   void routePeriod; void setRoutePeriod; void routeDateBase; void setRouteDateBase;
   const hasData = routeMetrics.ticketsRuta > 0;
   const pct = routeMetrics.ticketsRuta > 0 ? Math.round((routeMetrics.exitosas / routeMetrics.ticketsRuta) * 100) : 0;
+  const formatRouteMoney = (value: number) => value.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+  const routeKpis = [
+    { label: 'Visitas hoy', value: routeMetrics.ticketsRuta.toLocaleString('es-CL'), tone: 'text-[var(--text-main)]', action: onGoToRouteView },
+    { label: 'Exitosas', value: routeMetrics.exitosas.toLocaleString('es-CL'), tone: 'cc-green' },
+    { label: 'No exitosas', value: routeMetrics.noExitosas.toLocaleString('es-CL'), tone: 'cc-red' },
+    { label: 'Pendientes', value: routeMetrics.pendientes.toLocaleString('es-CL'), tone: 'text-orange-500 dark:text-orange-300' },
+    { label: 'En zona roja', value: routeMetrics.zonasRojas.toLocaleString('es-CL'), tone: 'cc-red' },
+    { label: 'Cumplimiento', value: `${pct}%`, tone: 'text-blue-600 dark:text-blue-300' },
+    { label: 'Total valorizado', value: formatRouteMoney(routeMetrics.totalValorizado), tone: 'text-[var(--text-main)]' },
+    { label: 'Proyectado máximo', value: formatRouteMoney(routeMetrics.proyectadoMaximo), tone: 'text-blue-600 dark:text-blue-300' },
+  ];
 
   return (
     <Panel className="h-full rounded-xl border p-4">
-      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+      <div className="mb-3 flex flex-wrap items-start justify-between gap-3">
         <div>
           <h2 className="cc-section-title text-lg font-black">Operaci&oacute;n diaria</h2>
           <p className="cc-muted mt-1 text-xs font-semibold">Resumen de visitas cargadas para el d&iacute;a seleccionado</p>
@@ -1850,59 +1860,40 @@ function DailyOperationSummary({
         </button>
       </div>
 
+      <div className="cc-stat-grid grid grid-cols-2 gap-3 md:grid-cols-4 xl:grid-cols-4 2xl:grid-cols-8">
+        {routeKpis.map((item) => {
+          const content = (
+            <>
+              <p className="cc-kpi-label text-xs font-bold">{item.label}</p>
+              <p className={`cc-kpi-value mt-1 text-lg font-black ${item.tone}`}>{item.value}</p>
+            </>
+          );
+          return item.action ? (
+            <button
+              className="cc-kpi-card cc-card rounded-xl border p-3 text-left transition hover:-translate-y-0.5 hover:border-blue-400/60"
+              key={item.label}
+              onClick={item.action}
+              type="button"
+            >
+              {content}
+            </button>
+          ) : (
+            <div className="cc-kpi-card cc-card rounded-xl border p-3" key={item.label}>
+              {content}
+            </div>
+          );
+        })}
+      </div>
+
       {!hasData ? (
-        <div className="flex flex-col items-center justify-center py-8 text-center">
+        <div className="mt-4 rounded-xl border border-dashed border-[var(--border-main)] bg-[var(--bg-card-soft)] px-4 py-3 text-center">
           <p className="text-sm font-bold text-[var(--text-main)]">Sin visitas cargadas para el d&iacute;a seleccionado</p>
           <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Usa la pesta&ntilde;a Ruta diaria para cargar tickets y visitas.</p>
-          <button className="mt-3 inline-flex h-8 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800" onClick={onGoToRouteView} type="button">
-            Ir a Ruta diaria
-          </button>
-        </div>
-      ) : (
-        <div className="cc-stat-grid grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6">
-          <div className="cc-kpi-card cc-card rounded-xl border p-3" onClick={onGoToRouteView} style={{cursor:"pointer"}}>
-            <p className="cc-kpi-label text-xs font-bold">Visitas hoy</p>
-            <p className="cc-kpi-value mt-1 text-lg font-black">{routeMetrics.ticketsRuta.toLocaleString("es-CL")}</p>
-          </div>
-          <div className="cc-kpi-card cc-card rounded-xl border p-3">
-            <p className="cc-kpi-label text-xs font-bold">Exitosas</p>
-            <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.exitosas.toLocaleString("es-CL")}</p>
-          </div>
-          <div className="cc-kpi-card cc-card rounded-xl border p-3">
-            <p className="cc-kpi-label text-xs font-bold">No exitosas</p>
-            <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.noExitosas.toLocaleString("es-CL")}</p>
-          </div>
-          <div className="cc-kpi-card cc-card rounded-xl border p-3">
-            <p className="cc-kpi-label text-xs font-bold">Pendientes</p>
-            <p className="cc-kpi-value mt-1 text-lg font-black" style={{color:"var(--cc-orange, #f97316)"}}>{routeMetrics.pendientes.toLocaleString("es-CL")}</p>
-          </div>
-          <div className="cc-kpi-card cc-card rounded-xl border p-3">
-            <p className="cc-kpi-label text-xs font-bold">Cumplimiento</p>
-            <p className="cc-kpi-value mt-1 text-lg font-black" style={{color:"var(--cc-blue, #2563eb)"}}>{pct}%</p>
-          </div>
-          <div className="cc-kpi-card cc-card rounded-xl border p-3">
-            <p className="cc-kpi-label text-xs font-bold">En zona roja</p>
-            <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.zonasRojas.toLocaleString("es-CL")}</p>
-          </div>
-        </div>
-      )}
-
-      {hasData ? (
-        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[var(--cc-muted)]">Total valorizado:</span>
-            <span className="font-black text-[var(--text-main)]">{routeMetrics.totalValorizado.toLocaleString("es-CL", {style:"currency", currency:"CLP", maximumFractionDigits:0})}</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <span className="font-bold text-[var(--cc-muted)]">Proyectado m&aacute;x:</span>
-            <span className="font-black" style={{color:"var(--cc-blue, #2563eb)"}}>{routeMetrics.proyectadoMaximo.toLocaleString("es-CL", {style:"currency", currency:"CLP", maximumFractionDigits:0})}</span>
-          </div>
         </div>
       ) : null}
     </Panel>
   );
 }
-
 function ExecutiveDashboardLayout({
   widgets,
   routeMetrics,
@@ -3770,19 +3761,6 @@ const dateFilterError = useMemo(() => {
                   onViewRoutePending={openRoutePending}
                   designSections={hasActiveDesignConfig ? activeDesignConfig?.sections : undefined}
                 />
-                <div className="mt-4">
-                  <AiAssistantPanel
-                    context={`Vista: ${viewMode}. Periodo: ${
-                      dateFilterMode === 'month'
-                        ? selectedMonthLabel
-                        : dateFilterMode === 'week'
-                          ? formatWeekLabel(selectedWeek)
-                          : dateFilterMode === 'day'
-                            ? selectedDay || 'Dia sin seleccionar'
-                            : `${rangeStart || 'Inicio'} - ${rangeEnd || 'Fin'}`
-                    }. Prioridad: ${selectedPriorityLabel}. Estado: ${selectedStatusLabel}. Ubicacion: ${selectedLocationLabel}. Reclamos: ${formatInt(totals.visitas)}. Facturacion: ${formatCurrency(totals.facturacion)}. Comunas: ${formatInt(tableRows.length)}.`}
-                  />
-                </div>
                 {showTerritorialExplanation ? (
                   <TerritorialExplanationModal
                     comunaCritica={territorialMetrics.comunaCritica}

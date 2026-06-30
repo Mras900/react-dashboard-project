@@ -23,9 +23,11 @@ const quickActions = [
 
 type AiAssistantPanelProps = {
   context?: string;
+  title?: string;
+  subtitle?: string;
 };
 
-export function AiAssistantPanel({ context }: AiAssistantPanelProps) {
+export function AiAssistantPanel({ context, title = 'Asistente IA operativo', subtitle = 'Consulta segura desde backend, sin claves en React.' }: AiAssistantPanelProps) {
   const [prompt, setPrompt] = useState('');
   const [provider, setProvider] = useState<AiProvider>('auto');
   const [answer, setAnswer] = useState<AskAiResponse | null>(null);
@@ -66,8 +68,8 @@ export function AiAssistantPanel({ context }: AiAssistantPanelProps) {
               <Bot size={18} />
             </span>
             <div>
-              <h2 className="text-base font-black text-[#EAF0F8]">Asistente IA operativo</h2>
-              <p className="text-xs font-semibold text-[#7A90A8]">Consulta segura desde backend, sin claves en React.</p>
+              <h2 className="text-base font-black text-[#EAF0F8]">{title}</h2>
+              <p className="text-xs font-semibold text-[#7A90A8]">{subtitle}</p>
             </div>
           </div>
         </div>

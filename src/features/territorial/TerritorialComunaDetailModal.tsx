@@ -21,16 +21,16 @@ export function TerritorialComunaDetailModal({
   onShowMap,
 }: TerritorialComunaDetailModalProps) {
   return (
-    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-slate-950/60 p-4">
-      <section className="w-full max-w-3xl rounded-xl border border-slate-200 bg-white shadow-2xl">
-        <header className="flex items-start justify-between gap-3 border-b border-slate-200 px-5 py-4">
+    <div className="fixed inset-0 z-[1200] flex items-center justify-center bg-black/60 p-4 backdrop-blur-sm">
+      <section className="w-full max-w-3xl overflow-hidden rounded-[14px] border border-slate-400/20 bg-[linear-gradient(180deg,rgba(15,23,42,0.98),rgba(13,19,36,0.98))] text-[#e5edf8] shadow-[0_28px_80px_rgba(2,6,23,0.55)]">
+        <header className="flex items-start justify-between gap-3 border-b border-slate-400/20 px-5 py-4">
           <div>
-            <p className="text-xs font-black uppercase text-blue-700">Análisis de comuna</p>
-            <h2 className="mt-1 text-xl font-black text-[#071b4d]">Análisis de comuna: {comuna}</h2>
+            <p className="text-xs font-black uppercase tracking-wide text-blue-300">Análisis de comuna</p>
+            <h2 className="mt-1 text-xl font-black text-[#e5edf8]">Análisis de comuna: {comuna}</h2>
           </div>
           <button
             aria-label="Cerrar análisis de comuna"
-            className="rounded-lg p-2 text-slate-500 hover:bg-slate-100 hover:text-slate-800"
+            className="rounded-lg border border-slate-400/15 p-2 text-slate-300 transition hover:bg-slate-700/50 hover:text-white"
             onClick={onClose}
             type="button"
           >
@@ -60,14 +60,14 @@ export function TerritorialComunaDetailModal({
               />
             </div>
 
-            <div className="rounded-lg border border-blue-100 bg-blue-50 p-4">
+            <div className="rounded-xl border border-blue-300/20 bg-blue-400/10 p-4">
               <div className="flex items-start gap-3">
-                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-100 text-blue-700">
+                <span className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-blue-400/15 text-blue-200">
                   <MapPinned size={18} />
                 </span>
                 <div>
-                  <h3 className="font-black text-blue-950">Recomendación</h3>
-                  <p className="mt-1 text-sm font-semibold leading-relaxed text-blue-900">
+                  <h3 className="font-black text-blue-100">Recomendación</h3>
+                  <p className="mt-1 text-sm font-semibold leading-relaxed text-slate-200">
                     {metric.recomendacionOperativa || getActionByRisk(metric.riesgoOperativoNivel)}
                   </p>
                 </div>
@@ -75,33 +75,33 @@ export function TerritorialComunaDetailModal({
             </div>
           </div>
         ) : (
-          <div className="px-5 py-8 text-sm font-bold text-slate-600">No se encontró información territorial para esta comuna en la muestra actual.</div>
+          <div className="px-5 py-8 text-sm font-bold text-[#93a4b8]">No se encontró información territorial para esta comuna en la muestra actual.</div>
         )}
 
-        <footer className="flex flex-col gap-2 border-t border-slate-200 px-5 py-4 sm:flex-row sm:justify-end">
+        <footer className="flex flex-col gap-2 border-t border-slate-400/20 px-5 py-4 sm:flex-row sm:justify-end">
           <button
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-[#172448] hover:bg-slate-50"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-400/20 bg-slate-800/70 px-4 text-sm font-black text-slate-100 transition hover:bg-slate-700"
             onClick={() => onShowEvidence(comuna)}
             type="button"
           >
             Ver evidencia
           </button>
           <button
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-[#172448] hover:bg-slate-50"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-400/20 bg-slate-800/70 px-4 text-sm font-black text-slate-100 transition hover:bg-slate-700"
             onClick={() => onFilterComuna(comuna)}
             type="button"
           >
             Filtrar comuna
           </button>
           <button
-            className="inline-flex h-10 items-center justify-center rounded-lg bg-[#073B91] px-4 text-sm font-black text-white hover:bg-blue-800"
+            className="inline-flex h-10 items-center justify-center rounded-lg bg-blue-600 px-4 text-sm font-black text-white shadow-lg shadow-blue-950/30 transition hover:bg-blue-500"
             onClick={() => onShowMap(comuna)}
             type="button"
           >
             Ver en mapa
           </button>
           <button
-            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-[#172448] hover:bg-slate-50"
+            className="inline-flex h-10 items-center justify-center rounded-lg border border-slate-400/20 bg-slate-900/60 px-4 text-sm font-black text-slate-200 transition hover:bg-slate-800"
             onClick={onClose}
             type="button"
           >
@@ -115,10 +115,10 @@ export function TerritorialComunaDetailModal({
 
 function Metric({ label, value, detail }: { label: string; value: string; detail?: string }) {
   return (
-    <div className="rounded-lg border border-slate-200 p-4">
-      <p className="text-xs font-black uppercase text-slate-500">{label}</p>
-      <p className="mt-1 break-words text-lg font-black text-[#071b4d]">{value}</p>
-      {detail ? <p className="mt-1 text-xs font-bold text-slate-500">{detail}</p> : null}
+    <div className="rounded-xl border border-slate-400/20 bg-slate-950/60 p-4 shadow-inner shadow-black/10">
+      <p className="text-xs font-black uppercase tracking-wide text-[#93a4b8]">{label}</p>
+      <p className="mt-1 break-words text-lg font-black text-[#e5edf8]">{value}</p>
+      {detail ? <p className="mt-1 text-xs font-bold text-[#93a4b8]">{detail}</p> : null}
     </div>
   );
 }
