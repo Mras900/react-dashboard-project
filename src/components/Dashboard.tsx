@@ -505,7 +505,7 @@ function BaseMapLayers({ children }: { children?: React.ReactNode }) {
 }
 
 function Panel({ children, className = '' }: { children: React.ReactNode; className?: string }) {
-  return <section className={`cc-card rounded-lg border border-slate-200 bg-white ${className}`}>{children}</section>;
+  return <section className={`cc-card rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] ${className}`}>{children}</section>;
 }
 
 function SidebarIcon({
@@ -561,7 +561,7 @@ function FilterControl({
           <span className="cc-label-pro block">{label}</span>
           <select
             aria-label={label}
-            className="block max-w-[150px] appearance-none truncate bg-transparent pr-6 text-sm font-black text-[#071b4d] outline-none"
+            className="block max-w-[150px] appearance-none truncate bg-transparent pr-6 text-sm font-black text-[var(--text-main)] outline-none"
             onChange={(event) => onChange(event.target.value)}
             value={value}
           >
@@ -617,7 +617,7 @@ function PrimaryMetric({
       />
       {actionLabel ? (
         <button
-          className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-[11px] font-black text-[#AFC6FF] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07]"
+          className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-[var(--bg-card)]"
           onClick={onAction}
           type="button"
         >
@@ -673,7 +673,7 @@ function InsightCard({
       />
       {actionLabel ? (
         <button
-          className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-[11px] font-black text-[#AFC6FF] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07]"
+          className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-[var(--bg-card)]"
           onClick={onAction}
           type="button"
         >
@@ -713,7 +713,7 @@ function StatStripItem({
         <ProgressLine pct={progressPct} tone={progressTone} />
         {actionLabel ? (
           <button
-            className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-slate-200 bg-white px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
+            className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
             onClick={onAction}
             type="button"
           >
@@ -757,7 +757,7 @@ function CustomKpiCard({
         </div>
       </div>
       {onRemove ? (
-        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-slate-400 transition hover:bg-red-50 hover:text-red-500" onClick={onRemove} type="button" aria-label="Eliminar KPI">
+        <button className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg text-[var(--cc-muted)] transition hover:bg-red-50 hover:text-red-500" onClick={onRemove} type="button" aria-label="Eliminar KPI">
           <Trash2 size={17} />
         </button>
       ) : null}
@@ -770,10 +770,10 @@ function VerticalBars({ items }: { items: Array<{ label: string; value: number; 
   const max = Math.max(0, ...safeItems.map((item) => item.value));
 
   return (
-    <div className="cc-vertical-chart flex h-44 items-end gap-4 border-l border-b border-slate-200 px-3 pt-4">
+    <div className="cc-vertical-chart flex h-44 items-end gap-4 border-l border-b border-[var(--border-main)] px-3 pt-4">
       {safeItems.map((item, index) => (
         <div key={item.label} className="cc-vertical-item flex h-full flex-1 flex-col items-center justify-end gap-2">
-          <span className="cc-chart-value text-[10px] font-black text-[#172448]">{item.display}</span>
+          <span className="cc-chart-value text-[10px] font-black text-[var(--text-main)]">{item.display}</span>
           <div
             className={`cc-chart-bar w-full max-w-10 rounded-t-md ${index === safeItems.length - 1 ? 'cc-chart-bar-accent bg-[#0757bd]' : 'cc-chart-bar-primary bg-[#9fd0fb]'}`}
             style={{ height: `${normalize(item.value, max)}%` }}
@@ -802,11 +802,11 @@ function HorizontalBars({
     <div className="cc-horizontal-chart space-y-2">
       {safeItems.map((item) => (
         <div key={item.name} className="cc-chart-row grid grid-cols-[104px_1fr_52px] items-center gap-2 text-[11px]">
-          <span className="cc-chart-label text-[10px] font-bold leading-tight text-[#172448]">{item.name}</span>
+          <span className="cc-chart-label text-[10px] font-bold leading-tight text-[var(--text-main)]">{item.name}</span>
           <div className="cc-chart-track h-2.5 overflow-hidden rounded-full bg-slate-100">
             <div aria-label={`${item.name}: ${item.label}`} className={`cc-chart-bar ${color === 'red' ? 'cc-chart-bar-danger' : 'cc-chart-bar-info'} h-full rounded-full ${bar}`} style={{ width: `${normalize(item.value, max)}%` }} title={`${item.name}: ${item.label}`} />
           </div>
-          <span className="cc-chart-value text-right font-black text-[#172448]">{item.label}</span>
+          <span className="cc-chart-value text-right font-black text-[var(--text-main)]">{item.label}</span>
         </div>
       ))}
       {maxLabel ? <div className="cc-chart-axis flex justify-between pt-1 text-[10px] font-bold text-[#6b7d98]"><span>0</span><span>{maxLabel}</span></div> : null}
@@ -831,15 +831,15 @@ function Donut({
       <div className="cc-donut-ring relative h-36 w-36 shrink-0">
         <div aria-label={safeSegments.map((segment) => `${segment.name}: ${segment.value}`).join(", ")} className="cc-donut-segment absolute inset-0 rounded-full" role="img" style={{ background }} title={safeSegments.map((segment) => `${segment.name}: ${segment.value}`).join(" | ")} />
         <div className="cc-donut-center absolute inset-8 flex flex-col items-center justify-center rounded-full bg-white shadow-inner">
-          <span className="cc-donut-value text-xl font-black text-[#071b4d]">{center}</span>
+          <span className="cc-donut-value text-xl font-black text-[var(--text-main)]">{center}</span>
           <span className="cc-chart-label text-xs font-bold text-[#466083]">{label}</span>
         </div>
       </div>
       <div className="cc-chart-legend flex-1 space-y-3">
         {safeSegments.map((segment) => (
           <div key={segment.name} className="cc-chart-legend-row flex items-center justify-between gap-3 text-xs">
-            <span className="cc-chart-label flex items-center gap-2 font-bold text-[#172448]"><span className="cc-chart-swatch h-3 w-3 rounded" style={{ backgroundColor: segment.color }} />{segment.name}</span>
-            <span className="cc-chart-value font-black text-[#172448]">{segment.value}</span>
+            <span className="cc-chart-label flex items-center gap-2 font-bold text-[var(--text-main)]"><span className="cc-chart-swatch h-3 w-3 rounded" style={{ backgroundColor: segment.color }} />{segment.name}</span>
+            <span className="cc-chart-value font-black text-[var(--text-main)]">{segment.value}</span>
           </div>
         ))}
       </div>
@@ -1094,7 +1094,7 @@ function KpiBuilder({
   return (
     <div className="grid gap-4">
       <Panel className="overflow-hidden">
-        <div className="border-b border-slate-200 px-5 py-4">
+        <div className="border-b border-[var(--border-main)] px-5 py-4">
           <p className="cc-label-pro">Constructor de KPI</p>
           <h2 className="cc-page-title-pro mt-1">Crear indicador desde la información cargada</h2>
         </div>
@@ -1104,7 +1104,7 @@ function KpiBuilder({
             <label className="grid gap-2">
               <span className="text-xs font-black uppercase text-[#466083]">Nombre KPI</span>
               <input
-                className="h-12 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#071b4d] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="h-12 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-black text-[var(--text-main)] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => setKpiDraft((current) => ({ ...current, title: event.target.value }))}
                 value={kpiDraft.title}
               />
@@ -1113,7 +1113,7 @@ function KpiBuilder({
             <label className="grid gap-2">
               <span className="text-xs font-black uppercase text-[#466083]">Métrica base</span>
               <select
-                className="h-12 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#071b4d] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="h-12 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-black text-[var(--text-main)] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => {
                   const metric = event.target.value as KpiMetricKey;
                   const recommendedFormat = kpiMetricOptions.find((option) => option.value === metric)?.recommendedFormat ?? kpiDraft.format;
@@ -1131,7 +1131,7 @@ function KpiBuilder({
             <label className="grid gap-2">
               <span className="text-xs font-black uppercase text-[#466083]">Cálculo</span>
               <select
-                className="h-12 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#071b4d] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="h-12 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-black text-[var(--text-main)] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => setKpiDraft((current) => ({ ...current, aggregation: event.target.value as KpiAggregation }))}
                 value={kpiDraft.aggregation}
               >
@@ -1144,7 +1144,7 @@ function KpiBuilder({
             <label className="grid gap-2">
               <span className="text-xs font-black uppercase text-[#466083]">Formato</span>
               <select
-                className="h-12 rounded-lg border border-slate-200 bg-white px-3 text-sm font-black text-[#071b4d] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
+                className="h-12 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-black text-[var(--text-main)] outline-none transition focus:border-blue-400 focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => setKpiDraft((current) => ({ ...current, format: event.target.value as KpiFormat }))}
                 value={kpiDraft.format}
               >
@@ -1158,7 +1158,7 @@ function KpiBuilder({
           <CustomKpiCard detail={getKpiDetail(kpiDraft)} title={kpiDraft.title || 'KPI personalizado'} value={formatKpiValue(previewKpiValue, kpiDraft.format)} />
         </div>
 
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-slate-200 px-5 py-4">
+        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-[var(--border-main)] px-5 py-4">
           <p className="text-xs font-bold text-[#6b7d98]">Base actual: {formatInt(tableRows.length)} comunas, {formatInt(totals.visitas)} reclamos y {formatCurrency(totals.facturacion)} de facturación.</p>
           <button className="flex h-11 items-center gap-2 rounded-lg bg-[#073B91] px-5 text-sm font-black text-white shadow-lg shadow-blue-900/15" onClick={addCustomKpi} type="button">
             <Plus size={17} />
@@ -1181,7 +1181,7 @@ function KpiBuilder({
         ) : (
           <Panel className="col-span-full flex min-h-[180px] flex-col items-center justify-center p-8 text-center">
             <Calculator className="mb-3 text-blue-600" size={38} />
-            <h3 className="text-xl font-black text-[#071b4d]">Aún no hay KPIs personalizados</h3>
+            <h3 className="text-xl font-black text-[var(--text-main)]">Aún no hay KPIs personalizados</h3>
             <p className="mt-2 max-w-xl text-sm font-semibold text-[#6b7d98]">Usa el constructor superior para crear indicadores desde visitas, facturación, prioridades, reiteraciones o participación por comuna.</p>
           </Panel>
         )}
@@ -1374,24 +1374,24 @@ function BillingView({
         .dark .billing-review-premium table tbody tr:hover { background: rgba(30, 41, 59, 0.56); }
         .billing-review-premium .text-white,
         .billing-review-premium .text-slate-100 { color: #0f172a !important; }
-        .billing-review-premium .text-slate-300,
-        .billing-review-premium .text-slate-400,
-        .billing-review-premium .text-slate-500 { color: #64748b !important; }
+        .billing-review-premium .text-[var(--text-main)],
+        .billing-review-premium .text-[var(--cc-muted)],
+        .billing-review-premium .text-[var(--cc-muted)] { color: #64748b !important; }
         .dark .billing-review-premium .text-white,
         .dark .billing-review-premium .text-slate-100 { color: #f8fafc !important; }
-        .dark .billing-review-premium .text-slate-300 { color: #cbd5e1 !important; }
-        .dark .billing-review-premium .text-slate-400 { color: #94a3b8 !important; }
-        .dark .billing-review-premium .text-slate-500 { color: #64748b !important; }
+        .dark .billing-review-premium .text-[var(--text-main)] { color: #cbd5e1 !important; }
+        .dark .billing-review-premium .text-[var(--cc-muted)] { color: #94a3b8 !important; }
+        .dark .billing-review-premium .text-[var(--cc-muted)] { color: #64748b !important; }
         .billing-review-premium .bg-slate-950\/60,
         .billing-review-premium .bg-slate-950\/70,
         .billing-review-premium .bg-slate-950\/80 { background: #f8fafc !important; }
         .dark .billing-review-premium .bg-slate-950\/60,
         .dark .billing-review-premium .bg-slate-950\/70,
         .dark .billing-review-premium .bg-slate-950\/80 { background: rgba(15, 23, 42, 0.7) !important; }
-        .billing-review-premium .border-slate-700,
-        .billing-review-premium .border-slate-800 { border-color: #cbd5e1 !important; }
-        .dark .billing-review-premium .border-slate-700,
-        .dark .billing-review-premium .border-slate-800 { border-color: #334155 !important; }
+        .billing-review-premium .border-[var(--border-main)],
+        .billing-review-premium .border-[var(--border-main)] { border-color: #cbd5e1 !important; }
+        .dark .billing-review-premium .border-[var(--border-main)],
+        .dark .billing-review-premium .border-[var(--border-main)] { border-color: #334155 !important; }
         .billing-review-premium button.text-white,
         .billing-review-premium a.text-white { color: #ffffff !important; }
       `}</style>
@@ -1401,10 +1401,10 @@ function BillingView({
           <div>
             <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Facturación</p>
             <h2 className="mt-2 text-3xl font-black text-white">Facturación</h2>
-            <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">Revisión, validación y corrección de datos cargados</p>
+            <p className="mt-2 max-w-3xl text-sm font-semibold text-[var(--cc-muted)]">Revisión, validación y corrección de datos cargados</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 text-sm font-black text-slate-100 disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Download size={16} /> Exportar revisión</button>
+            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-sm font-black text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Download size={16} /> Exportar revisión</button>
             <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 text-sm font-black text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100" onClick={() => setBillingOnlyErrors(true)} type="button"><AlertTriangle size={16} /> Ver inconsistencias</button>
             <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Pen size={16} /> Actualizar datos</button>
           </div>
@@ -1421,7 +1421,7 @@ function BillingView({
         ].map(([label, value, Icon]) => (
           <article key={String(label)} className="billing-card rounded-xl border p-4">
             <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-black uppercase tracking-wide text-slate-400">{String(label)}</p>
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">{String(label)}</p>
               {React.createElement(Icon as typeof Calculator, { className: 'text-cyan-300', size: 18 })}
             </div>
             <p className="mt-3 text-2xl font-black text-white">{String(value)}</p>
@@ -1431,16 +1431,16 @@ function BillingView({
 
       <section className="billing-card rounded-xl border p-4">
         <div className="grid gap-3 xl:grid-cols-[minmax(260px,1.4fr)_repeat(6,minmax(140px,1fr))]">
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">
             Buscar
             <input className="h-10 rounded-lg border px-3 text-sm font-semibold" onChange={(event) => setBillingSearch(event.target.value)} placeholder="Ticket, cliente, comuna, región o monto" value={billingSearch} />
           </label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Periodo<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPeriod(event.target.value)} value={billingPeriod}>{filterOptions.periods.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Región<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingRegion(event.target.value)} value={billingRegion}>{filterOptions.regions.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Comuna<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingComuna(event.target.value)} value={billingComuna}>{filterOptions.comunas.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Estado<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingEstado(event.target.value)} value={billingEstado}>{filterOptions.estados.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
-          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-slate-400">Prioridad<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPriority(event.target.value)} value={billingPriority}>{filterOptions.prioridades.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
-          <label className="flex items-end gap-2 rounded-lg border border-slate-800 bg-slate-950/60 px-3 py-2 text-xs font-black uppercase tracking-wide text-slate-300"><input checked={billingOnlyErrors} onChange={(event) => setBillingOnlyErrors(event.target.checked)} type="checkbox" /> Solo con errores</label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Periodo<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPeriod(event.target.value)} value={billingPeriod}>{filterOptions.periods.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Región<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingRegion(event.target.value)} value={billingRegion}>{filterOptions.regions.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Comuna<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingComuna(event.target.value)} value={billingComuna}>{filterOptions.comunas.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Estado<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingEstado(event.target.value)} value={billingEstado}>{filterOptions.estados.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
+          <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Prioridad<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPriority(event.target.value)} value={billingPriority}>{filterOptions.prioridades.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
+          <label className="flex items-end gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-xs font-black uppercase tracking-wide text-[var(--text-main)]"><input checked={billingOnlyErrors} onChange={(event) => setBillingOnlyErrors(event.target.checked)} type="checkbox" /> Solo con errores</label>
         </div>
       </section>
 
@@ -1448,31 +1448,31 @@ function BillingView({
         <section className="billing-card flex min-h-[320px] flex-col items-center justify-center rounded-xl border p-10 text-center">
           <Calculator className="mb-4 text-cyan-300" size={44} />
           <h3 className="text-2xl font-black text-white">No hay datos cargados para revisar</h3>
-          <p className="mt-2 max-w-md text-sm font-semibold text-slate-400">Importa datos desde el menú de usuario para habilitar la revisión de facturación</p>
+          <p className="mt-2 max-w-md text-sm font-semibold text-[var(--cc-muted)]">Importa datos desde el menú de usuario para habilitar la revisión de facturación</p>
         </section>
       ) : (
         <section className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_340px]">
           <div className="billing-card overflow-hidden rounded-xl border">
-            <div className="border-b border-slate-800 px-4 py-3">
+            <div className="border-b border-[var(--border-main)] px-4 py-3">
               <h3 className="text-lg font-black text-white">Registros de facturación</h3>
-              <p className="mt-1 text-xs font-semibold text-slate-400">Vista segura: no guarda cambios ni llama endpoints de escritura.</p>
+              <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Vista segura: no guarda cambios ni llama endpoints de escritura.</p>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full min-w-[1180px] text-left text-xs">
-                <thead className="bg-slate-950/80 text-[11px] uppercase text-slate-400">
+                <thead className="bg-[var(--bg-card)] text-[11px] uppercase text-[var(--cc-muted)]">
                   <tr>{['Ticket', 'Cliente', 'Comuna', 'Región', 'Facturación', 'Estado', 'Prioridad', 'Observación', 'Validación', 'Acción'].map((head) => <th key={head} className="px-4 py-3 font-black">{head}</th>)}</tr>
                 </thead>
                 <tbody className="divide-y divide-slate-800">
                   {filteredBillingRows.map((row) => (
                     <tr key={row.id} className="hover:bg-slate-800/50">
                       <td className="px-4 py-3 font-black text-white">{row.ticket}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-300">{row.cliente}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-300">{row.comuna || 'Sin comuna'}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-300">{row.region || 'Sin región'}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-main)]">{row.cliente}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-main)]">{row.comuna || 'Sin comuna'}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-main)]">{row.region || 'Sin región'}</td>
                       <td className="px-4 py-3 font-black text-cyan-100">{formatCurrency(row.facturacion)}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-300">{row.estado || 'Sin estado'}</td>
-                      <td className="px-4 py-3 font-semibold text-slate-300">{row.prioridad || 'Sin prioridad'}</td>
-                      <td className="max-w-[220px] truncate px-4 py-3 font-semibold text-slate-400">{row.observacion || 'Sin observación'}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-main)]">{row.estado || 'Sin estado'}</td>
+                      <td className="px-4 py-3 font-semibold text-[var(--text-main)]">{row.prioridad || 'Sin prioridad'}</td>
+                      <td className="max-w-[220px] truncate px-4 py-3 font-semibold text-[var(--cc-muted)]">{row.observacion || 'Sin observación'}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5">
                           {row.issues.length > 0 ? row.issues.map((issue) => <span key={issue.label} className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass(issue.tone)}`}>{issue.label}</span>) : <span className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass('ok')}`}>OK</span>}
@@ -1480,17 +1480,17 @@ function BillingView({
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
-                          <button className="rounded-md border border-slate-700 px-2 py-1 text-[11px] font-black text-slate-100" onClick={() => setSelectedBillingRow(row)} type="button">Revisar</button>
-                          <button className="rounded-md border border-slate-800 px-2 py-1 text-[11px] font-black text-slate-500" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver dashboard</button>
-                          <button className="rounded-md border border-slate-800 px-2 py-1 text-[11px] font-black text-slate-500" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver mapa</button>
-                          <button className="rounded-md border border-slate-800 px-2 py-1 text-[11px] font-black text-slate-500" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Pendiente</button>
+                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--text-main)]" onClick={() => setSelectedBillingRow(row)} type="button">Revisar</button>
+                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver dashboard</button>
+                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver mapa</button>
+                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Pendiente</button>
                         </div>
                       </td>
                     </tr>
                   ))}
                 </tbody>
               </table>
-              {filteredBillingRows.length === 0 ? <div className="p-8 text-center text-sm font-bold text-slate-400">Sin registros para filtros actuales.</div> : null}
+              {filteredBillingRows.length === 0 ? <div className="p-8 text-center text-sm font-bold text-[var(--cc-muted)]">Sin registros para filtros actuales.</div> : null}
             </div>
           </div>
 
@@ -1498,27 +1498,27 @@ function BillingView({
             <section className="billing-card rounded-xl border p-4">
               <h3 className="text-lg font-black text-white">Calidad de datos</h3>
               <div className="mt-4 grid gap-3 text-sm">
-                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Total revisados</span><span className="font-black text-white">{formatInt(qualitySummary.reviewed)}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Registros OK</span><span className="font-black text-emerald-200">{formatInt(qualitySummary.ok)}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Advertencias</span><span className="font-black text-amber-200">{formatInt(qualitySummary.warnings)}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Críticos</span><span className="font-black text-red-200">{formatInt(qualitySummary.critical)}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Duplicados</span><span className="font-black text-red-200">{formatInt(qualitySummary.duplicates)}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-semibold text-slate-400">Campos faltantes</span><span className="font-black text-amber-200">{formatInt(qualitySummary.missingFields)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-[var(--cc-muted)]">Total revisados</span><span className="font-black text-white">{formatInt(qualitySummary.reviewed)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-[var(--cc-muted)]">Registros OK</span><span className="font-black text-emerald-200">{formatInt(qualitySummary.ok)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-[var(--cc-muted)]">Advertencias</span><span className="font-black text-amber-200">{formatInt(qualitySummary.warnings)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-[var(--cc-muted)]">Críticos</span><span className="font-black text-red-200">{formatInt(qualitySummary.critical)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-[var(--cc-muted)]">Duplicados</span><span className="font-black text-red-200">{formatInt(qualitySummary.duplicates)}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-semibold text-[var(--cc-muted)]">Campos faltantes</span><span className="font-black text-amber-200">{formatInt(qualitySummary.missingFields)}</span></div>
               </div>
             </section>
 
             <section className="billing-card rounded-xl border p-4">
               <h3 className="text-lg font-black text-white">Detalle seguro</h3>
               {selectedBillingRow ? (
-                <div className="mt-3 grid gap-2 text-sm font-semibold text-slate-300">
-                  <p><span className="text-slate-500">Ticket:</span> {selectedBillingRow.ticket}</p>
-                  <p><span className="text-slate-500">Cliente:</span> {selectedBillingRow.cliente}</p>
-                  <p><span className="text-slate-500">Ubicación:</span> {selectedBillingRow.comuna || 'Sin comuna'} · {selectedBillingRow.region || 'Sin región'}</p>
-                  <p><span className="text-slate-500">Facturación:</span> {formatCurrency(selectedBillingRow.facturacion)}</p>
+                <div className="mt-3 grid gap-2 text-sm font-semibold text-[var(--text-main)]">
+                  <p><span className="text-[var(--cc-muted)]">Ticket:</span> {selectedBillingRow.ticket}</p>
+                  <p><span className="text-[var(--cc-muted)]">Cliente:</span> {selectedBillingRow.cliente}</p>
+                  <p><span className="text-[var(--cc-muted)]">Ubicación:</span> {selectedBillingRow.comuna || 'Sin comuna'} · {selectedBillingRow.region || 'Sin región'}</p>
+                  <p><span className="text-[var(--cc-muted)]">Facturación:</span> {formatCurrency(selectedBillingRow.facturacion)}</p>
                   <p className="rounded-lg border border-blue-400/20 bg-blue-500/10 p-3 text-xs font-black text-blue-100">Corrección persistente pendiente de endpoint seguro</p>
                 </div>
               ) : (
-                <p className="mt-3 text-sm font-semibold text-slate-400">Selecciona Revisar en una fila para ver detalle visual.</p>
+                <p className="mt-3 text-sm font-semibold text-[var(--cc-muted)]">Selecciona Revisar en una fila para ver detalle visual.</p>
               )}
             </section>
           </aside>
@@ -1589,23 +1589,23 @@ function SettingsView({
       .dark .settings-control-premium .text-slate-100,
       .dark .settings-control-premium .text-\[\#071b4d\] { color: #f8fafc !important; }
       .settings-control-premium p,
-      .settings-control-premium .text-slate-300,
-      .settings-control-premium .text-slate-400,
-      .settings-control-premium .text-slate-600,
+      .settings-control-premium .text-[var(--text-main)],
+      .settings-control-premium .text-[var(--cc-muted)],
+      .settings-control-premium .text-[var(--cc-muted)],
       .settings-control-premium .text-\[\#6b7d98\] { color: #64748b !important; }
       .dark .settings-control-premium p,
-      .dark .settings-control-premium .text-slate-300,
-      .dark .settings-control-premium .text-slate-400,
-      .dark .settings-control-premium .text-slate-600,
+      .dark .settings-control-premium .text-[var(--text-main)],
+      .dark .settings-control-premium .text-[var(--cc-muted)],
+      .dark .settings-control-premium .text-[var(--cc-muted)],
       .dark .settings-control-premium .text-\[\#6b7d98\] { color: #94a3b8 !important; }
       .settings-control-premium .bg-slate-950\/60,
       .settings-control-premium .bg-slate-950\/70 { background: #f8fafc !important; }
       .dark .settings-control-premium .bg-slate-950\/60,
       .dark .settings-control-premium .bg-slate-950\/70 { background: rgba(15, 23, 42, 0.7) !important; }
-      .settings-control-premium .border-slate-700,
-      .settings-control-premium .border-slate-800 { border-color: #cbd5e1 !important; }
-      .dark .settings-control-premium .border-slate-700,
-      .dark .settings-control-premium .border-slate-800 { border-color: #334155 !important; }
+      .settings-control-premium .border-[var(--border-main)],
+      .settings-control-premium .border-[var(--border-main)] { border-color: #cbd5e1 !important; }
+      .dark .settings-control-premium .border-[var(--border-main)],
+      .dark .settings-control-premium .border-[var(--border-main)] { border-color: #334155 !important; }
       .settings-control-premium button.text-white,
       .settings-control-premium a.text-white { color: #ffffff !important; }
     `}</style>
@@ -1613,7 +1613,7 @@ function SettingsView({
 
   const BackButton = ({ label = 'Volver a Configuraciones' }: { label?: string }) => (
     <button
-      className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-sm font-black text-slate-700 transition hover:bg-slate-50 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-100 dark:hover:bg-slate-900"
+      className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-sm font-black text-[var(--text-main)] transition hover:bg-[var(--bg-main)] dark:border-[var(--border-main)] dark:bg-slate-950/70 dark:text-slate-100 dark:hover:bg-slate-900"
       onClick={() => setActiveSettingsSection('home')}
       type="button"
     >
@@ -1637,7 +1637,7 @@ function SettingsView({
         <div>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Configuraciones</p>
           <h2 className="mt-2 text-2xl font-black text-white">{title}</h2>
-          <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">{description}</p>
+          <p className="mt-2 max-w-3xl text-sm font-semibold text-[var(--cc-muted)]">{description}</p>
         </div>
         <BackButton />
       </div>
@@ -1682,7 +1682,7 @@ function SettingsView({
             <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl border border-blue-400/20 bg-blue-400/10 text-blue-300"><FileBarChart size={24} /></span>
             <div>
               <h3 className="text-xl font-black text-white">Configuración de gráficos</h3>
-              <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-400">Los gráficos configurables existentes se administran desde Centro de diseño. No se crea constructor nuevo ni se mueve Reportes a Configuraciones.</p>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-[var(--cc-muted)]">Los gráficos configurables existentes se administran desde Centro de diseño. No se crea constructor nuevo ni se mueve Reportes a Configuraciones.</p>
               <button className="mt-4 rounded-lg bg-blue-600 px-4 py-2 text-sm font-black text-white" onClick={() => openSection('design')} type="button">Abrir Centro de diseño</button>
             </div>
           </div>
@@ -1700,7 +1700,7 @@ function SettingsView({
           <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_auto] lg:items-center">
             <div>
               <h3 className="text-xl font-black text-white">Importador existente</h3>
-              <p className="mt-2 max-w-2xl text-sm font-semibold text-slate-400">La carga sigue usando el modal actual del menú de usuario. No se toca DataImportModal ni normalizadores.</p>
+              <p className="mt-2 max-w-2xl text-sm font-semibold text-[var(--cc-muted)]">La carga sigue usando el modal actual del menú de usuario. No se toca DataImportModal ni normalizadores.</p>
             </div>
             <button className="inline-flex h-11 items-center justify-center gap-2 rounded-lg bg-amber-500 px-4 text-sm font-black text-slate-950 disabled:cursor-not-allowed disabled:opacity-50" disabled={!canOpenImport} onClick={onOpenImport} type="button">
               <Download size={16} /> Abrir importador
@@ -1728,15 +1728,15 @@ function SettingsView({
         {renderSectionHeader('Preferencias del sistema', 'Configuración visual y comportamiento general')}
         <Panel className="settings-control-card rounded-xl border p-6">
           <div className="grid gap-4 md:grid-cols-2">
-            <article className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-              <h3 className="text-lg font-black text-white">Apariencia</h3>
-              <p className="mt-2 text-sm font-semibold text-slate-400">Tema, textos, widgets y layout se gestionan en Centro de diseño.</p>
-              <button className="mt-4 rounded-lg border border-slate-700 px-4 py-2 text-sm font-black text-slate-100" onClick={() => openSection('design')} type="button">Abrir diseño</button>
+            <article className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+              <h3 className="text-lg font-black text-[var(--text-main)]">Apariencia</h3>
+              <p className="mt-2 text-sm font-semibold text-[var(--cc-muted)]">Tema, textos, widgets y layout se gestionan en Centro de diseño.</p>
+              <button className="mt-4 rounded-lg border border-[var(--border-main)] px-4 py-2 text-sm font-black text-[var(--text-main)]" onClick={() => openSection('design')} type="button">Abrir diseño</button>
             </article>
-            <article className="rounded-xl border border-slate-800 bg-slate-950/60 p-4">
-              <h3 className="text-lg font-black text-white">Indicadores</h3>
-              <p className="mt-2 text-sm font-semibold text-slate-400">KPIs personalizados se mantienen en su constructor actual.</p>
-              <button className="mt-4 rounded-lg border border-slate-700 px-4 py-2 text-sm font-black text-slate-100" onClick={() => openSection('kpis')} type="button">Abrir KPIs</button>
+            <article className="rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
+              <h3 className="text-lg font-black text-[var(--text-main)]">Indicadores</h3>
+              <p className="mt-2 text-sm font-semibold text-[var(--cc-muted)]">KPIs personalizados se mantienen en su constructor actual.</p>
+              <button className="mt-4 rounded-lg border border-[var(--border-main)] px-4 py-2 text-sm font-black text-[var(--text-main)]" onClick={() => openSection('kpis')} type="button">Abrir KPIs</button>
             </article>
           </div>
         </Panel>
@@ -1751,8 +1751,8 @@ function SettingsView({
         <div>
           <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Centro de control</p>
           <h2 className="mt-2 text-3xl font-black text-white">Configuraciones</h2>
-          <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">Centro de control del sistema</p>
-          <p className="mt-2 max-w-4xl text-sm font-medium text-slate-500">Administra apariencia, KPIs, gráficos, importación y preferencias del dashboard.</p>
+          <p className="mt-2 max-w-3xl text-sm font-semibold text-[var(--cc-muted)]">Centro de control del sistema</p>
+          <p className="mt-2 max-w-4xl text-sm font-medium text-[var(--cc-muted)]">Administra apariencia, KPIs, gráficos, importación y preferencias del dashboard.</p>
         </div>
       </Panel>
 
@@ -1769,10 +1769,10 @@ function SettingsView({
             >
               <div className="flex items-start justify-between gap-3">
                 <span className={`flex h-12 w-12 items-center justify-center rounded-xl border ${card.accent}`}><Icon size={23} /></span>
-                {card.badge ? <span className="rounded-full border border-slate-700 bg-slate-950/70 px-2.5 py-1 text-[10px] font-black uppercase text-slate-400">{card.badge}</span> : null}
+                {card.badge ? <span className="rounded-full border border-[var(--border-main)] bg-[var(--bg-card)] px-2.5 py-1 text-[10px] font-black uppercase text-[var(--cc-muted)]">{card.badge}</span> : null}
               </div>
               <h3 className="mt-5 text-xl font-black text-white">{card.title}</h3>
-              <p className="mt-2 text-sm font-semibold leading-relaxed text-slate-400">{card.description}</p>
+              <p className="mt-2 text-sm font-semibold leading-relaxed text-[var(--cc-muted)]">{card.description}</p>
             </button>
           );
         })}
@@ -1799,12 +1799,12 @@ function DashboardSlot({
 }
 function RouteMiniMap({ hasRouteTickets }: { hasRouteTickets: boolean }) {
   return (
-    <div className="relative h-32 min-w-[150px] flex-1 overflow-hidden rounded-xl border border-slate-200 bg-slate-50">
+    <div className="relative h-32 min-w-[150px] flex-1 overflow-hidden rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)]">
       <div className="absolute inset-0 opacity-80" style={{ backgroundImage: 'linear-gradient(90deg, rgba(148,163,184,.18) 1px, transparent 1px), linear-gradient(rgba(148,163,184,.18) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
       <div className="absolute left-8 top-8 h-3 w-3 rounded-full bg-blue-600 ring-4 ring-blue-100" />
       <div className={`absolute bottom-8 right-8 h-3 w-3 rounded-full ${hasRouteTickets ? 'bg-red-500 ring-red-100' : 'bg-slate-400 ring-slate-200'} ring-4`} />
       <div className="absolute left-11 top-11 h-[2px] w-[96px] origin-left rotate-[24deg] rounded-full border-t-2 border-dashed border-blue-500" />
-      <span className="absolute bottom-2 left-3 text-[10px] font-black uppercase text-slate-500">Ruta</span>
+      <span className="absolute bottom-2 left-3 text-[10px] font-black uppercase text-[var(--cc-muted)]">Ruta</span>
     </div>
   );
 }
@@ -1857,7 +1857,7 @@ function RouteMetricsSummary({
                 <Route size={15} /> Optimizar ruta
               </button>
               <button
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-black text-[#172448] hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-50"
+                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-black text-[var(--text-main)] hover:bg-[var(--bg-main)] disabled:cursor-not-allowed disabled:opacity-50"
                 disabled={!hasRouteTickets}
                 onClick={onViewPending}
                 title={hasRouteTickets ? undefined : 'Disponible al cargar tickets.'}
@@ -3028,10 +3028,10 @@ const dateFilterError = useMemo(() => {
       title: 'Mapa de reclamos',
       visible: true,
       content: (
-        <Panel className="cc-map-panel flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-slate-200 bg-white">
-          <div className="cc-map-header flex-shrink-0 border-b border-slate-200 px-4 py-2">
+        <Panel className="cc-map-panel flex h-full min-h-0 flex-col overflow-hidden rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)]">
+          <div className="cc-map-header flex-shrink-0 border-b border-[var(--border-main)] px-4 py-2">
             <h2 className="cc-section-title text-base font-black text-blue-900">{getDesignWidgetLabel('mapaReclamos', viewMode === 'regiones' ? 'Mapa de reclamos Regiones' : 'Mapa de reclamos RM')}</h2>
-            <p className="cc-muted mt-0.5 text-[11px] font-semibold text-slate-600">Intensidad territorial de reclamos en {viewMode === 'regiones' ? 'Regiones' : 'Región Metropolitana'}</p>
+            <p className="cc-muted mt-0.5 text-[11px] font-semibold text-[var(--cc-muted)]">Intensidad territorial de reclamos en {viewMode === 'regiones' ? 'Regiones' : 'Región Metropolitana'}</p>
           </div>
           <div className="cc-map-surface relative min-h-0 flex-1 overflow-hidden rounded-xl">
             {viewMode === 'rm' ? (
@@ -3086,11 +3086,11 @@ const dateFilterError = useMemo(() => {
                 </div>
               </div>
             ) : (
-              <div className="cc-map-legend absolute bottom-4 left-4 z-[500] w-[200px] rounded-lg border border-slate-200 bg-white/95 p-3 shadow-lg">
+              <div className="cc-map-legend absolute bottom-4 left-4 z-[500] w-[200px] rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)]/95 p-3 shadow-lg">
                 <div className="mb-2 text-[10px] font-black uppercase text-[#466083]">Reclamos por comuna</div>
                 <div className="space-y-1.5">
                   {MAP_LEGEND_LEVELS.map((level) => (
-                    <div key={level.label} className="flex items-center gap-2 text-[11px] font-bold text-[#172448]">
+                    <div key={level.label} className="flex items-center gap-2 text-[11px] font-bold text-[var(--text-main)]">
                       <span className="h-3 w-3 shrink-0 rounded-sm" style={{ backgroundColor: level.color }} />
                       <span>{level.label}</span>
                     </div>
@@ -3148,7 +3148,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('graficoFacturacionMensual', viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM')}</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[var(--text-main)]">{getDesignWidgetLabel('graficoFacturacionMensual', viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM')}</h3>
           {filteredCharts.monthlyBars.length > 0 ? <VerticalBars items={filteredCharts.monthlyBars} /> : <EmptyState />}
         </Panel>
       ),
@@ -3159,7 +3159,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('topComunasReclamos', 'Top 10 comunas con más reclamos')}</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[var(--text-main)]">{getDesignWidgetLabel('topComunasReclamos', 'Top 10 comunas con más reclamos')}</h3>
           {filteredCharts.topClaims.length > 0 ? <HorizontalBars color="red" items={filteredCharts.topClaims} maxLabel={formatInt(filteredCharts.topClaims[0]?.value ?? 0)} /> : <EmptyState />}
         </Panel>
       ),
@@ -3170,7 +3170,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('topComunasFacturacion', 'Top 10 comunas con mayor facturación')}</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[var(--text-main)]">{getDesignWidgetLabel('topComunasFacturacion', 'Top 10 comunas con mayor facturación')}</h3>
           {filteredCharts.topBilling.length > 0 ? <HorizontalBars color="blue" items={filteredCharts.topBilling} maxLabel={formatCurrencyShort(filteredCharts.topBilling[0]?.value ?? 0)} /> : <EmptyState />}
         </Panel>
       ),
@@ -3181,7 +3181,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="cc-chart-card h-full p-4">
-          <h3 className="cc-chart-title mb-3 text-sm font-black text-[#071b4d]">{getDesignWidgetLabel('distribucionPrioridad', 'Distribución por prioridad')}</h3>
+          <h3 className="cc-chart-title mb-3 text-sm font-black text-[var(--text-main)]">{getDesignWidgetLabel('distribucionPrioridad', 'Distribución por prioridad')}</h3>
           {totals.visitas > 0 ? (
             <Donut
               center={formatInt(totals.visitas)}
@@ -3202,7 +3202,7 @@ const dateFilterError = useMemo(() => {
       visible: true,
       content: (
         <Panel className="h-full overflow-hidden">
-          <div className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${showEvidenceTable ? 'border-b border-slate-200' : ''}`}>
+          <div className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${showEvidenceTable ? 'border-b border-[var(--border-main)]' : ''}`}>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
                 <h2 className="text-lg font-black text-blue-900">{getDesignWidgetLabel('tablaComunas', 'Evidencia por comuna')}</h2>
@@ -3210,13 +3210,13 @@ const dateFilterError = useMemo(() => {
                   {formatInt(tableRows.length)} comunas
                 </span>
               </div>
-              <p className="mt-1 max-w-3xl text-xs font-semibold text-slate-600">
+              <p className="mt-1 max-w-3xl text-xs font-semibold text-[var(--cc-muted)]">
                 Accede a respaldos, visitas y registros asociados a cada comuna.
               </p>
             </div>
             <button
               aria-expanded={showEvidenceTable}
-              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-4 text-xs font-black text-[#073B91] shadow-sm transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600/25 sm:w-auto"
+              className="inline-flex h-10 w-full items-center justify-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-xs font-black text-[#073B91] shadow-sm transition hover:bg-blue-50 focus:outline-none focus:ring-2 focus:ring-blue-600/25 sm:w-auto"
               onClick={() => setShowEvidenceTable((current) => !current)}
               type="button"
             >
@@ -3235,13 +3235,13 @@ const dateFilterError = useMemo(() => {
           </div>
           {showEvidenceTable ? (
             <>
-              <div className="flex flex-col gap-2 border-b border-slate-200 bg-slate-50/70 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
+              <div className="flex flex-col gap-2 border-b border-[var(--border-main)] bg-[var(--bg-card)]/70 px-4 py-3 lg:flex-row lg:items-center lg:justify-between">
                 <div className="flex flex-1 flex-col gap-2 sm:flex-row">
                   <label className="relative min-w-0 flex-1 sm:max-w-sm">
-                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-slate-500" size={16} />
+                    <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cc-muted)]" size={16} />
                     <input
                       aria-label="Buscar en evidencia"
-                      className="h-10 w-full rounded-lg border border-slate-200 bg-white pl-9 pr-3 text-sm text-[#172448] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                      className="h-10 w-full rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] pl-9 pr-3 text-sm text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                       onChange={(event) => setEvidenceSearch(event.target.value)}
                       placeholder="Buscar comuna o región"
                       value={evidenceSearch}
@@ -3249,7 +3249,7 @@ const dateFilterError = useMemo(() => {
                   </label>
                   <select
                     aria-label="Filtrar evidencia por región"
-                    className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-semibold text-[#172448] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                    className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-semibold text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                     onChange={(event) => setEvidenceRegion(event.target.value)}
                     value={evidenceRegion}
                   >
@@ -3257,7 +3257,7 @@ const dateFilterError = useMemo(() => {
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-[#172448] hover:bg-slate-50" onClick={exportEvidenceCsv} type="button">
+                  <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={exportEvidenceCsv} type="button">
                     <Download size={15} /> CSV
                   </button>
                   <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-bold text-white hover:bg-blue-800" onClick={() => void exportEvidenceExcel()} type="button">
@@ -3267,7 +3267,7 @@ const dateFilterError = useMemo(() => {
               </div>
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[760px] text-left text-xs">
-                  <thead className="bg-slate-50 text-[11px] uppercase text-[#466083]">
+                  <thead className="bg-[var(--bg-card)] text-[11px] uppercase text-[#466083]">
                     <tr>
                       {['Comuna', 'Reclamos', 'Facturación', 'Alta prioridad', 'Última visita', 'Evidencia'].map((head) => (
                         <th key={head} className="px-4 py-2 font-black">{head}</th>
@@ -3278,7 +3278,7 @@ const dateFilterError = useMemo(() => {
                     {tableRows.length > 0 ? (
                       visibleEvidenceRows.map((row) => (
                         <tr key={row.comuna} className="hover:bg-blue-50/40">
-                          <td className="px-4 py-2 font-black text-[#172448]">{row.comuna}</td>
+                          <td className="px-4 py-2 font-black text-[var(--text-main)]">{row.comuna}</td>
                           <td className="px-4 py-2 font-bold">{formatInt(row.visitas)}</td>
                           <td className="px-4 py-2 font-bold">{formatCurrency(row.facturacion)}</td>
                           <td className="px-4 py-2"><span className="rounded-full bg-red-100 px-2 py-1 font-black text-red-500">{formatInt(row.alta)}</span></td>
@@ -3288,7 +3288,7 @@ const dateFilterError = useMemo(() => {
                       ))
                     ) : (
                       <tr>
-                        <td className="px-4 py-8 text-center text-sm font-bold text-slate-500" colSpan={6}>
+                        <td className="px-4 py-8 text-center text-sm font-bold text-[var(--cc-muted)]" colSpan={6}>
                           {isEmptyCurrentView ? emptyViewMessage : 'Sin datos para los filtros seleccionados.'}
                         </td>
                       </tr>
@@ -3296,9 +3296,9 @@ const dateFilterError = useMemo(() => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between border-t border-slate-200 px-4 py-3">
+              <div className="flex items-center justify-between border-t border-[var(--border-main)] px-4 py-3">
                 <button
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-sm transition hover:bg-[var(--bg-main)] disabled:opacity-50"
                   disabled={tablePage === 0}
                   onClick={() => setTablePage((p) => p - 1)}
                   type="button"
@@ -3309,7 +3309,7 @@ const dateFilterError = useMemo(() => {
                   Página {Math.min(tablePage + 1, Math.max(1, Math.ceil(tableRows.length / PAGE_SIZE)))} de {Math.max(1, Math.ceil(tableRows.length / PAGE_SIZE))}
                 </span>
                 <button
-                  className="rounded-lg border border-slate-200 bg-white px-4 py-2 text-xs font-black text-[#172448] shadow-sm transition hover:bg-slate-50 disabled:opacity-50"
+                  className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-sm transition hover:bg-[var(--bg-main)] disabled:opacity-50"
                   disabled={(tablePage + 1) * PAGE_SIZE >= tableRows.length}
                   onClick={() => setTablePage((p) => p + 1)}
                   type="button"
@@ -3396,7 +3396,7 @@ const dateFilterError = useMemo(() => {
     : configuredDashboardWidgets;
 
   return (
-    <div className={`cc-shell flex h-screen font-sans text-[#172448] ${hasActiveDesignConfig ? 'cc-design-active' : ''}`} style={designCssVariables}>
+    <div className={`cc-shell flex h-screen font-sans text-[var(--text-main)] ${hasActiveDesignConfig ? 'cc-design-active' : ''}`} style={designCssVariables}>
       <style>{`
         .leaflet-control-attribution { font-size: 9px; }
         .leaflet-popup-content-wrapper {
@@ -3560,7 +3560,7 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-slate-200 bg-white py-4 dark:border-[#22304D] dark:bg-[#0B1020]">
+      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-[var(--border-main)] bg-[var(--bg-card)] py-4 dark:border-[#22304D] dark:bg-[#0B1020]">
         <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
           <Navigation size={22} />
         </div>
@@ -3590,7 +3590,7 @@ const dateFilterError = useMemo(() => {
           {isAdmin ? (
             <button
               className={`mt-1 flex h-10 w-10 items-center justify-center rounded-full border-2 transition ${
-                editMode ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-200' : 'border-slate-200 bg-white text-slate-600 hover:border-blue-300 hover:text-blue-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300 dark:hover:border-blue-500 dark:hover:text-blue-200'
+                editMode ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-200' : 'border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] hover:border-blue-300 hover:text-blue-600 dark:border-[var(--border-main)] dark:bg-slate-900 dark:text-[var(--text-main)] dark:hover:border-blue-500 dark:hover:text-blue-200'
               }`}
               onClick={() => editMode ? exitEditMode() : enterEditMode()}
               title={editMode ? 'Salir modo edicion' : 'Editar dashboard'}
@@ -3605,7 +3605,7 @@ const dateFilterError = useMemo(() => {
         </div>
       </aside>
 
-      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-slate-50 p-4 text-slate-900 dark:bg-[#070B14] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible">
+      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[var(--bg-main)] p-4 text-[var(--text-main)] dark:bg-[#070B14] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible">
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
           {isComponentVisible('header') ? (
           <TailAdminTopbar
@@ -3641,11 +3641,11 @@ const dateFilterError = useMemo(() => {
                   title="Dashboard territorial"
                 >
                 <section className="cc-primary-tabs mb-2" role="tablist" aria-label="Vista principal">
-                  <div className="flex gap-1 rounded-xl border border-slate-200 bg-white p-1 shadow-sm dark:border-[#22304D] dark:bg-[#0B1020]">
+                  <div className="flex gap-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-1 shadow-sm dark:border-[#22304D] dark:bg-[#0B1020]">
                     {hasPermission('rm') ? (
                       <button
                         aria-selected={viewMode === 'rm'}
-                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
+                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[var(--cc-muted)] hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
                         onClick={() => setViewMode('rm')}
                         role="tab"
                         type="button"
@@ -3656,7 +3656,7 @@ const dateFilterError = useMemo(() => {
                     {hasPermission('regiones') ? (
                       <button
                         aria-selected={viewMode === 'regiones'}
-                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-slate-500 hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
+                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[var(--cc-muted)] hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
                         onClick={() => setViewMode('regiones')}
                         role="tab"
                         type="button"
@@ -3684,24 +3684,24 @@ const dateFilterError = useMemo(() => {
                       {dateFilterMode === 'month' ? (
                         <FilterControl icon={<CalendarDays size={20} />} label="Mes" onChange={(value) => setFilters((current) => ({ ...current, month: value }))} options={availableMonths} value={filters.month} />
                       ) : dateFilterMode === 'week' ? (
-                        <label className="cc-filter grid h-10 min-w-[170px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                        <label className="cc-filter grid h-10 min-w-[170px] gap-0 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--cc-muted)] shadow-sm">
                           Semana
-                          <input aria-label="Semana" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setSelectedWeek(event.target.value)} type="week" value={selectedWeek} />
+                          <input aria-label="Semana" className="bg-transparent text-sm font-bold normal-case text-[var(--text-main)] outline-none" onChange={(event) => setSelectedWeek(event.target.value)} type="week" value={selectedWeek} />
                         </label>
                       ) : dateFilterMode === 'day' ? (
-                        <label className="cc-filter grid h-10 min-w-[170px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                        <label className="cc-filter grid h-10 min-w-[170px] gap-0 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--cc-muted)] shadow-sm">
                           Día
-                          <input aria-label="Día" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setSelectedDay(event.target.value)} type="date" value={selectedDay} />
+                          <input aria-label="Día" className="bg-transparent text-sm font-bold normal-case text-[var(--text-main)] outline-none" onChange={(event) => setSelectedDay(event.target.value)} type="date" value={selectedDay} />
                         </label>
                       ) : (
                         <div className="flex flex-wrap gap-2" aria-label="Rango de fechas">
-                          <label className="cc-filter grid h-10 min-w-[150px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                          <label className="cc-filter grid h-10 min-w-[150px] gap-0 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--cc-muted)] shadow-sm">
                             Desde
-                            <input aria-label="Fecha de inicio" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" onChange={(event) => setRangeStart(event.target.value)} type="date" value={rangeStart} />
+                            <input aria-label="Fecha de inicio" className="bg-transparent text-sm font-bold normal-case text-[var(--text-main)] outline-none" onChange={(event) => setRangeStart(event.target.value)} type="date" value={rangeStart} />
                           </label>
-                          <label className="cc-filter grid h-10 min-w-[150px] gap-0 rounded-lg border border-slate-200 bg-white px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 shadow-sm">
+                          <label className="cc-filter grid h-10 min-w-[150px] gap-0 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-1 text-[10px] font-bold uppercase tracking-wide text-[var(--cc-muted)] shadow-sm">
                             Hasta
-                            <input aria-label="Fecha de fin" className="bg-transparent text-sm font-bold normal-case text-[#071b4d] outline-none" min={rangeStart || undefined} onChange={(event) => setRangeEnd(event.target.value)} type="date" value={rangeEnd} />
+                            <input aria-label="Fecha de fin" className="bg-transparent text-sm font-bold normal-case text-[var(--text-main)] outline-none" min={rangeStart || undefined} onChange={(event) => setRangeEnd(event.target.value)} type="date" value={rangeEnd} />
                           </label>
                         </div>
                       )}
@@ -3711,11 +3711,11 @@ const dateFilterError = useMemo(() => {
                     </div>
 
                   </div>
-                  <p className="mt-2 text-xs font-semibold text-slate-500">
+                  <p className="mt-2 text-xs font-semibold text-[var(--cc-muted)]">
                     Filtros activos: {dateFilterMode === 'month' ? selectedMonthLabel : dateFilterMode === 'week' ? formatWeekLabel(selectedWeek) : dateFilterMode === 'day' ? selectedDay || 'Día sin seleccionar' : (rangeStart || 'Inicio') + ' — ' + (rangeEnd || 'Fin')} · Prioridad {selectedPriorityLabel} · Estado {selectedStatusLabel} · {selectedLocationLabel}
                   </p>
                   {databaseDashboardLoading ? (
-                    <p className="mt-1 text-xs font-semibold text-slate-500" role="status">Actualizando datos...</p>
+                    <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]" role="status">Actualizando datos...</p>
                   ) : databaseDashboardError ? (
                     <div className="cc-api-alert mt-2 flex flex-wrap items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-xs font-semibold text-amber-800" role="alert">
                       <span>Algunos datos no se pudieron actualizar. Mostrando la última información disponible.</span>
@@ -3838,7 +3838,7 @@ const dateFilterError = useMemo(() => {
           ) : (
             <Panel className="flex min-h-[620px] flex-col items-center justify-center p-10 text-center">
               <AlertTriangle className="mb-4 text-blue-600" size={44} />
-              <h2 className="text-2xl font-black text-[#071b4d]">Módulo en construcción</h2>
+              <h2 className="text-2xl font-black text-[var(--text-main)]">Módulo en construcción</h2>
               <p className="mt-2 max-w-md text-sm font-semibold text-[#6b7d98]">La navegación lateral ya está preparada para conectar nuevas vistas operativas.</p>
               <button className="mt-6 rounded-lg bg-[#073B91] px-5 py-3 text-sm font-black text-white" onClick={() => setActiveTab('dashboard')} type="button">Volver al dashboard</button>
             </Panel>
