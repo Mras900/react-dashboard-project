@@ -814,6 +814,36 @@ function HorizontalBars({
     </div>
   );
 }
+function MonthlyHorizontalBars({ items }: { items: Array<{ label: string; value: number; display: string }> }) {
+  const safeItems = Array.isArray(items) ? items.slice(0, 8) : [];
+  const max = Math.max(0, ...safeItems.map((item) => item.value));
+
+  return (
+    <div className="cc-monthly-horizontal-chart space-y-3">
+      {safeItems.map((item) => (
+        <div key={item.label} className="grid grid-cols-[68px_minmax(0,1fr)_74px] items-center gap-3 text-xs sm:grid-cols-[82px_minmax(0,1fr)_92px]">
+          <span className="font-black text-[var(--text-main)]">{item.label}</span>
+          <div className="h-3 overflow-hidden rounded-full bg-slate-200/80 dark:bg-slate-800/80">
+            <div
+              aria-label={`${item.label}: ${item.display}`}
+              className="h-full rounded-full bg-gradient-to-r from-blue-500 to-cyan-300 shadow-[0_0_18px_rgba(14,165,255,0.28)]"
+              style={{ width: `${normalize(item.value, max)}%` }}
+              title={`${item.label}: ${item.display}`}
+            />
+          </div>
+          <span className="text-right text-[11px] font-black text-blue-700 dark:text-cyan-200 sm:text-xs">{item.display}</span>
+        </div>
+      ))}
+      {safeItems.length > 0 ? (
+        <div className="flex justify-between pt-1 text-[10px] font-bold uppercase tracking-wide text-slate-500 dark:text-slate-400">
+          <span>0</span>
+          <span>{safeItems[0]?.display ?? ''}</span>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 
 function Donut({
   center,
@@ -2696,8 +2726,29 @@ const dateFilterError = useMemo(() => {
   }, [currentData, filters.location, filters.priority, monthFactor]);
 
   const filteredMapData = filteredData;
+  const territorialAlertRows = useMemo<ComunaMetric[]>(() =>
+    currentData
+      .map((item) => {
+        const priorityCount = filters.priority === 'todas' ? item.visitas : item[filters.priority];
+        const priorityFactor = item.visitas > 0 ? priorityCount / item.visitas : 0;
+        const factor = monthFactor * priorityFactor;
+
+        return {
+          ...item,
+          visitas: scaleMetric(item.visitas, factor),
+          ticketsUnicos: Math.min(scaleMetric(item.ticketsUnicos, factor), scaleMetric(item.visitas, factor)),
+          facturacion: scaleMetric(item.facturacion, factor),
+          alta: filters.priority === 'todas' || filters.priority === 'alta' ? scaleMetric(item.alta, monthFactor) : 0,
+          media: filters.priority === 'todas' || filters.priority === 'media' ? scaleMetric(item.media, monthFactor) : 0,
+          baja: filters.priority === 'todas' || filters.priority === 'baja' ? scaleMetric(item.baja, monthFactor) : 0,
+          reiteradas: scaleMetric(item.reiteradas, factor),
+        };
+      })
+      .filter((item) => item.visitas > 0 || item.facturacion > 0 || item.alta > 0 || item.media > 0 || item.baja > 0),
+    [currentData, filters.priority, monthFactor],
+  );
   const territorialMetrics = useTerritorialMetrics({
-    rows: viewMode === 'rm' ? filteredData : [],
+    rows: viewMode === 'rm' ? territorialAlertRows : [],
     hasActiveSource: viewMode === 'rm' && currentData.length > 0,
   });
   const selectedTerritorialMetric = useMemo(
@@ -3132,7 +3183,7 @@ const dateFilterError = useMemo(() => {
       content: (
         <Panel className="cc-chart-card h-full p-4">
           <h3 className="cc-chart-title mb-3 text-sm font-black text-[var(--text-main)]">{getDesignWidgetLabel('graficoFacturacionMensual', viewMode === 'regiones' ? 'Facturación mensual Regiones' : 'Facturación mensual RM')}</h3>
-          {filteredCharts.monthlyBars.length > 0 ? <VerticalBars items={filteredCharts.monthlyBars} /> : <EmptyState />}
+          {filteredCharts.monthlyBars.length > 0 ? <MonthlyHorizontalBars items={filteredCharts.monthlyBars} /> : <EmptyState />}
         </Panel>
       ),
     },
