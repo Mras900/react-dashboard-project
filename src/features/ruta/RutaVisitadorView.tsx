@@ -387,7 +387,8 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const [redZoneSaving, setRedZoneSaving] = useState(false);
   const [redZoneManageError, setRedZoneManageError] = useState('');
   void addressSuggestions; void addressLoading; void addressSearched;
-  const [redZoneDetectMessage, setRedZoneDetectMessage] = useState('');
+  void redZoneInputClass; void redZoneTextareaClass; void redZoneManageError;
+  const [redZoneDetectMessage, setRedZoneDetectMessage] = useState(''); void redZoneDetectMessage;
   const [weatherSummary, setWeatherSummary] = useState<RouteWeatherSummary | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
   const [weatherError, setWeatherError] = useState('');
@@ -680,7 +681,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
     }
   }, [redZoneDraft, refreshActiveRedZones]);
 
-  const removeRedZone = useCallback(async () => {
+  const removeRedZone = useCallback(async () => { void removeRedZone;
     if (!redZoneDraft?.id) return;
 
     setRedZoneSaving(true);
@@ -1422,238 +1423,8 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         </RutaPanel>
       )}
 
-      {activeRouteTab !== 'operation' ? (
-        <RutaPanel className="route-map-section-pro overflow-hidden">
-          <div className="border-b border-[var(--border-main)] px-4 py-3">
-            <h3 className="text-base font-bold text-[var(--text-main)]">Mapa de ruta</h3>
-          </div>
-          <div className="cc-route-map-compact relative overflow-hidden rounded-xl" style={{minHeight:"360px", maxHeight:"420px"}}>
-            <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>
-              <ZoomControl position="topleft" />
-              <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
-              <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZoneCenter} />
-              <RouteMapBounds points={boundsPoints} />
-              <SelectedRedZoneFocus zone={redZoneDraft} />
-              <BaseMapLayers>
-                <ActiveRedZonesLayers onSelect={selectRedZone} redZoneMode="manage" selectedZoneId={selectedRedZoneId} zones={activeRedZones} />
-                {redZones ? (
-                  <LayersControl.Overlay name="Zonas rojas históricas">
-                    <GeoJSON
-                      data={redZones}
-                      style={RED_ZONE_STYLE}
-                      onEachFeature={onEachHistoricalZone}
-                    />
-                  </LayersControl.Overlay>
-                ) : null}
-                {optimizedLine.length > 1 || (optimizedLine.length === 0 && stopPoints.length > 1) ? (
-                  <LayersControl.Overlay checked name="Ruta optimizada">
-                    <LayerGroup>
-                      <Polyline positions={optimizedLine.length > 1 ? optimizedLine : stopPoints} pathOptions={{ color: '#0f5fcf', weight: optimizedLine.length > 1 ? 5 : 4, opacity: optimizedLine.length > 1 ? 0.82 : 0.72 }} />
-                    </LayerGroup>
-                  </LayersControl.Overlay>
-                ) : null}
-                {stops.length > 0 ? (
-                  <LayersControl.Overlay checked name="Paradas / tickets">
-                    <LayerGroup>
-                      {stops.map((stop, index) =>
-                        Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? (
-                          <CircleMarker
-                            key={stop.id}
-                            center={[stop.lat as number, stop.lng as number]}
-                            pathOptions={{
-                              color: '#ffffff',
-                              fillColor: stop.isRedZone ? '#ef4444' : stop.status === 'exitosa' ? '#10b981' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b',
-                              fillOpacity: 0.85,
-                              weight: 2,
-                            }}
-                            radius={9}
-                          >
-                            <Popup>
-                              <strong>
-                                {index + 1}. {stop.clientName}
-                              </strong>
-                              <br />
-                              Ref: {stop.referencia}
-                              <br />
-                              Estado: {STATUS_LABELS[stop.status]}
-                            </Popup>
-                          </CircleMarker>
-                        ) : null,
-                      )}
-                    </LayerGroup>
-                  </LayersControl.Overlay>
-                ) : null}
-              </BaseMapLayers>
-              {selectedStartPoint ? (
-                <CircleMarker
-                  center={[selectedStartPoint.lat, selectedStartPoint.lon]}
-                  pathOptions={{
-                    color: '#ffffff',
-                    fillColor: '#10b981',
-                    fillOpacity: 0.95,
-                    weight: 3,
-                  }}
-                  radius={11}
-                >
-                  <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
-                    Inicio de ruta
-                  </Tooltip>
-                  <Popup>
-                    <strong>Punto de inicio</strong>
-                    <br />
-                    {selectedStartPoint.label}
-                  </Popup>
-                </CircleMarker>
-              ) : null}
-            </MapContainer>
-            {redZonePanelOpen ? (
-              <div className="absolute left-4 right-4 top-16 z-[500] max-h-[70%] overflow-y-auto rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-xl md:left-auto md:right-4 md:w-[320px] md:max-h-[85%]">
-                <div className="sticky top-0 border-b border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-[var(--text-main)]">Zonas rojas</p>
-                      <p className="mt-1 text-[11px] font-medium text-[var(--cc-muted)]">Activas en PostgreSQL y capa histórica solo de referencia.</p>
-                    </div>
-                    <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={() => setRedZonePanelOpen(false)} type="button">
-                      Ocultar
-                    </button>
-                  </div>
-                  <button
-                    className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-700"
-                    onClick={() => {
-                      setRedZoneDraft(createEmptyRedZoneDraft());
-                      setRedZonePicking(true);
-                      setRedZoneManageError('');
-                    }}
-                    type="button"
-                  >
-                    <MapPin size={14} />
-                    Nueva zona
-                  </button>
-                </div>
 
-                <div className="space-y-4 p-4">
-                  <div className="space-y-2">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-[var(--cc-muted)]">Zonas activas ({activeRedZones.length})</p>
-                    {activeRedZones.length === 0 ? <p className="text-xs text-[var(--cc-muted)]">No hay zonas activas guardadas. Puedes crear una nueva o convertir una zona histórica.</p> : null}
-                    {activeRedZones.map((zone) => (
-                      <button
-                        key={zone.id}
-                        className={`w-full rounded-lg border px-3 py-2 text-left transition ${selectedRedZoneId === zone.id ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-100' : 'border-[var(--border-main)] bg-[var(--bg-card)] hover:bg-[var(--bg-main)]'}`}
-                        onClick={() => selectRedZone(zone)}
-                        type="button"
-                      >
-                        <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-[var(--text-main)]">{zone.name}</span>
-                          <span className="rounded-md bg-[var(--bg-card)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--text-main)]">{zone.severity}</span>
-                        </div>
-                        <p className="mt-1 text-[11px] text-[var(--cc-muted)]">{zone.comuna || 'Sin comuna'} · {Math.round(zone.radius_m)} m</p>
-                        <span className="mt-2 inline-flex text-[11px] font-bold text-blue-300">Editar</span>
-                      </button>
-                    ))}
-                    <p className="pt-1 text-[11px] font-medium text-[var(--cc-muted)]">Zonas históricas: disponibles como capa de referencia en el selector de capas.</p>
-                  </div>
-
-                  {redZoneDraft ? (
-                    <div className="space-y-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-3" ref={redZoneFormRef}>
-                      <div className="flex items-start justify-between gap-3">
-                        <div>
-                          <h4 className="text-sm font-bold text-white">{redZoneDraft.id ? 'Editar zona roja' : 'Nueva zona roja'}</h4>
-                          <p className="mt-1 text-[11px] text-[var(--cc-muted)]">{redZoneDraft.id ? 'Actualiza la zona seleccionada.' : 'Define una nueva zona activa.'}</p>
-                        </div>
-                        <button
-                          className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-bold text-[var(--text-main)] hover:bg-[var(--bg-card)]"
-                          onClick={() => {
-                            setRedZoneDraft(null);
-                            setRedZonePicking(false);
-                            setRedZoneManageError('');
-                          }}
-                          type="button"
-                        >
-                          Cancelar
-                        </button>
-                      </div>
-
-                      <input aria-label="Nombre de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, name: event.target.value })} value={redZoneDraft.name} />
-                      <div className="grid grid-cols-2 gap-2">
-                        <input aria-label="Comuna de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, comuna: event.target.value })} value={redZoneDraft.comuna ?? ''} />
-                        <input aria-label="Región de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, region: event.target.value })} value={redZoneDraft.region ?? ''} />
-                      </div>
-
-                      <button
-                        className="flex h-9 w-full items-center justify-center gap-2 rounded-lg border border-blue-500/40 bg-blue-500/10 text-xs font-bold text-blue-200 hover:bg-blue-500/20"
-                        onClick={() => {
-                          setRedZonePicking(true);
-                          setRedZoneManageError('');
-                        }}
-                        type="button"
-                      >
-                        <MapPin size={14} />
-                        Seleccionar o mover centro
-                      </button>
-                      {redZonePicking ? <p className="text-[11px] font-semibold text-amber-300">Haz click en el mapa para definir el centro.</p> : null}
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <input aria-label="Latitud de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lat: Number(event.target.value) })} step="any" type="number" value={redZoneDraft.lat ?? ''} />
-                        <input aria-label="Longitud de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lon: Number(event.target.value) })} step="any" type="number" value={redZoneDraft.lon ?? ''} />
-                      </div>
-
-                      <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
-                        Radio: {Math.round(redZoneDraft.radius_m)} m
-                        <input max={3000} min={100} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, radius_m: Number(event.target.value) })} step={50} type="range" value={redZoneDraft.radius_m} />
-                      </label>
-
-                      <div className="grid grid-cols-2 gap-2">
-                        <select className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, severity: event.target.value as RedZoneDraft['severity'] })} value={redZoneDraft.severity}>
-                          <option value="baja">Baja</option>
-                          <option value="media">Media</option>
-                          <option value="alta">Alta</option>
-                          <option value="critica">Crítica</option>
-                        </select>
-                        <select className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, display_mode: event.target.value as RedZoneDraft['display_mode'] })} value={redZoneDraft.display_mode}>
-                          <option value="circle">Círculo</option>
-                          <option value="heatpoint">Punto de calor</option>
-                          {redZoneDraft.polygon_geojson ? <option value="polygon">Polígono</option> : null}
-                        </select>
-                      </div>
-
-                      <textarea aria-label="Notas de zona roja" className={redZoneTextareaClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, notes: event.target.value })} value={redZoneDraft.notes ?? ''} />
-
-                      {redZoneManageError ? <p className="text-[11px] font-semibold text-red-300">{redZoneManageError}</p> : null}
-                      {redZoneDetectMessage ? <p className="text-[11px] font-semibold text-emerald-300">{redZoneDetectMessage}</p> : null}
-
-                      <div className="flex flex-wrap gap-2">
-                        <button className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white disabled:opacity-60" disabled={redZoneSaving} onClick={() => void saveRedZone()} ref={redZoneSaveButtonRef} type="button">
-                          {redZoneSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                          {redZoneDraft.id ? 'Actualizar zona' : 'Guardar zona'}
-                        </button>
-                        {redZoneDraft.id ? (
-                          <button className="flex h-9 items-center justify-center gap-2 rounded-lg bg-red-500/15 px-3 text-xs font-bold text-red-200 disabled:opacity-60" disabled={redZoneSaving} onClick={() => void removeRedZone()} type="button">
-                            <Trash2 size={14} />
-                            Eliminar
-                          </button>
-                        ) : null}
-                      </div>
-                    </div>
-                  ) : (
-                    <p className="text-xs text-[var(--cc-muted)]">Selecciona una zona activa, crea una nueva o convierte una zona histórica para editarla.</p>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <button
-                className="absolute right-4 top-16 z-[500] rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-xl"
-                onClick={() => setRedZonePanelOpen(true)}
-                type="button"
-              >
-                Zonas rojas
-              </button>
-            )}
-          </div>
-        </RutaPanel>
-      ) : null}
-
-        <RutaPanel className="route-map-section-pro overflow-hidden">
+      <RutaPanel className="route-map-section-pro overflow-hidden">
           <div className="border-b border-[var(--border-main)] px-4 py-3">
             <h3 className="text-base font-bold text-[var(--text-main)]">Mapa de ruta</h3>
           </div>
@@ -1825,6 +1596,17 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             )}
           </div>
         </RutaPanel>
+
+        {/* Map legend */}
+        <div className="flex flex-wrap items-center gap-4 px-1 py-2 text-[11px] font-semibold text-[var(--cc-muted)]">
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" /> Inicio</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" /> Paradas</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> Zonas rojas</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4 bg-blue-500" /> Ruta optimizada</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> Exitosa</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> No exitosa</span>
+          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-gray-400" /> Pendiente</span>
+        </div>
 
         {activeRouteTab === 'operation' ? (
         <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
