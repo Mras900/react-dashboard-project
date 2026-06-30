@@ -992,621 +992,437 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   };
 
   return (
-    <div className="cc-route-daily-premium grid gap-4">
-      <style>{`
-        .cc-route-daily-premium { color: #0f172a; }
-        .dark .cc-route-daily-premium { color: #e2e8f0; }
-        .cc-route-daily-premium .cc-route-card,
-        .cc-route-daily-premium .route-daily-shell-pro,
-        .cc-route-daily-premium .route-territory-toolbar-pro,
-        .cc-route-daily-premium .route-territory-concentration-pro,
-        .cc-route-daily-premium .route-territory-layer-panel-pro {
-          background: #ffffff !important;
-          border-color: #e2e8f0 !important;
-          color: #0f172a !important;
-          border-radius: 16px !important;
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-        }
-        .dark .cc-route-daily-premium .cc-route-card,
-        .dark .cc-route-daily-premium .route-daily-shell-pro,
-        .dark .cc-route-daily-premium .route-territory-toolbar-pro,
-        .dark .cc-route-daily-premium .route-territory-concentration-pro,
-        .dark .cc-route-daily-premium .route-territory-layer-panel-pro {
-          background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(13, 19, 36, 0.98)) !important;
-          border-color: #22304d !important;
-          color: #e2e8f0 !important;
-          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
-        }
-        .cc-route-daily-premium h2,
-        .cc-route-daily-premium h3,
-        .cc-route-daily-premium h4,
-        .cc-route-daily-premium .text-white,
-        .cc-route-daily-premium .text-slate-100,
-        .cc-route-daily-premium .cc-text,
-        .cc-route-daily-premium .cc-route-ticket-header,
-        .cc-route-daily-premium .cc-route-weather-condition {
-          color: #0f172a !important;
-        }
-        .dark .cc-route-daily-premium h2,
-        .dark .cc-route-daily-premium h3,
-        .dark .cc-route-daily-premium h4,
-        .dark .cc-route-daily-premium .text-white,
-        .dark .cc-route-daily-premium .text-slate-100,
-        .dark .cc-route-daily-premium .cc-text,
-        .dark .cc-route-daily-premium .cc-route-ticket-header,
-        .dark .cc-route-daily-premium .cc-route-weather-condition {
-          color: #f8fafc !important;
-        }
-        .cc-route-daily-premium p,
-        .cc-route-daily-premium .text-[var(--text-main)],
-        .cc-route-daily-premium .text-[var(--cc-muted)],
-        .cc-route-daily-premium .cc-route-subtitle,
-        .cc-route-daily-premium .cc-route-stop-meta,
-        .cc-route-daily-premium .cc-text-secondary {
-          color: #64748b !important;
-        }
-        .dark .cc-route-daily-premium p,
-        .dark .cc-route-daily-premium .text-[var(--text-main)],
-        .dark .cc-route-daily-premium .text-[var(--cc-muted)],
-        .dark .cc-route-daily-premium .cc-route-subtitle,
-        .dark .cc-route-daily-premium .cc-route-stop-meta,
-        .dark .cc-route-daily-premium .cc-text-secondary {
-          color: #94a3b8 !important;
-        }
-        .cc-route-daily-premium input,
-        .cc-route-daily-premium textarea,
-        .cc-route-daily-premium select,
-        .cc-route-daily-premium .cc-route-input {
-          background: #ffffff !important;
-          border-color: #cbd5e1 !important;
-          color: #0f172a !important;
-        }
-        .dark .cc-route-daily-premium input,
-        .dark .cc-route-daily-premium textarea,
-        .dark .cc-route-daily-premium select,
-        .dark .cc-route-daily-premium .cc-route-input {
-          background: rgba(15, 23, 42, 0.86) !important;
-          border-color: #22304d !important;
-          color: #f8fafc !important;
-        }
-        .cc-route-daily-premium input::placeholder,
-        .cc-route-daily-premium textarea::placeholder { color: #94a3b8 !important; }
-        .dark .cc-route-daily-premium input::placeholder,
-        .dark .cc-route-daily-premium textarea::placeholder { color: #64748b !important; }
-        .cc-route-daily-premium .route-map-section-pro .cc-route-map-compact { min-height: 360px; }
-        .cc-route-daily-premium table thead { background: #f1f5f9; }
-        .dark .cc-route-daily-premium table thead { background: rgba(2, 6, 23, 0.58); }
-        .cc-route-daily-premium .cc-list-card-pro { background: #f8fafc; }
-        .dark .cc-route-daily-premium .cc-list-card-pro { background: rgba(15, 23, 42, 0.38); }
-        .cc-route-daily-premium .bg-slate-950\/70,
-        .cc-route-daily-premium .bg-slate-950\/80,
-        .cc-route-daily-premium .bg-slate-950\/95,
-        .cc-route-daily-premium .bg-[var(--bg-card)]\/80 { background: #f8fafc !important; }
-        .dark .cc-route-daily-premium .bg-slate-950\/70,
-        .dark .cc-route-daily-premium .bg-slate-950\/80,
-        .dark .cc-route-daily-premium .bg-slate-950\/95,
-        .dark .cc-route-daily-premium .bg-[var(--bg-card)]\/80 { background: rgba(15, 23, 42, 0.82) !important; }
-        .cc-route-daily-premium .border-[var(--border-main)],
-        .cc-route-daily-premium .border-[var(--border-main)],
-        .cc-route-daily-premium .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #cbd5e1 !important; }
-        .dark .cc-route-daily-premium .border-[var(--border-main)],
-        .dark .cc-route-daily-premium .border-[var(--border-main)],
-        .dark .cc-route-daily-premium .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
-        .cc-route-daily-premium button.text-white,
-        .cc-route-daily-premium a.text-white { color: #ffffff !important; }
-      `}</style>
-      <div className="flex items-center justify-between gap-4 mb-3">
-        <div>
-          <h2 className="text-2xl font-black text-[var(--text-main)]">Ruta diaria</h2>
-          <p className="mt-0.5 text-sm font-semibold text-[var(--cc-muted)]">Planificación operativa, visitas y seguimiento en terreno</p>
-        </div>
-        <div className="flex items-center gap-2">
-            {([
-              { id: 'operation' as const, label: 'Operación diaria' },
-              { id: 'territory' as const, label: 'Mapa territorial' },
-            ]).map((tab) => (
-              <button
-                key={tab.id}
-                aria-pressed={activeRouteTab === tab.id}
-                className={`h-11 rounded-lg border px-4 text-sm font-black transition ${activeRouteTab === tab.id ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-950/30' : 'border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] hover:bg-[var(--bg-main)] hover:text-[var(--text-main)] dark:border-[var(--border-main)] dark:bg-[var(--bg-card)] dark:text-[var(--text-main)] dark:hover:bg-[var(--bg-card)] dark:hover:text-white'}`}
-                onClick={() => setActiveRouteTab(tab.id)}
-                type="button"
-              >
-                {tab.label}
-              </button>
-            ))}
+    <div className="flex flex-col h-full" style={{padding: "10px 34px 0 26px"}}>
+      {/* ===== HEADER: title + export + tabs ===== */}
+      <div style={{marginBottom: "11px"}}>
+        <div className="flex items-center justify-between mb-2">
+          <div>
+            <h1 style={{fontSize: "22px", fontWeight: 900, color: "#e5edf8", margin: 0}}>Ruta diaria</h1>
+            <p style={{fontSize: "13px", fontWeight: 500, color: "#93a4b8", margin: "2px 0 0 0"}}>Planificación operativa, visitas y seguimiento en terreno</p>
           </div>
-          <button className="flex h-10 items-center gap-2 rounded-lg bg-[#0f5fcf] px-4 text-sm font-black text-white transition hover:bg-[#0d47a1]" onClick={exportCsv} type="button" disabled={stops.length === 0}>
+          <button
+            onClick={exportCsv}
+            disabled={stops.length === 0}
+            style={{height: "38px", padding: "0 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", color: "#e5edf8", fontSize: "13px", fontWeight: 800, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "8px"}}
+            type="button"
+          >
             <Download size={16} />
             Exportar ruta
           </button>
         </div>
+        <div className="flex items-center gap-4 border-b" style={{borderBottom: "1px solid rgba(148,163,184,0.1)", paddingBottom: 0}}>
+          <button onClick={() => setActiveRouteTab('operation')} type="button"
+            style={{padding: "10px 4px 10px 4px", fontSize: "13px", fontWeight: 700, color: activeRouteTab === 'operation' ? "#0ea5ff" : "#93a4b8", border: "none", background: "none", cursor: "pointer", borderBottom: activeRouteTab === 'operation' ? "2px solid #0ea5ff" : "2px solid transparent", marginBottom: "-1px"}}>
+            Operación diaria
+          </button>
+          <button onClick={() => setActiveRouteTab('territory')} type="button"
+            style={{padding: "10px 4px 10px 4px", fontSize: "13px", fontWeight: 700, color: activeRouteTab === 'territory' ? "#0ea5ff" : "#93a4b8", border: "none", background: "none", cursor: "pointer", borderBottom: activeRouteTab === 'territory' ? "2px solid #0ea5ff" : "2px solid transparent", marginBottom: "-1px"}}>
+            Mapa territorial
+          </button>
+        </div>
+      </div>
 
       {activeRouteTab === 'operation' ? (
         <>
-          {/* KPI row — 4 cards */}
-          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-            <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString("es-CL")} subtitle="Total del día" icon={<CalendarDays size={18} />} tone="blue" />
-            <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString("es-CL")} subtitle="Gestionadas" icon={<Save size={18} />} tone="green" />
-            <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString("es-CL")}%`} subtitle="Efectividad" icon={<Route size={18} />} tone="blue" />
-            <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString("es-CL")} subtitle="En ruta" icon={<Search size={18} />} tone="red" />
-          </section>
+          {/* ===== KPI ROW: 4 cards, height 96px, gap 16px ===== */}
+          <div style={{display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", height: "96px", marginBottom: "11px"}}>
 
-          {/* Controls — compact row */}
-          <RutaPanel className="p-3">
-            <div className="flex flex-wrap items-center gap-2">
-              <div className="cc-route-segmented flex rounded-lg border">
-                <button aria-pressed={searchMode === "ticket"} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === "ticket" ? "bg-blue-600 text-white" : "text-[var(--cc-muted)] hover:text-[var(--text-main)]"}`} onClick={() => setSearchMode("ticket")} type="button">Por Ticket</button>
-                <button aria-pressed={searchMode === "rut"} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === "rut" ? "bg-blue-600 text-white" : "text-[var(--cc-muted)] hover:text-[var(--text-main)]"}`} onClick={() => setSearchMode("rut")} type="button">Por RUT</button>
+            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+              <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(14,165,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+                <CalendarDays size={20} color="#0ea5ff" />
               </div>
-              <form className="flex gap-2 min-w-0 flex-1" onSubmit={(event) => { event.preventDefault(); void handleSearch(); }}>
-                <input className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label={searchMode === "ticket" ? "ID ticket" : "RUT"} placeholder={searchMode === "ticket" ? "Ej: FAC-4821" : "Ej: 12.345.678-9"} onChange={(event) => setSearchValue(event.target.value)} value={searchValue} />
-                <button className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit" aria-label="Buscar">{loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}<span>Agregar</span></button>
-              </form>
-              <span className="text-xs font-bold text-[var(--cc-muted)]">|</span>
-              <button className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" onClick={() => setShowBulkInput(prev => !prev)} type="button">Carga masiva</button>
-              <input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none" type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} />
-              <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button" title="Exportar CSV"><Download size={13} /></button>
-              <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button" title="Limpiar tickets"><Trash2 size={13} /></button>
+              <div className="min-w-0">
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Visitas planificadas</p>
+                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#0ea5ff", lineHeight: 1.1}}>{summary.ticketsToday.toLocaleString("es-CL")}</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>Total del día</p>
+              </div>
             </div>
-            {showBulkInput ? (
-              <form className="mt-2 flex gap-2" onSubmit={(event) => { event.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(""); void addTicketIds(ids); }}>
-                <textarea className="h-16 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Carga masiva de tickets" placeholder="IDs separados por coma, punto y coma o salto de línea..." onChange={(event) => setBulkTicketIds(event.target.value)} value={bulkTicketIds} />
-                <button className="flex h-16 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit"><span>Cargar</span></button>
-              </form>
-            ) : null}
-          </RutaPanel>
 
-          {/* Action buttons */}
-          <div className="flex flex-wrap items-center gap-2">
-            <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60" disabled={saving || stops.length === 0 || !visitador.trim()} onClick={() => void saveDailyVisits()} type="button">{saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />} Guardar visitas</button>
-            <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={stops.length === 0 || optimizing || !startPoint.trim()} onClick={optimizeRoute} type="button">{optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />} Optimizar ruta</button>
+            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+              <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+                <Save size={20} color="#22c55e" />
+              </div>
+              <div className="min-w-0">
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Visitas completadas</p>
+                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#22c55e", lineHeight: 1.1}}>{summary.successful.toLocaleString("es-CL")}</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>Gestionadas</p>
+              </div>
+            </div>
+
+            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+              <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(14,165,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+                <Route size={20} color="#0ea5ff" />
+              </div>
+              <div className="min-w-0">
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>% Cumplimiento</p>
+                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#0ea5ff", lineHeight: 1.1}}>{routeCompletionPct.toLocaleString("es-CL")}%</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>Efectividad</p>
+              </div>
+            </div>
+
+            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+              <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(239,68,68,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
+                <Search size={20} color="#ef4444" />
+              </div>
+              <div className="min-w-0">
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Reclamos del día</p>
+                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#ef4444", lineHeight: 1.1}}>{routeClaimsToday.toLocaleString("es-CL")}</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>En ruta</p>
+              </div>
+            </div>
+
           </div>
 
-          {/* Config toggle — minimal, collapsed by default */}
-          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--cc-muted)] transition hover:bg-[var(--bg-main)]" onClick={() => setConfigPanelOpen(prev => !prev)} type="button">
-            <Settings size={13} />
-            <span>Configuración de ruta</span>
-            <ChevronDown size={12} className={`transition-transform ${configPanelOpen ? "rotate-180" : ""}`} />
-          </button>
+          {/* ===== CONTROLS ROW: height 74px, grid 436px 286px 1fr, gap 12px ===== */}
+          <div style={{display: "grid", gridTemplateColumns: "436px 286px 1fr", gap: "12px", height: "74px", marginBottom: "11px"}}>
+            {/* Input + Agregar */}
+            <div style={{display: "flex", alignItems: "center", gap: "8px", padding: "0 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+              <form onSubmit={(e) => { e.preventDefault(); void handleSearch(); }} style={{display: "flex", gap: "8px", flex: 1, alignItems: "center"}}>
+                <input
+                  style={{flex: 1, height: "36px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 12px", fontSize: "12px", color: "#e5edf8", outline: "none"}}
+                  aria-label={searchMode === "ticket" ? "ID ticket" : "RUT"}
+                  placeholder={searchMode === "ticket" ? "Ingresar ticket de visita" : "Ej: 12.345.678-9"}
+                  onChange={(e) => setSearchValue(e.target.value)}
+                  value={searchValue}
+                />
+                <button type="submit" disabled={loading} style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+                  {loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}
+                  Agregar
+                </button>
+              </form>
+            </div>
+
+            {/* Por ticket / Por RUT / Carga masiva */}
+            <div style={{display: "flex", alignItems: "center", gap: "4px", padding: "0 12px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+              <button onClick={() => setSearchMode("ticket")} type="button" style={{height: "30px", padding: "0 12px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 700, cursor: "pointer", background: searchMode === "ticket" ? "#2563eb" : "transparent", color: searchMode === "ticket" ? "#fff" : "#93a4b8", transition: "all 0.15s"}}>Por Ticket</button>
+              <button onClick={() => setSearchMode("rut")} type="button" style={{height: "30px", padding: "0 12px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 700, cursor: "pointer", background: searchMode === "rut" ? "#2563eb" : "transparent", color: searchMode === "rut" ? "#fff" : "#93a4b8", transition: "all 0.15s"}}>Por RUT</button>
+              <div style={{width: "1px", height: "20px", background: "rgba(148,163,184,0.2)", margin: "0 4px"}} />
+              <button onClick={() => setShowBulkInput(prev => !prev)} type="button" style={{height: "30px", padding: "0 10px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 700, cursor: "pointer", background: "transparent", color: "#93a4b8", transition: "all 0.15s"}}>Carga masiva</button>
+            </div>
+
+            {/* Selects: Modo de carga, Territorio, Fecha */}
+            <div style={{display: "flex", alignItems: "center", gap: "8px", padding: "0 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+              <select style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}}>
+                <option>Modo de carga</option>
+                <option>Individual</option>
+                <option>Masivo</option>
+              </select>
+              <select style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}}>
+                <option>RM</option>
+                <option>Regiones</option>
+              </select>
+              <input type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}} />
+            </div>
+          </div>
+
+          {/* Bulk input (collapsible) */}
+          {showBulkInput ? (
+            <div style={{marginBottom: "11px"}}>
+              <form onSubmit={(e) => { e.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(""); void addTicketIds(ids); }} style={{display: "flex", gap: "8px", padding: "12px 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+                <textarea value={bulkTicketIds} onChange={(e) => setBulkTicketIds(e.target.value)} placeholder="IDs separados por coma, punto y coma o salto de línea..." style={{flex: 1, height: "60px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "8px 12px", fontSize: "11px", color: "#e5edf8", outline: "none", resize: "none"}} />
+                <button type="submit" disabled={loading} style={{height: "60px", padding: "0 20px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1}}>Cargar</button>
+              </form>
+            </div>
+          ) : null}
+
+          {/* ===== MAIN ROUTE ROW: height 332px, grid 571px 1fr, gap 11px ===== */}
+          <div style={{display: "grid", gridTemplateColumns: "571px 1fr", gap: "11px", height: "332px", marginBottom: "11px"}}>
+            {/* LEFT: MAP */}
+            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", overflow: "hidden", display: "flex", flexDirection: "column"}}>
+              <div style={{padding: "12px 16px", borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
+                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "#e5edf8"}}>Mapa de ruta &mdash; Hoy</h3>
+              </div>
+              <div style={{flex: 1, position: "relative", minHeight: 0}}>
+                <div style={{position: "absolute", inset: 0, margin: "8px", borderRadius: "6px", overflow: "hidden"}}>
+                  <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false} style={{height: "245px", width: "100%"}}>
+                    <ZoomControl position="topleft" />
+                    <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
+                    <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZoneCenter} />
+                    <RouteMapBounds points={boundsPoints} />
+                    <SelectedRedZoneFocus zone={redZoneDraft} />
+                    <BaseMapLayers>
+                      <ActiveRedZonesLayers onSelect={selectRedZone} redZoneMode="manage" selectedZoneId={selectedRedZoneId} zones={activeRedZones} />
+                      {redZones ? (
+                        <LayersControl.Overlay name="Zonas rojas históricas">
+                          <GeoJSON data={redZones} style={RED_ZONE_STYLE} onEachFeature={onEachHistoricalZone} />
+                        </LayersControl.Overlay>
+                      ) : null}
+                      {optimizedLine.length > 1 || (optimizedLine.length === 0 && stopPoints.length > 1) ? (
+                        <LayersControl.Overlay checked name="Ruta optimizada">
+                          <LayerGroup>
+                            <Polyline positions={optimizedLine.length > 1 ? optimizedLine : stopPoints} pathOptions={{ color: '#0f5fcf', weight: optimizedLine.length > 1 ? 5 : 4, opacity: optimizedLine.length > 1 ? 0.82 : 0.72 }} />
+                          </LayerGroup>
+                        </LayersControl.Overlay>
+                      ) : null}
+                      {stops.length > 0 ? (
+                        <LayersControl.Overlay checked name="Paradas / tickets">
+                          <LayerGroup>
+                            {stops.map((stop, index) =>
+                              Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? (
+                                <CircleMarker key={stop.id} center={[stop.lat, stop.lng]} radius={9}
+                                  pathOptions={{ color: '#ffffff', fillColor: stop.isRedZone ? '#ef4444' : stop.status === 'exitosa' ? '#10b981' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b', fillOpacity: 0.85, weight: 2 }}>
+                                  <Popup><strong>{index + 1}. {stop.clientName}</strong><br />Ref: {stop.referencia}<br />Estado: {STATUS_LABELS[stop.status]}</Popup>
+                                </CircleMarker>
+                              ) : null
+                            )}
+                          </LayerGroup>
+                        </LayersControl.Overlay>
+                      ) : null}
+                    </BaseMapLayers>
+                    {selectedStartPoint ? (
+                      <CircleMarker center={[selectedStartPoint.lat, selectedStartPoint.lon]} radius={11}
+                        pathOptions={{ color: '#ffffff', fillColor: '#10b981', fillOpacity: 0.95, weight: 3 }}>
+                        <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>Inicio de ruta</Tooltip>
+                        <Popup><strong>Punto de inicio</strong><br />{selectedStartPoint.label}</Popup>
+                      </CircleMarker>
+                    ) : null}
+                  </MapContainer>
+                </div>
+              </div>
+              {/* Map legend */}
+              <div style={{padding: "8px 16px", borderTop: "1px solid rgba(148,163,184,0.1)", display: "flex", gap: "16px", fontSize: "10px", fontWeight: 600, color: "#93a4b8"}}>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Inicio</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block"}} /> Paradas</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> Zonas rojas</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 16, height: 2, background: "#0f5fcf", display: "inline-block"}} /> Ruta optimizada</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Exitosa</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> No exitosa</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#64748b", display: "inline-block"}} /> Pendiente</span>
+              </div>
+            </div>
+
+            {/* RIGHT: VISITS TABLE */}
+            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", overflow: "hidden", display: "flex", flexDirection: "column"}}>
+              <div style={{padding: "12px 16px", borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
+                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "#e5edf8"}}>Visitas planificadas</h3>
+                <p style={{margin: "2px 0 0 0", fontSize: "11px", fontWeight: 500, color: "#93a4b8"}}>Marca resultado de visita, observación y revisión territorial.</p>
+              </div>
+              <div style={{flex: 1, overflow: "auto", minHeight: 0}}>
+                {stops.length === 0 ? (
+                  <div style={{display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 20px"}}>
+                    <div style={{textAlign: "center"}}>
+                      <p style={{margin: 0, fontSize: "14px", fontWeight: 700, color: "#e5edf8"}}>Sin tickets cargados</p>
+                      <p style={{margin: "4px 0 0 0", fontSize: "12px", fontWeight: 500, color: "#93a4b8"}}>Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
+                    </div>
+                  </div>
+                ) : (
+                  <table style={{width: "100%", borderCollapse: "collapse", fontSize: "11px"}}>
+                    <thead>
+                      <tr style={{borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>N°</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Ticket</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Cliente / Dirección</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Reclamos</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Estado</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Zona roja</th>
+                        <th style={{padding: "8px 12px", textAlign: "right", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Valor</th>
+                        <th style={{padding: "8px 12px", textAlign: "center", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Acción</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {stops.map((stop, index) => (
+                        <tr key={stop.id} style={{borderBottom: "1px solid rgba(148,163,184,0.06)", transition: "background 0.15s"}}
+                            onMouseEnter={e => e.currentTarget.style.background = "rgba(148,163,184,0.04)"}
+                            onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
+                          <td style={{padding: "8px 12px", fontWeight: 700, color: "#e5edf8"}}>{index + 1}</td>
+                          <td style={{padding: "8px 12px", fontFamily: "monospace", fontSize: "10px", color: "#93a4b8"}}>{stop.referencia}</td>
+                          <td style={{padding: "8px 12px", maxWidth: "180px"}}>
+                            <p style={{margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600, color: "#e5edf8", maxWidth: "180px"}} title={stop.clientName}>{stop.clientName}</p>
+                            {stop.address ? <p style={{margin: "1px 0 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "10px", color: "#93a4b8", maxWidth: "180px"}} title={stop.address}>{stop.address}</p> : null}
+                          </td>
+                          <td style={{padding: "8px 12px", color: "#93a4b8"}}>{stop.claimsCount.toLocaleString('es-CL')}</td>
+                          <td style={{padding: "8px 12px"}}>
+                            <span style={{display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: 700,
+                              background: stop.status === 'exitosa' ? 'rgba(34,197,94,0.12)' : stop.status === 'no_exitosa' ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)',
+                              color: stop.status === 'exitosa' ? '#22c55e' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b',
+                              border: stop.status === 'exitosa' ? '1px solid rgba(34,197,94,0.2)' : stop.status === 'no_exitosa' ? '1px solid rgba(239,68,68,0.2)' : '1px solid rgba(245,158,11,0.2)'}}>
+                              <span style={{width: 5, height: 5, borderRadius: "50%",
+                                background: stop.status === 'exitosa' ? '#22c55e' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b',
+                                display: "inline-block"}} />
+                              {STATUS_LABELS[stop.status]}
+                            </span>
+                          </td>
+                          <td style={{padding: "8px 12px"}}>
+                            {stop.isRedZone
+                              ? <span style={{display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: 700, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)"}}><span style={{width: 5, height: 5, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> Zona roja</span>
+                              : <span style={{color: "#64748b"}}>&mdash;</span>
+                            }
+                          </td>
+                          <td style={{padding: "8px 12px", fontWeight: 700, color: "#e5edf8", textAlign: "right", whiteSpace: "nowrap"}}>{calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</td>
+                          <td style={{padding: "8px 12px", textAlign: "center"}}>
+                            <div style={{display: "flex", alignItems: "center", gap: "4px", justifyContent: "center"}}>
+                              <select value={stop.status} onChange={(e) => updateStopStatus(stop.id, e.target.value as RutaVisitStatus)} style={{height: "26px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 4px", fontSize: "10px", fontWeight: 600, color: "#e5edf8", outline: "none"}} aria-label="Estado">
+                                <option value="pendiente">Pend.</option>
+                                <option value="exitosa">Ok</option>
+                                <option value="no_exitosa">No</option>
+                              </select>
+                              <button onClick={() => removeStop(stop.id)} type="button" style={{width: "26px", height: "26px", borderRadius: "4px", border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.1)", color: "#ef4444", cursor: "pointer", display: "flex", alignItems: "center", justifyContent: "center"}} title="Eliminar"><Trash2 size={11} /></button>
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                )}
+              </div>
+              {/* Paginator placeholder */}
+              {stops.length > 0 ? (
+                <div style={{padding: "8px 16px", borderTop: "1px solid rgba(148,163,184,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "#93a4b8"}}>
+                  <span>{stops.length} registro(s)</span>
+                  <div style={{display: "flex", gap: "4px"}}>
+                    <button style={{width: "28px", height: "28px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "transparent", color: "#93a4b8", cursor: "pointer", fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center"}} type="button">1</button>
+                  </div>
+                </div>
+              ) : null}
+            </div>
+          </div>
+
+          {/* ===== BOTTOM CARDS ROW: height 171px, grid 315px 271px 340px 1fr, gap 12px ===== */}
+          <div style={{display: "grid", gridTemplateColumns: "315px 271px 340px 1fr", gap: "12px", height: "171px"}}>
+            {/* Valorización del día */}
+            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Valorización del día</h3>
+              <div style={{marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", flex: 1}}>
+                <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tarifa exitosa</span><span style={{fontWeight: 700, color: "#22c55e"}}>{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+                <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tarifa no exitosa</span><span style={{fontWeight: 700, color: "#ef4444"}}>{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+                <div style={{borderTop: "1px solid rgba(148,163,184,0.14)", marginTop: "auto", paddingTop: "6px", display: "flex", justifyContent: "space-between"}}><span style={{fontWeight: 700, color: "#e5edf8"}}>Total</span><span style={{fontWeight: 900, color: "#e5edf8"}}>{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+              </div>
+            </div>
+
+            {/* Resultados del día */}
+            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Resultados del día</h3>
+              <div style={{marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", flex: 1}}>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "#93a4b8"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Exitosas</span>
+                  <span style={{fontWeight: 700, color: "#22c55e"}}>{summary.successful.toLocaleString('es-CL')}</span>
+                </div>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "#93a4b8"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> No exitosas</span>
+                  <span style={{fontWeight: 700, color: "#ef4444"}}>{summary.unsuccessful.toLocaleString('es-CL')}</span>
+                </div>
+                <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
+                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "#93a4b8"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block"}} /> Pendientes</span>
+                  <span style={{fontWeight: 700, color: "#e5edf8"}}>{summary.pending.toLocaleString('es-CL')}</span>
+                </div>
+                {summary.ticketsToday > 0 ? (
+                  <div style={{marginTop: "auto", display: "flex", height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(148,163,184,0.14)"}}>
+                    <div style={{height: "100%", background: "#22c55e", transition: "width 0.3s", width: (summary.successful / summary.ticketsToday) * 100 + "%"}} />
+                    <div style={{height: "100%", background: "#ef4444", transition: "width 0.3s", width: (summary.unsuccessful / summary.ticketsToday) * 100 + "%"}} />
+                    <div style={{height: "100%", background: "#f59e0b", transition: "width 0.3s", width: (summary.pending / summary.ticketsToday) * 100 + "%"}} />
+                  </div>
+                ) : null}
+              </div>
+            </div>
+
+            {/* Clima en ruta */}
+            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Clima en ruta</h3>
+              {weatherSummary && !weatherLoading ? (
+                <div style={{marginTop: "8px", flex: 1, display: "flex", flexDirection: "column"}}>
+                  <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
+                    <span style={{fontSize: "28px"}}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}</span>
+                    <div>
+                      <p style={{margin: 0, fontSize: "18px", fontWeight: 900, color: "#e5edf8"}}>{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</p>
+                      <p style={{margin: 0, fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</p>
+                    </div>
+                  </div>
+                  <div style={{marginTop: "auto", display: "flex", gap: "12px", fontSize: "10px", color: "#93a4b8"}}>
+                    {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
+                    {weatherSummary.precipitationProbabilityMax != null ? <span>Lluvia {weatherSummary.precipitationProbabilityMax}%</span> : null}
+                  </div>
+                </div>
+              ) : (
+                <p style={{marginTop: "12px", fontSize: "12px", fontWeight: 500, color: "#93a4b8"}}>{weatherLoading ? "Consultando..." : "Sin datos climáticos"}</p>
+              )}
+            </div>
+
+            {/* Resumen de reclamos */}
+            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Resumen de reclamos</h3>
+              <div style={{marginTop: "8px", flex: 1, display: "flex", flexDirection: "column"}}>
+                <p style={{margin: 0, fontSize: "24px", fontWeight: 900, color: "#e5edf8"}}>{routeClaimsToday.toLocaleString('es-CL')}</p>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 500, color: "#93a4b8"}}>Reclamos en ruta hoy</p>
+                <div style={{marginTop: "auto", display: "flex", flexDirection: "column", gap: "2px", fontSize: "11px"}}>
+                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tickets cargados</span><span style={{fontWeight: 700, color: "#e5edf8"}}>{stops.length}</span></div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Con coordenadas</span><span style={{fontWeight: 700, color: "#e5edf8"}}>{stopPoints.length}</span></div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Zonas rojas activas</span><span style={{fontWeight: 700, color: "#ef4444"}}>{activeRedZones.length}</span></div>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Actions + Config + Message (compact, below bottom cards) */}
+          <div style={{display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px"}}>
+            <button onClick={() => void saveDailyVisits()} disabled={saving || stops.length === 0 || !visitador.trim()} type="button"
+              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#22c55e", color: "#fff", fontSize: "11px", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              {saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />} Guardar visitas
+            </button>
+            <button onClick={optimizeRoute} disabled={stops.length === 0 || optimizing || !startPoint.trim()} type="button"
+              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "11px", fontWeight: 700, cursor: optimizing ? "not-allowed" : "pointer", opacity: optimizing ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              {optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />} Optimizar ruta
+            </button>
+            <button onClick={exportCsv} disabled={stops.length === 0} type="button"
+              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", color: "#e5edf8", fontSize: "11px", fontWeight: 700, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              <Download size={13} /> Exportar CSV
+            </button>
+            <button onClick={clearStops} disabled={stops.length === 0} type="button"
+              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.1)", color: "#ef4444", fontSize: "11px", fontWeight: 700, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              <Trash2 size={13} /> Limpiar tickets
+            </button>
+            <button onClick={() => setConfigPanelOpen(prev => !prev)} type="button"
+              style={{height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", color: "#93a4b8", fontSize: "11px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px"}}>
+              <Settings size={13} /> Configuración <ChevronDown size={10} style={{transform: configPanelOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s"}} />
+            </button>
+          </div>
+
           {configPanelOpen ? (
-            <div className="grid gap-3 xl:grid-cols-[280px_1fr_280px]">
-              <RutaPanel className="route-calendar-card-pro cc-route-calendar-zone rounded-xl border p-3">
+            <div style={{display: "grid", gridTemplateColumns: "280px 1fr 280px", gap: "12px", marginTop: "8px"}}>
+              <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "12px"}}>
                 <RouteMonthCalendar selectedDate={fechaVisita} onSelectDate={(d) => { setFechaVisita(d); }} visitsByDate={visitsByDate} />
-              </RutaPanel>
-              <RutaPanel className="route-hero-pro cc-route-ticket-primary rounded-xl border p-3">
-                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
-                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><UserRound size={12} /> Visitador</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Nombre del visitador" onChange={(event) => setVisitador(event.target.value)} value={visitador} /></label>
-                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><CalendarDays size={12} /> Fecha carga</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" onChange={(event) => setFechaCarga(event.target.value)} type="date" value={fechaCarga} /></label>
-                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><CalendarDays size={12} /> Fecha visita</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" onChange={(event) => setFechaVisita(event.target.value)} type="date" value={fechaVisita} /></label>
-                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><MapPin size={12} /> Punto inicio</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Punto de inicio" onChange={(event) => { setStartPoint(event.target.value); setSelectedStartPoint(null); setSelectingStartPoint(false); setOptimizedRoute(null); }} value={startPoint} /></label>
-                  <label className="grid gap-1"><span className="text-[10px] font-bold text-[var(--text-main)]">Min/visita</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" min={10} onChange={(event) => setServiceMinutesPerStop(Math.max(Number(event.target.value) || 10, 10))} type="number" value={serviceMinutesPerStop} /></label>
-                  <label className="grid gap-1"><span className="text-[10px] font-bold text-[var(--text-main)]">Km/L</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" min={1} onChange={(event) => setFuelEfficiency(Math.max(Number(event.target.value) || 1, 1))} step="0.1" type="number" value={fuelEfficiency} /></label>
-                  <label className="grid gap-1"><span className="text-[10px] font-bold text-[var(--text-main)]">Precio comb.</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" min={0} onChange={(event) => setFuelPrice(Math.max(Number(event.target.value) || 0, 0))} step={10} type="number" value={fuelPrice} /></label>
+              </div>
+              <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "12px"}}>
+                <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px"}}>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Visitador <input value={visitador} onChange={(e) => setVisitador(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Fecha carga <input type="date" value={fechaCarga} onChange={(e) => setFechaCarga(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Fecha visita <input type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Punto inicio <input value={startPoint} onChange={(e) => { setStartPoint(e.target.value); setSelectedStartPoint(null); setSelectingStartPoint(false); setOptimizedRoute(null); }} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Min/visita <input type="number" min={10} value={serviceMinutesPerStop} onChange={(e) => setServiceMinutesPerStop(Math.max(Number(e.target.value) || 10, 10))} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Km/L <input type="number" min={1} step="0.1" value={fuelEfficiency} onChange={(e) => setFuelEfficiency(Math.max(Number(e.target.value) || 1, 1))} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Precio comb. <input type="number" min={0} step={10} value={fuelPrice} onChange={(e) => setFuelPrice(Math.max(Number(e.target.value) || 0, 0))} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
                 </div>
-                <div className="mt-2 flex flex-wrap items-center gap-2">
-                  <button className={`h-7 rounded-md px-2 text-[10px] font-bold transition ${selectingStartPoint ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200" : "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"}`} onClick={() => { setSelectingStartPoint(true); setMessage("Haz click en el mapa para definir el punto de partida"); }} type="button">Seleccionar en mapa</button>
-                  <button className="h-7 rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-[10px] font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={!selectedStartPoint && !startPoint} onClick={clearStartPoint} type="button">Limpiar</button>
-                  <span className={`rounded-md px-2 py-1 text-[10px] font-bold ${selectingStartPoint ? "bg-amber-50 text-amber-700" : selectedStartPoint ? "bg-emerald-50 text-emerald-700" : "bg-[var(--bg-card)] text-[var(--cc-muted)]"}`}>{selectingStartPoint ? "Selecciona punto en mapa" : selectedStartPoint ? "Inicio validado" : "Sin validar"}</span>
+                <div style={{marginTop: "8px", display: "flex", gap: "6px"}}>
+                  <button onClick={() => { setSelectingStartPoint(true); setMessage("Haz click en el mapa para definir el punto de partida"); }} type="button" style={{height: "28px", padding: "0 10px", borderRadius: "4px", border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.1)", color: "#60a5fa", fontSize: "10px", fontWeight: 700, cursor: "pointer"}}>Seleccionar en mapa</button>
+                  <button onClick={clearStartPoint} disabled={!selectedStartPoint && !startPoint} type="button" style={{height: "28px", padding: "0 10px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.14)", background: "transparent", color: "#93a4b8", fontSize: "10px", fontWeight: 700, cursor: "pointer"}}>Limpiar</button>
+                  <span style={{display: "flex", alignItems: "center", padding: "0 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, background: selectingStartPoint ? "rgba(245,158,11,0.1)" : selectedStartPoint ? "rgba(34,197,94,0.1)" : "transparent", color: selectingStartPoint ? "#f59e0b" : selectedStartPoint ? "#22c55e" : "#64748b"}}>{selectingStartPoint ? "Selecciona punto en mapa" : selectedStartPoint ? "Inicio validado" : "Sin validar"}</span>
                 </div>
-              </RutaPanel>
-              <RutaPanel className="route-weather-compact-pro cc-route-weather-hero rounded-xl border p-2">
-                <div className="route-weather-header-pro flex items-center gap-2 mb-2">
-                  <span className="cc-route-label text-[10px] font-bold">Clima de ruta</span>
-                  <select className="cc-route-input h-6 w-auto max-w-[120px] px-1 text-[9px] font-bold rounded-lg border" value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)}>{KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}</select>
-                </div>
-                {weatherLoading ? <p className="cc-route-stop-meta text-[10px]"><span style={{color:"var(--cc-cyan,#0891b2)"}}>⟳</span> Consultando...</p> : null}
-                {weatherError ? <p className="cc-route-stop-meta text-[10px] leading-tight"><span style={{color:"var(--cc-orange,#f97316)"}}>⚠</span> {weatherError}</p> : null}
-                {weatherSummary && !weatherLoading ? <div className="flex flex-wrap items-center gap-2"><div className="route-weather-icon-pro cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}</div><span className="text-sm font-bold text-[var(--text-main)]">{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</span><span className="text-[10px] text-[var(--cc-muted)]">{weatherSummary.current?.windSpeed10m != null ? `Viento ${weatherSummary.current.windSpeed10m} km/h` : weatherSummary.windSpeedMax != null ? `Viento máx ${weatherSummary.windSpeedMax} km/h` : null}</span></div> : null}
-              </RutaPanel>
+              </div>
+              <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "12px"}}>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 700, color: "#e5edf8"}}>Clima de ruta</p>
+                <select value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)} style={{marginTop: "6px", height: "28px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "10px", fontWeight: 600, color: "#e5edf8", outline: "none", width: "100%"}}>
+                  {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
+                </select>
+                {weatherLoading ? <p style={{margin: "6px 0 0 0", fontSize: "10px", color: "#93a4b8"}}><span style={{color: "#06b6d4"}}>⟳</span> Consultando...</p> : null}
+                {weatherError ? <p style={{margin: "6px 0 0 0", fontSize: "10px", color: "#f97316"}}>⚠ {weatherError}</p> : null}
+                {weatherSummary && !weatherLoading ? <div style={{marginTop: "6px", fontSize: "11px", color: "#e5edf8"}}>{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</div> : null}
+              </div>
             </div>
           ) : null}
 
           {message || redZonesError || optimizedRoute ? (
-            <RutaPanel className="p-3">
-              {message ? <p className="text-sm font-semibold text-[var(--text-main)]">{message}</p> : null}
-              {optimizedRoute ? <p className="mt-1 text-xs font-semibold text-blue-700">Distancia {formatDistance(optimizedRoute.distance_m)} · Conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} · Atención {formatDuration(getRouteServiceDuration(optimizedRoute))} · Total {formatDuration(optimizedRoute.duration_s)}</p> : null}
-              {redZonesError ? <p className="mt-1 text-xs font-semibold cc-orange">{redZonesError}</p> : null}
-            </RutaPanel>
+            <div style={{marginTop: "8px", padding: "10px 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+              {message ? <p style={{margin: 0, fontSize: "12px", fontWeight: 600, color: "#e5edf8"}}>{message}</p> : null}
+              {optimizedRoute ? <p style={{margin: "4px 0 0 0", fontSize: "11px", fontWeight: 600, color: "#60a5fa"}}>Distancia {formatDistance(optimizedRoute.distance_m)} &middot; Conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} &middot; Atención {formatDuration(getRouteServiceDuration(optimizedRoute))} &middot; Total {formatDuration(optimizedRoute.duration_s)}</p> : null}
+              {redZonesError ? <p style={{margin: "4px 0 0 0", fontSize: "11px", fontWeight: 600, color: "#f97316"}}>{redZonesError}</p> : null}
+            </div>
           ) : null}
         </>
       ) : (
-        <RutaPanel className="route-territory-toolbar-pro rounded-xl border p-4">
-          <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_360px] xl:items-start">
-            <div>
-              <p className="cc-route-label text-xs">Mapa territorial</p>
-              <h3 className="mt-1 text-xl font-black text-white">Cobertura territorial de visitas</h3>
-              <p className="mt-1 text-sm font-semibold text-[var(--cc-muted)]">Busca y revisa concentración por comuna con las visitas cargadas.</p>
-              <label className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] px-4">
-                <Search size={18} className="text-[var(--cc-muted)]" />
-                <input
-                  aria-label="Buscar dirección, ticket o comuna"
-                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-white outline-none placeholder:text-[var(--cc-muted)]"
-                  onChange={(event) => setTerritorialSearch(event.target.value)}
-                  placeholder="Buscar dirección, ticket o comuna..."
-                  value={territorialSearch}
-                />
-              </label>
-            </div>
-            <div className="grid gap-3">
-              <p className="cc-route-label text-xs">Capas activas</p>
-              <div className="grid grid-cols-2 gap-2">
-                {['Visitas', 'Heatmap', 'Zonas rojas', 'Comunas'].map((layer) => (
-                  <span key={layer} className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-xs font-black text-[var(--text-main)]">
-                    {layer}
-                  </span>
-                ))}
-              </div>
-              <p className="text-xs font-semibold text-[var(--cc-muted)]">Heatmap usa soporte disponible de puntos/capas existentes; sin datos cargados no dibuja puntos.</p>
-            </div>
-          </div>
-        </RutaPanel>
-      )}
-
-
-      <RutaPanel className="route-map-section-pro overflow-hidden">
-          <div className="border-b border-[var(--border-main)] px-4 py-3">
-            <h3 className="text-base font-bold text-[var(--text-main)]">Mapa de ruta</h3>
-          </div>
-          <div className="cc-route-map-compact relative overflow-hidden rounded-xl" style={{minHeight:"360px", maxHeight:"420px"}}>
-            <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>
-              <ZoomControl position="topleft" />
-              <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
-              <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZoneCenter} />
-              <RouteMapBounds points={boundsPoints} />
-              <SelectedRedZoneFocus zone={redZoneDraft} />
-              <BaseMapLayers>
-                <ActiveRedZonesLayers onSelect={selectRedZone} redZoneMode="manage" selectedZoneId={selectedRedZoneId} zones={activeRedZones} />
-                {redZones ? (
-                  <LayersControl.Overlay name="Zonas rojas históricas">
-                    <GeoJSON
-                      data={redZones}
-                      style={RED_ZONE_STYLE}
-                      onEachFeature={onEachHistoricalZone}
-                    />
-                  </LayersControl.Overlay>
-                ) : null}
-                {optimizedLine.length > 1 || (optimizedLine.length === 0 && stopPoints.length > 1) ? (
-                  <LayersControl.Overlay checked name="Ruta optimizada">
-                    <LayerGroup>
-                      <Polyline positions={optimizedLine.length > 1 ? optimizedLine : stopPoints} pathOptions={{ color: '#0f5fcf', weight: optimizedLine.length > 1 ? 5 : 4, opacity: optimizedLine.length > 1 ? 0.82 : 0.72 }} />
-                    </LayerGroup>
-                  </LayersControl.Overlay>
-                ) : null}
-                {stops.length > 0 ? (
-                  <LayersControl.Overlay checked name="Paradas / tickets">
-                    <LayerGroup>
-                      {stops.map((stop, index) =>
-                        Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? (
-                          <CircleMarker
-                            key={stop.id}
-                            center={[stop.lat as number, stop.lng as number]}
-                            pathOptions={{
-                              color: '#ffffff',
-                              fillColor: stop.isRedZone ? '#ef4444' : stop.status === 'exitosa' ? '#10b981' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b',
-                              fillOpacity: 0.85,
-                              weight: 2,
-                            }}
-                            radius={9}
-                          >
-                            <Popup>
-                              <strong>
-                                {index + 1}. {stop.clientName}
-                              </strong>
-                              <br />
-                              Ref: {stop.referencia}
-                              <br />
-                              Estado: {STATUS_LABELS[stop.status]}
-                            </Popup>
-                          </CircleMarker>
-                        ) : null,
-                      )}
-                    </LayerGroup>
-                  </LayersControl.Overlay>
-                ) : null}
-              </BaseMapLayers>
-              {selectedStartPoint ? (
-                <CircleMarker
-                  center={[selectedStartPoint.lat, selectedStartPoint.lon]}
-                  pathOptions={{
-                    color: '#ffffff',
-                    fillColor: '#10b981',
-                    fillOpacity: 0.95,
-                    weight: 3,
-                  }}
-                  radius={11}
-                >
-                  <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
-                    Inicio de ruta
-                  </Tooltip>
-                  <Popup>
-                    <strong>Punto de inicio</strong>
-                    <br />
-                    {selectedStartPoint.label}
-                  </Popup>
-                </CircleMarker>
-              ) : null}
-            </MapContainer>
-            {redZonePanelOpen ? (
-              <div className="absolute left-4 right-4 top-16 z-[500] max-h-[70%] overflow-y-auto rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-xl md:left-auto md:right-4 md:w-[320px] md:max-h-[85%]">
-                <div className="sticky top-0 border-b border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
-                  <div className="flex items-center justify-between gap-3">
-                    <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-[var(--text-main)]">Zonas rojas</p>
-                      <p className="mt-1 text-[11px] font-medium text-[var(--cc-muted)]">Activas en PostgreSQL y capa histórica solo de referencia.</p>
-                    </div>
-                    <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={() => setRedZonePanelOpen(false)} type="button">
-                      Ocultar
-                    </button>
-                  </div>
-                  <button
-                    className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-700"
-                    onClick={() => {
-                      const newDraft = createEmptyRedZoneDraft();
-                      newDraft.lat = activeRedZones.length > 0 ? activeRedZones[0].lat : null;
-                      newDraft.lon = activeRedZones.length > 0 ? activeRedZones[0].lon : null;
-                      setRedZoneDraft(newDraft);
-                      setRedZonePicking(true);
-                      setMessage('Haz clic en el mapa para definir el centro de la nueva zona roja');
-                    }}
-                    type="button"
-                  >
-                    + Nueva zona roja
-                  </button>
-                </div>
-                <div className="p-4">
-                  {activeRedZones.length > 0 ? (
-                    <div className="grid gap-2">
-                      {activeRedZones.map((zone) => (
-                        <button
-                          key={zone.id}
-                          className={`w-full rounded-lg border px-3 py-2 text-left transition ${selectedRedZoneId === zone.id ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-100' : 'border-[var(--border-main)] bg-[var(--bg-card)] hover:bg-[var(--bg-main)]'}`}
-                          onClick={() => selectRedZone(zone)}
-                          type="button"
-                        >
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="text-xs font-bold text-[var(--text-main)]">{zone.name}</span>
-                            <span className="rounded-md bg-[var(--bg-card)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--text-main)]">{zone.severity}</span>
-                          </div>
-                          <p className="mt-1 text-[11px] text-[var(--cc-muted)]">{zone.comuna || 'Sin comuna'} · {Math.round(zone.radius_m)} m</p>
-                          <span className="mt-2 inline-flex text-[11px] font-bold text-blue-300">Editar</span>
-                        </button>
-                      ))}
-                    </div>
-                  ) : null}
-                  <p className="pt-1 text-[11px] font-medium text-[var(--cc-muted)]">Zonas históricas: disponibles como capa de referencia en el selector de capas.</p>
-                  <div className="mt-4 space-y-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-3" ref={redZoneFormRef}>
-                    <p className="text-xs font-bold text-[var(--text-main)]">Nueva zona roja</p>
-                    <div className="grid grid-cols-2 gap-2">
-                      <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
-                        Nombre
-                        <input className="rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none" onChange={(e) => setRedZoneDraft(prev => prev ? {...prev, name: e.target.value} : null)} value={redZoneDraft?.name ?? ''} />
-                      </label>
-                      <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
-                        Comuna
-                        <input className="rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none" onChange={(e) => setRedZoneDraft(prev => prev ? {...prev, comuna: e.target.value} : null)} value={redZoneDraft?.comuna ?? ''} />
-                      </label>
-                    </div>
-                    <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
-                      Radio (m)
-                      <input className="rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none" max={2000} min={50} onChange={(e) => setRedZoneDraft(prev => prev ? {...prev, radius_m: Number(e.target.value)} : null)} type="number" value={redZoneDraft?.radius_m ?? 350} />
-                    </label>
-                    <div className="flex items-center gap-2">
-                      <button
-                        className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white disabled:opacity-60"
-                        disabled={redZoneSaving}
-                        onClick={() => void saveRedZone()}
-                        type="button"
-                      >
-                        {redZoneSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
-                        Guardar
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            ) : (
-              <button
-                className="absolute right-4 top-16 z-[500] rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-xl"
-                onClick={() => setRedZonePanelOpen(true)}
-                type="button"
-              >
-                Zonas rojas
-              </button>
-            )}
-          </div>
-        </RutaPanel>
-
-        {/* Map legend */}
-        <div className="flex flex-wrap items-center gap-4 px-1 py-2 text-[11px] font-semibold text-[var(--cc-muted)]">
-          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-emerald-500" /> Inicio</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-amber-500" /> Paradas</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> Zonas rojas</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-0.5 w-4 bg-blue-500" /> Ruta optimizada</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-green-500" /> Exitosa</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-red-500" /> No exitosa</span>
-          <span className="flex items-center gap-1.5"><span className="inline-block h-2.5 w-2.5 rounded-full bg-gray-400" /> Pendiente</span>
+        /* Territory tab */
+        <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
+          <p style={{color: "#93a4b8", fontSize: "13px"}}>Mapa territorial - contenido</p>
         </div>
-
-        {activeRouteTab === 'operation' ? (
-        <>
-        <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
-          <RutaPanel className="route-stops-panel-pro overflow-hidden">
-            <div className="border-b border-[var(--border-main)] px-4 py-3">
-              <h3 className="text-base font-bold text-[var(--text-main)]">Visitas planificadas</h3>
-              <p className="text-xs font-medium text-[var(--cc-muted)]">Marca resultado de visita, observación y revisión territorial.</p>
-            </div>
-
-            {stops.length === 0 ? (
-              <div className="p-6 text-center">
-                <p className="text-sm font-bold text-[var(--text-main)]">Sin tickets cargados</p>
-                <p className="mt-1 text-xs font-medium text-[var(--cc-muted)]">Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
-              </div>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full text-left text-xs">
-                  <thead>
-                    <tr className="border-b border-[var(--border-main)] bg-[var(--bg-card)] text-[10px] font-bold uppercase tracking-wider text-[var(--cc-muted)]">
-                      <th className="px-3 py-2">N°</th>
-                      <th className="px-3 py-2">Ticket</th>
-                      <th className="px-3 py-2">Cliente / Dirección</th>
-                      <th className="px-3 py-2">Reclamos</th>
-                      <th className="px-3 py-2">Estado</th>
-                      <th className="px-3 py-2">Zona roja</th>
-                      <th className="px-3 py-2">Valor</th>
-                      <th className="px-3 py-2 w-20">Acción</th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-[var(--border-main)]">
-                    {stops.map((stop, index) => (
-                      <tr key={stop.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
-                        <td className="px-3 py-2 font-bold text-[var(--text-main)]">{index + 1}</td>
-                        <td className="px-3 py-2"><span className="font-mono text-[10px] text-[var(--text-secondary)]">{stop.referencia}</span></td>
-                        <td className="px-3 py-2 min-w-0">
-                          <p className="truncate max-w-[200px] font-semibold text-[var(--text-main)]" title={stop.clientName}>{stop.clientName}</p>
-                          {stop.address ? <p className="truncate max-w-[200px] text-[10px] text-[var(--cc-muted)]" title={stop.address}>{stop.address}</p> : null}
-                        </td>
-                        <td className="px-3 py-2 text-[var(--cc-muted)]">{stop.claimsCount.toLocaleString('es-CL')}</td>
-                        <td className="px-3 py-2">
-                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${STATUS_CLASSES[stop.status]}`}>
-                            <span className={`inline-block h-1.5 w-1.5 rounded-full ${stop.status === 'exitosa' ? 'bg-emerald-500' : stop.status === 'no_exitosa' ? 'bg-red-500' : 'bg-amber-500'}`} />
-                            {STATUS_LABELS[stop.status]}
-                          </span>
-                        </td>
-                        <td className="px-3 py-2">
-                          {stop.isRedZone ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-950/30 dark:text-red-300">Zona roja</span> : <span className="text-[var(--cc-muted)]">—</span>}
-                        </td>
-                        <td className="px-3 py-2 font-bold text-[var(--text-main)] whitespace-nowrap">{calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</td>
-                        <td className="px-3 py-2">
-                          <div className="flex items-center gap-1">
-                            <select className="h-7 w-16 rounded border border-[var(--border-main)] bg-[var(--bg-card)] px-1 text-[10px] font-bold text-[var(--text-main)] outline-none" aria-label="Estado de visita" onChange={(event) => updateStopStatus(stop.id, event.target.value as RutaVisitStatus)} value={stop.status}>
-                              <option value="pendiente">Pend.</option>
-                              <option value="exitosa">Ok</option>
-                              <option value="no_exitosa">No</option>
-                            </select>
-                            <button className="flex h-7 w-7 items-center justify-center rounded border border-red-100 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-300" onClick={() => removeStop(stop.id)} type="button" title="Eliminar"><Trash2 size={11} /></button>
-                          </div>
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </RutaPanel>
-
-          <RutaPanel className="route-totals-panel-pro p-4">
-            <h3 className="text-sm font-black text-[var(--text-main)]">Valorización del día</h3>
-            <div className="mt-3 space-y-2 text-xs">
-              <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Tarifa exitosa</span><span className="font-bold text-emerald-700">{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
-              <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Tarifa no exitosa</span><span className="font-bold text-red-700">{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
-              <div className="border-t border-[var(--border-main)] pt-2 flex justify-between"><span className="font-bold text-[var(--text-main)]">Total</span><span className="font-black text-[var(--text-main)]">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
-              {optimizedRoute ? <div className="border-t border-[var(--border-main)] pt-2 text-[10px] text-[var(--cc-muted)]">Distancia: {routeFuelSummary ? formatKilometers(routeFuelSummary.totalKm) : formatDistance(optimizedRoute.distance_m)} · {formatDuration(optimizedRoute.duration_s)}</div> : null}
-            </div>
-          </RutaPanel>
-        </section>
-
-        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
-          <RutaPanel className="p-4">
-            <h3 className="text-sm font-black text-[var(--text-main)]">Resultados del día</h3>
-            <div className="mt-3 flex flex-col gap-2">
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1.5 text-xs text-[var(--cc-muted)]"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Exitosas</span>
-                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{summary.successful.toLocaleString('es-CL')}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1.5 text-xs text-[var(--cc-muted)]"><span className="inline-block h-2 w-2 rounded-full bg-red-500" /> No exitosas</span>
-                <span className="text-sm font-bold text-red-700 dark:text-red-300">{summary.unsuccessful.toLocaleString('es-CL')}</span>
-              </div>
-              <div className="flex items-center justify-between gap-2">
-                <span className="flex items-center gap-1.5 text-xs text-[var(--cc-muted)]"><span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> Pendientes</span>
-                <span className="text-sm font-bold text-[var(--text-main)]">{summary.pending.toLocaleString('es-CL')}</span>
-              </div>
-              {/* Mini bar chart */}
-              {summary.ticketsToday > 0 ? <div className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-[var(--border-main)]">
-                <div className="h-full bg-emerald-500 transition-all" style={{width: `${(summary.successful / summary.ticketsToday) * 100}%`}} />
-                <div className="h-full bg-red-500 transition-all" style={{width: `${(summary.unsuccessful / summary.ticketsToday) * 100}%`}} />
-                <div className="h-full bg-amber-500 transition-all" style={{width: `${(summary.pending / summary.ticketsToday) * 100}%`}} />
-              </div> : null}
-            </div>
-          </RutaPanel>
-
-          {/* 3. Clima en ruta */}
-          <RutaPanel className="p-4">
-            <h3 className="text-sm font-black text-[var(--text-main)]">Clima en ruta</h3>
-            {weatherSummary && !weatherLoading ? (
-              <div className="mt-3">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl">{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}</span>
-                  <div>
-                    <p className="text-lg font-black text-[var(--text-main)]">{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C</p>
-                    <p className="text-[10px] font-medium text-[var(--cc-muted)]">{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</p>
-                  </div>
-                </div>
-                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--cc-muted)]">
-                  {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
-                  {weatherSummary.precipitationProbabilityMax != null ? <span>Lluvia {weatherSummary.precipitationProbabilityMax}%</span> : null}
-                </div>
-              </div>
-            ) : (
-              <p className="mt-3 text-xs font-medium text-[var(--cc-muted)]">{weatherLoading ? 'Consultando...' : 'Sin datos climáticos'}</p>
-            )}
-          </RutaPanel>
-
-          {/* 4. Resumen de reclamos */}
-          <RutaPanel className="p-4">
-            <h3 className="text-sm font-black text-[var(--text-main)]">Resumen de reclamos</h3>
-            <div className="mt-3">
-              <p className="text-2xl font-black text-[var(--text-main)]">{routeClaimsToday.toLocaleString('es-CL')}</p>
-              <p className="text-xs font-medium text-[var(--cc-muted)]">Reclamos en ruta hoy</p>
-              <div className="mt-2 space-y-1 text-xs">
-                <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Tickets cargados</span><span className="font-bold text-[var(--text-main)]">{stops.length}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Con coordenadas</span><span className="font-bold text-[var(--text-main)]">{stopPoints.length}</span></div>
-                <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Zonas rojas activas</span><span className="font-bold text-red-700 dark:text-red-300">{activeRedZones.length}</span></div>
-              </div>
-            </div>
-          </RutaPanel>
-        </section>
-        </>
-        ) : (
-          <section className="route-territory-panels-pro grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
-            <RutaPanel className="route-territory-concentration-pro overflow-hidden rounded-xl border">
-              <div className="border-b border-[var(--border-main)] px-4 py-3">
-                <h3 className="text-base font-bold text-white">Panel de concentración por comuna</h3>
-                <p className="text-xs font-medium text-[var(--cc-muted)]">Derivado desde coordenadas y capa comunal existente.</p>
-              </div>
-              <div className="divide-y divide-slate-800">
-                {visibleTerritorialConcentration.length > 0 ? visibleTerritorialConcentration.map((item) => (
-                  <article key={item.comuna} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                    <div className="min-w-0">
-                      <h4 className="truncate text-sm font-black text-white">{item.comuna}</h4>
-                      <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">{item.completadas} completadas · {item.pendientes} pendientes · {item.zonasRojas} zonas rojas</p>
-                    </div>
-                    <span className="rounded-lg bg-blue-500/15 px-3 py-2 text-sm font-black text-blue-200">{item.visitas}</span>
-                  </article>
-                )) : (
-                  <div className="p-6 text-center text-sm font-bold text-[var(--cc-muted)]">Sin visitas georreferenciadas para mostrar concentración.</div>
-                )}
-              </div>
-            </RutaPanel>
-
-            <RutaPanel className="route-territory-layer-panel-pro self-start rounded-xl border p-4">
-              <h3 className="text-base font-bold text-white">Panel de capas activas</h3>
-              <div className="mt-4 grid gap-2 text-sm">
-                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Visitas cargadas</span><span className="font-black text-white">{stops.length.toLocaleString('es-CL')}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Con coordenadas</span><span className="font-black text-white">{stopPoints.length.toLocaleString('es-CL')}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Zonas rojas activas</span><span className="font-black text-red-300">{activeRedZones.length.toLocaleString('es-CL')}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Comunas detectadas</span><span className="font-black text-white">{territorialConcentration.length.toLocaleString('es-CL')}</span></div>
-              </div>
-            </RutaPanel>
-          </section>
-        )}
-      {/* END main (removed in restructure) */}
+      )}
     </div>
   );
 }
-
-
-
-
-
