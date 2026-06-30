@@ -42,9 +42,9 @@ const toneStyles: Record<KpiTone, { icon: string; trend: string; halo: string }>
     halo: 'bg-cyan-400/10',
   },
   slate: {
-    icon: 'bg-white/[0.04] text-[#EAF0F8] border-white/[0.08]',
-    trend: 'bg-white/[0.04] text-[#EAF0F8] border-white/[0.08]',
-    halo: 'bg-white/[0.04]',
+    icon: 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-main)]',
+    trend: 'bg-[var(--bg-card)] text-[var(--text-main)] border-[var(--border-main)]',
+    halo: 'bg-[var(--bg-card)]',
   },
 };
 
@@ -67,16 +67,16 @@ export function TailAdminKpiCard({
   const styles = toneStyles[tone];
 
   return (
-    <section className={`relative flex min-h-[132px] items-center overflow-hidden rounded-lg border border-white/[0.08] bg-[#111827] p-4 shadow-lg shadow-black/20 ${className}`}>
+    <section className={`relative flex min-h-[132px] items-center overflow-hidden rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-4 shadow-lg shadow-black/20 ${className}`}>
       <div className={`pointer-events-none absolute -right-8 -top-10 h-28 w-28 rounded-full blur-2xl ${styles.halo}`} />
       <div className="relative w-full">
         <div className="flex items-center justify-between gap-4">
           <div className="flex min-w-0 flex-1 flex-col justify-center">
-            <p className="truncate text-sm font-bold text-[#7A90A8]">{title}</p>
-            <p className="mt-1.5 break-words text-2xl font-black leading-none text-[#EAF0F8]">{value}</p>
+            <p className="truncate text-sm font-bold text-[var(--cc-muted)]">{title}</p>
+            <p className="mt-1.5 break-words text-2xl font-black leading-none text-[var(--text-main)]">{value}</p>
             {(detail || trendLabel) ? (
               <div className="mt-3 flex flex-wrap items-center gap-2">
-                {detail ? <p className="min-w-0 text-xs font-semibold leading-snug text-[#7A90A8]">{detail}</p> : null}
+                {detail ? <p className="min-w-0 text-xs font-semibold leading-snug text-[var(--cc-muted)]">{detail}</p> : null}
                 {trendLabel ? (
                   <span className={`inline-flex items-center gap-1 rounded-full border px-2.5 py-1 text-xs font-black ${styles.trend}`}>
                     <TrendIcon direction={trendDirection} />

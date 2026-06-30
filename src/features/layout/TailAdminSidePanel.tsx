@@ -21,22 +21,22 @@ export function TailAdminSidePanel({
   className = '',
 }: TailAdminSidePanelProps) {
   return (
-    <section className={`rounded-lg border border-white/[0.08] bg-[#111827] shadow-lg shadow-black/20 ${className}`}>
-      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/[0.08] px-4 py-3">
+    <section className={`rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] shadow-lg shadow-black/20 ${className}`}>
+      <div className="flex flex-wrap items-center justify-between gap-3 border-b border-[var(--border-main)] px-4 py-3">
         <div className="flex min-w-0 items-center gap-3">
           <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#1B4FD8]/30 bg-[#1B4FD8]/15 text-[#AFC6FF]">
             <SlidersHorizontal size={19} />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-black text-[#EAF0F8] sm:text-base">{title}</h2>
-            {subtitle ? <p className="mt-0.5 truncate text-xs font-semibold text-[#7A90A8]">{subtitle}</p> : null}
+            <h2 className="truncate text-sm font-black text-[var(--text-main)] sm:text-base">{title}</h2>
+            {subtitle ? <p className="mt-0.5 truncate text-xs font-semibold text-[var(--cc-muted)]">{subtitle}</p> : null}
           </div>
         </div>
 
         {onToggle ? (
           <button
             aria-expanded={!collapsed}
-            className="flex h-9 w-9 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-[#7A90A8] transition hover:border-[#1B4FD8]/60 hover:text-[#EAF0F8]"
+            className="flex h-9 w-9 items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] transition hover:border-[#1B4FD8]/60 hover:text-[var(--text-main)]"
             onClick={onToggle}
             type="button"
           >
@@ -52,7 +52,7 @@ export function TailAdminSidePanel({
       ) : null}
 
       {footer && !collapsed ? (
-        <div className="border-t border-white/[0.08] px-4 py-3 text-xs font-semibold text-[#7A90A8]">
+        <div className="border-t border-[var(--border-main)] px-4 py-3 text-xs font-semibold text-[var(--cc-muted)]">
           {footer}
         </div>
       ) : null}

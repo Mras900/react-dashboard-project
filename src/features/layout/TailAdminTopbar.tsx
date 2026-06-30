@@ -30,14 +30,14 @@ export function TailAdminTopbar({
   const downloadTitle = viewMode === 'regiones' && isEmptyCurrentView ? emptyViewMessage : downloadLabel;
 
   return (
-    <header className="cc-header no-print mb-3 flex min-h-[68px] flex-col gap-3 rounded-lg border border-white/[0.08] bg-[#111827]/95 px-4 py-3 shadow-lg shadow-black/20 backdrop-blur xl:flex-row xl:items-center xl:justify-between">
+    <header className="cc-header no-print mb-3 flex min-h-[68px] flex-col gap-3 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)]/95 px-4 py-3 shadow-lg shadow-black/20 backdrop-blur xl:flex-row xl:items-center xl:justify-between">
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#1B4FD8] shadow-[0_0_0_4px_rgba(27,79,216,0.16)]" aria-hidden="true" />
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[#7A90A8]">Dashboard administrativo</p>
+          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--cc-muted)]">Dashboard administrativo</p>
         </div>
-        <h1 className="mt-1 truncate text-xl font-black tracking-tight text-[#EAF0F8] 2xl:text-2xl">{title}</h1>
-        <p className="mt-1 truncate text-xs font-semibold text-[#7A90A8] 2xl:text-sm">{subtitle}</p>
+        <h1 className="mt-1 truncate text-xl font-black tracking-tight text-[var(--text-main)] 2xl:text-2xl">{title}</h1>
+        <p className="mt-1 truncate text-xs font-semibold text-[var(--cc-muted)] 2xl:text-sm">{subtitle}</p>
       </div>
 
       <div className="cc-header-actions flex flex-wrap items-center justify-start gap-2 xl:justify-end">
@@ -53,7 +53,7 @@ export function TailAdminTopbar({
         </button>
 
         <button
-          className="inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-xs font-black text-[#EAF0F8] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
+          className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07] disabled:cursor-not-allowed disabled:opacity-50 2xl:px-4"
           disabled={isEmptyCurrentView}
           onClick={onExportEvidence}
           title={isEmptyCurrentView ? emptyViewMessage : 'Exportar evidencia'}
@@ -65,7 +65,7 @@ export function TailAdminTopbar({
 
         <button
           aria-label={isDarkPremium ? 'Cambiar a tema claro' : 'Cambiar a modo oscuro'}
-          className="theme-toggle inline-flex h-10 items-center gap-2 rounded-lg border border-white/[0.08] bg-white/[0.04] px-3 text-xs font-black text-[#EAF0F8] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07] 2xl:px-4"
+          className="theme-toggle inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07] 2xl:px-4"
           onClick={onToggleTheme}
           title={isDarkPremium ? 'Tema claro' : 'Modo oscuro'}
           type="button"
@@ -76,7 +76,7 @@ export function TailAdminTopbar({
 
         <button
           aria-label="Notificaciones"
-          className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-white/[0.08] bg-white/[0.04] text-[#EAF0F8] transition hover:border-[#1B4FD8]/60 hover:bg-white/[0.07]"
+          className="relative flex h-10 w-10 items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-main)] transition hover:border-[#1B4FD8]/60 hover:bg-[var(--bg-card)]"
           type="button"
         >
           <Bell size={19} />
