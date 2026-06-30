@@ -14,7 +14,7 @@ type ConfigurableChartCardProps = {
 function SinDatos() {
   return (
     <div className="flex h-full min-h-[200px] items-center justify-center">
-      <p className="text-sm font-bold text-slate-400">Sin datos</p>
+      <p className="text-sm font-bold text-[var(--cc-muted)]">Sin datos</p>
     </div>
   );
 }
@@ -26,7 +26,7 @@ export function ConfigurableChartCard({ chart, dataSources }: ConfigurableChartC
     if (!data || data.length === 0) return <SinDatos />;
 
     const primaryColor = getChartAccentHex(chart.accent);
-    const tooltipStyle = { background: '#fff', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '13px' };
+    const tooltipStyle = { background: 'var(--bg-card)', border: '1px solid var(--border-main)', borderRadius: '8px', fontSize: '13px', color: 'var(--text-main)' };
     const fmt = (value: number | string) => {
       const n = typeof value === 'number' ? value : Number(value);
       return Number.isFinite(n) ? n.toLocaleString('es-CL') : String(value);
@@ -36,7 +36,7 @@ export function ConfigurableChartCard({ chart, dataSources }: ConfigurableChartC
       return (
         <ResponsiveContainer width="100%" height={250}>
           <BarChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-            <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+            <CartesianGrid stroke="var(--border-main)" strokeDasharray="3 3" />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} interval={0} angle={-20} textAnchor="end" height={60} />
             <YAxis tickFormatter={fmt} tick={{ fontSize: 11 }} />
             <Tooltip contentStyle={tooltipStyle} formatter={(value) => [fmt(value as number), '']} />
@@ -50,7 +50,7 @@ export function ConfigurableChartCard({ chart, dataSources }: ConfigurableChartC
       return (
         <ResponsiveContainer width="100%" height={250}>
           <LineChart data={data} margin={{ top: 8, right: 8, left: 0, bottom: 8 }}>
-            <CartesianGrid stroke="#e2e8f0" strokeDasharray="3 3" />
+            <CartesianGrid stroke="var(--border-main)" strokeDasharray="3 3" />
             <XAxis dataKey="name" tick={{ fontSize: 11 }} />
             <YAxis tickFormatter={fmt} tick={{ fontSize: 11 }} />
             <Tooltip contentStyle={tooltipStyle} formatter={(value) => [fmt(value as number), '']} />
@@ -79,10 +79,10 @@ export function ConfigurableChartCard({ chart, dataSources }: ConfigurableChartC
   }, [data, chart.type, chart.accent]);
 
   return (
-    <div className="flex h-full flex-col gap-1 rounded-xl border border-slate-200 bg-white p-4">
+    <div className="flex h-full flex-col gap-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-4">
       <div className="flex-shrink-0">
-        <h3 className="text-sm font-black text-[#071b4d]">{chart.title}</h3>
-        {chart.subtitle ? <p className="text-[11px] font-semibold text-slate-500">{chart.subtitle}</p> : null}
+        <h3 className="text-sm font-black text-[var(--text-main)]">{chart.title}</h3>
+        {chart.subtitle ? <p className="text-[11px] font-semibold text-[var(--cc-muted)]">{chart.subtitle}</p> : null}
       </div>
       <div className="min-h-0 flex-1">{content}</div>
     </div>
