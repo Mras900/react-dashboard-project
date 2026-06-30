@@ -108,40 +108,37 @@ body {
   background: var(--bg-main);
 }
 
-[data-theme="dark-premium"] .bg-white,
-[data-theme="dark-premium"] [class*="bg-white"],
-[data-theme="dark-premium"] [class*="bg-[#f6f8fc]"],
-[data-theme="dark-premium"] [class*="bg-[#f4f7fb]"] {
+[data-theme="dark-premium"] .bg-white {
   background-color: var(--bg-card) !important;
 }
 
-[data-theme="dark-premium"] aside[class*="bg-white"] {
+/* F6 removed aggressive substring selectors [class*="bg-white"], [class*="bg-[#f6f8fc]"], [class*="bg-[#f4f7fb]"] — components now use CSS variables */
+
+[data-theme="dark-premium"] aside.bg-white {
   background-color: var(--bg-sidebar) !important;
 }
 
-[data-theme="dark-premium"] main,
-[data-theme="dark-premium"] [class*="bg-[#f4f7fb]"],
-[data-theme="dark-premium"] [class*="bg-[#f6f8fc]"] {
+[data-theme="dark-premium"] main {
   background-color: var(--bg-main) !important;
 }
 
-[data-theme="dark-premium"] header,
-[data-theme="dark-premium"] section[class*="bg-white"],
-[data-theme="dark-premium"] .rounded-lg[class*="border"],
-[data-theme="dark-premium"] .rounded-xl[class*="border"] {
+/* F6 removed aggressive substring selectors bg-[#f4f7fb], bg-[#f6f8fc] — components now use CSS variables */
+
+[data-theme="dark-premium"] header {
   background-color: var(--bg-card) !important;
   border-color: var(--border-main) !important;
   box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28) !important;
 }
 
-[data-theme="dark-premium"] [class*="bg-slate-50"],
-[data-theme="dark-premium"] [class*="bg-slate-100"],
+/* F6 removed aggressive substring selectors section[class*="bg-white"], .rounded-lg[class*="border"], .rounded-xl[class*="border"] — components now use CSS variables */
+
 [data-theme="dark-premium"] [class*="bg-blue-50"],
 [data-theme="dark-premium"] [class*="bg-cyan-100"],
 [data-theme="dark-premium"] [class*="bg-violet-50"],
 [data-theme="dark-premium"] [class*="bg-orange-100"] {
   background-color: var(--bg-card-soft) !important;
 }
+/* F6 removed aggressive substring selectors bg-slate-50, bg-slate-100 — migrated to CSS variables */
 
 [data-theme="dark-premium"] [class*="bg-blue-100"] {
   background-color: rgba(27, 79, 216, 0.22) !important;
@@ -155,29 +152,8 @@ body {
   background-color: rgba(34, 197, 94, 0.14) !important;
 }
 
-[data-theme="dark-premium"] [class*="border-slate-100"],
-[data-theme="dark-premium"] [class*="border-slate-200"],
-[data-theme="dark-premium"] [class*="divide-slate-100"] > :not([hidden]) ~ :not([hidden]) {
-  border-color: var(--border-main) !important;
-}
+/* F6 — removed aggressive substring selectors border-slate-*, divide-slate-*, text-[#071b4d], text-[#172448], text-[#466083], text-slate-500/600/700/900 — components now use CSS variables */
 
-[data-theme="dark-premium"] [class*="text-[#071b4d]"],
-[data-theme="dark-premium"] [class*="text-[#172448]"],
-[data-theme="dark-premium"] [class*="text-slate-900"],
-[data-theme="dark-premium"] [class*="text-blue-900"] {
-  color: var(--text-main) !important;
-}
-
-[data-theme="dark-premium"] [class*="text-[#466083]"],
-[data-theme="dark-premium"] [class*="text-[#6b7d98]"],
-[data-theme="dark-premium"] [class*="text-[#8190ad]"],
-[data-theme="dark-premium"] [class*="text-slate-500"],
-[data-theme="dark-premium"] [class*="text-slate-600"],
-[data-theme="dark-premium"] [class*="text-slate-700"] {
-  color: var(--text-secondary) !important;
-}
-
-[data-theme="dark-premium"] [class*="text-[#073B91]"],
 [data-theme="dark-premium"] [class*="text-blue-600"],
 [data-theme="dark-premium"] [class*="text-blue-700"] {
   color: #8fb4ff !important;
