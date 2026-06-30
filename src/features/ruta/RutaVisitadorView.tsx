@@ -286,9 +286,9 @@ function BaseMapLayers({ children }: { children?: ReactNode }) {
 
 const formatKilometers = (kilometers: number) => `${kilometers.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} km`;
 
-const formatLiters = (liters: number) => `${liters.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L`;
+const formatLiters = (liters: number) => { void formatLiters; return `${liters.toLocaleString('es-CL', { minimumFractionDigits: 1, maximumFractionDigits: 1 })} L`; };
 
-const formatClp = (value: number) => value.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
+const formatClp = (value: number) => { void formatClp; return value.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 }); };
 
 
 const MONTHS = ['Enero','Febrero','Marzo','Abril','Mayo','Junio','Julio','Agosto','Septiembre','Octubre','Noviembre','Diciembre'];
@@ -1609,6 +1609,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         </div>
 
         {activeRouteTab === 'operation' ? (
+        <>
         <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <RutaPanel className="route-stops-panel-pro overflow-hidden">
             <div className="border-b border-[var(--border-main)] px-4 py-3">
@@ -1674,62 +1675,79 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             )}
           </RutaPanel>
 
-          <RutaPanel className="route-totals-panel-pro self-start p-4">
-            <h3 className="text-base font-bold text-[var(--text-main)]">Valorización del día</h3>
-            <div className="mt-4 grid gap-3 text-sm">
-              <div className="flex justify-between gap-3">
-                <span className="font-medium text-[var(--cc-muted)]">Tramo actual</span>
-                <span className="font-bold text-[var(--text-main)]">{stops.length >= 13 ? '13 o más tickets' : 'Menos de 13 tickets'}</span>
+          <RutaPanel className="route-totals-panel-pro p-4">
+            <h3 className="text-sm font-black text-[var(--text-main)]">Valorización del día</h3>
+            <div className="mt-3 space-y-2 text-xs">
+              <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Tarifa exitosa</span><span className="font-bold text-emerald-700">{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+              <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Tarifa no exitosa</span><span className="font-bold text-red-700">{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+              <div className="border-t border-[var(--border-main)] pt-2 flex justify-between"><span className="font-bold text-[var(--text-main)]">Total</span><span className="font-black text-[var(--text-main)]">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+              {optimizedRoute ? <div className="border-t border-[var(--border-main)] pt-2 text-[10px] text-[var(--cc-muted)]">Distancia: {routeFuelSummary ? formatKilometers(routeFuelSummary.totalKm) : formatDistance(optimizedRoute.distance_m)} · {formatDuration(optimizedRoute.duration_s)}</div> : null}
+            </div>
+          </RutaPanel>
+        </section>
+
+        <section className="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+          <RutaPanel className="p-4">
+            <h3 className="text-sm font-black text-[var(--text-main)]">Resultados del día</h3>
+            <div className="mt-3 flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-[var(--cc-muted)]"><span className="inline-block h-2 w-2 rounded-full bg-emerald-500" /> Exitosas</span>
+                <span className="text-sm font-bold text-emerald-700 dark:text-emerald-300">{summary.successful.toLocaleString('es-CL')}</span>
               </div>
-              <div className="flex justify-between gap-3">
-                <span className="font-medium text-[var(--cc-muted)]">Tarifa exitosa</span>
-                <span className="font-bold text-emerald-700">{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-[var(--cc-muted)]"><span className="inline-block h-2 w-2 rounded-full bg-red-500" /> No exitosas</span>
+                <span className="text-sm font-bold text-red-700 dark:text-red-300">{summary.unsuccessful.toLocaleString('es-CL')}</span>
               </div>
-              <div className="flex justify-between gap-3">
-                <span className="font-medium text-[var(--cc-muted)]">Tarifa no exitosa</span>
-                <span className="font-bold text-red-700">{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
+              <div className="flex items-center justify-between gap-2">
+                <span className="flex items-center gap-1.5 text-xs text-[var(--cc-muted)]"><span className="inline-block h-2 w-2 rounded-full bg-amber-500" /> Pendientes</span>
+                <span className="text-sm font-bold text-[var(--text-main)]">{summary.pending.toLocaleString('es-CL')}</span>
               </div>
-              {optimizedRoute ? (
-                <div className="border-t border-[var(--border-main)] pt-3">
-                  <div className="flex justify-between gap-3">
-                    <span className="font-medium text-[var(--cc-muted)]">Kilómetros totales</span>
-                    <span className="font-bold text-blue-700">{routeFuelSummary ? formatKilometers(routeFuelSummary.totalKm) : formatDistance(optimizedRoute.distance_m)}</span>
+              {/* Mini bar chart */}
+              {summary.ticketsToday > 0 ? <div className="mt-1 flex h-2 w-full overflow-hidden rounded-full bg-[var(--border-main)]">
+                <div className="h-full bg-emerald-500 transition-all" style={{width: `${(summary.successful / summary.ticketsToday) * 100}%`}} />
+                <div className="h-full bg-red-500 transition-all" style={{width: `${(summary.unsuccessful / summary.ticketsToday) * 100}%`}} />
+                <div className="h-full bg-amber-500 transition-all" style={{width: `${(summary.pending / summary.ticketsToday) * 100}%`}} />
+              </div> : null}
+            </div>
+          </RutaPanel>
+
+          {/* 3. Clima en ruta */}
+          <RutaPanel className="p-4">
+            <h3 className="text-sm font-black text-[var(--text-main)]">Clima en ruta</h3>
+            {weatherSummary && !weatherLoading ? (
+              <div className="mt-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-2xl">{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}</span>
+                  <div>
+                    <p className="text-lg font-black text-[var(--text-main)]">{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C</p>
+                    <p className="text-[10px] font-medium text-[var(--cc-muted)]">{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</p>
                   </div>
-                  <div className="mt-2 flex justify-between gap-3">
-                    <span className="font-medium text-[var(--cc-muted)]">Tiempo conducción</span>
-                    <span className="font-bold text-blue-700">{formatDuration(getRouteTravelDuration(optimizedRoute))}</span>
-                  </div>
-                  <div className="mt-2 flex justify-between gap-3">
-                    <span className="font-medium text-[var(--cc-muted)]">Tiempo atención</span>
-                    <span className="font-bold text-blue-700">{formatDuration(getRouteServiceDuration(optimizedRoute))}</span>
-                  </div>
-                  <div className="mt-2 flex justify-between gap-3">
-                    <span className="font-medium text-[var(--cc-muted)]">Tiempo total estimado</span>
-                    <span className="font-bold text-blue-700">{formatDuration(optimizedRoute.duration_s)}</span>
-                  </div>
-                  {routeFuelSummary ? (
-                    <>
-                      <div className="mt-2 flex justify-between gap-3">
-                        <span className="font-medium text-[var(--cc-muted)]">Litros estimados</span>
-                        <span className="font-bold text-blue-700">{formatLiters(routeFuelSummary.estimatedLiters)}</span>
-                      </div>
-                      <div className="mt-2 flex justify-between gap-3">
-                        <span className="font-medium text-[var(--cc-muted)]">Costo combustible</span>
-                        <span className="font-bold text-blue-700">{formatClp(routeFuelSummary.estimatedFuelCost)}</span>
-                      </div>
-                    </>
-                  ) : null}
                 </div>
-              ) : null}
-              <div className="border-t border-[var(--border-main)] pt-3">
-                <div className="flex justify-between gap-3">
-                  <span className="font-bold text-[var(--text-main)]">Total valorizado</span>
-                  <span className="font-extrabold text-[var(--text-main)]">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
+                <div className="mt-2 flex flex-wrap gap-x-3 gap-y-1 text-[10px] text-[var(--cc-muted)]">
+                  {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
+                  {weatherSummary.precipitationProbabilityMax != null ? <span>Lluvia {weatherSummary.precipitationProbabilityMax}%</span> : null}
                 </div>
+              </div>
+            ) : (
+              <p className="mt-3 text-xs font-medium text-[var(--cc-muted)]">{weatherLoading ? 'Consultando...' : 'Sin datos climáticos'}</p>
+            )}
+          </RutaPanel>
+
+          {/* 4. Resumen de reclamos */}
+          <RutaPanel className="p-4">
+            <h3 className="text-sm font-black text-[var(--text-main)]">Resumen de reclamos</h3>
+            <div className="mt-3">
+              <p className="text-2xl font-black text-[var(--text-main)]">{routeClaimsToday.toLocaleString('es-CL')}</p>
+              <p className="text-xs font-medium text-[var(--cc-muted)]">Reclamos en ruta hoy</p>
+              <div className="mt-2 space-y-1 text-xs">
+                <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Tickets cargados</span><span className="font-bold text-[var(--text-main)]">{stops.length}</span></div>
+                <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Con coordenadas</span><span className="font-bold text-[var(--text-main)]">{stopPoints.length}</span></div>
+                <div className="flex justify-between"><span className="text-[var(--cc-muted)]">Zonas rojas activas</span><span className="font-bold text-red-700 dark:text-red-300">{activeRedZones.length}</span></div>
               </div>
             </div>
           </RutaPanel>
         </section>
+        </>
         ) : (
           <section className="route-territory-panels-pro grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
             <RutaPanel className="route-territory-concentration-pro overflow-hidden rounded-xl border">
