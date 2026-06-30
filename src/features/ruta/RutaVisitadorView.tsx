@@ -1,4 +1,4 @@
-import { CalendarDays, ChevronDown, Download, Loader2, MapPin, Route, Save, Search, Trash2, UserRound } from 'lucide-react';
+import { CalendarDays, ChevronDown, Download, Loader2, MapPin, Route, Save, Search, Settings, Trash2, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L, { type LatLngTuple, type Layer } from 'leaflet';
@@ -402,7 +402,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const redZoneSaveButtonRef = useRef<HTMLButtonElement | null>(null);
 
   const weatherCoords = KNOWN_COMUNAS.find((k) => k.name === weatherComuna);
-  const importedEligibleCount = importedReclamos.length;
+  const importedEligibleCount = importedReclamos.length; void importedEligibleCount;
 
   useEffect(() => {
     if (!weatherCoords) return;
@@ -1095,14 +1095,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         .cc-route-daily-premium button.text-white,
         .cc-route-daily-premium a.text-white { color: #ffffff !important; }
       `}</style>
-      <RutaPanel className="route-daily-shell-pro rounded-xl border p-4">
-        <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
-          <div>
-            <p className="cc-route-label text-xs">Ruta diaria</p>
-            <h2 className="mt-1 text-2xl font-black text-white">Ruta diaria</h2>
-            <p className="mt-1 text-sm font-semibold text-[var(--cc-muted)]">Planificación operativa, visitas y seguimiento en terreno</p>
-          </div>
-          <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[360px]">
+      <div className="flex items-center justify-between gap-4 mb-3">
+        <div>
+          <h2 className="text-2xl font-black text-[var(--text-main)]">Ruta diaria</h2>
+          <p className="mt-0.5 text-sm font-semibold text-[var(--cc-muted)]">Planificación operativa, visitas y seguimiento en terreno</p>
+        </div>
+        <div className="flex items-center gap-2">
             {([
               { id: 'operation' as const, label: 'Operación diaria' },
               { id: 'territory' as const, label: 'Mapa territorial' },
@@ -1118,277 +1116,99 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </button>
             ))}
           </div>
+          <button className="flex h-10 items-center gap-2 rounded-lg bg-[#0f5fcf] px-4 text-sm font-black text-white transition hover:bg-[#0d47a1]" onClick={exportCsv} type="button" disabled={stops.length === 0}>
+            <Download size={16} />
+            Exportar ruta
+          </button>
         </div>
-      </RutaPanel>
 
       {activeRouteTab === 'operation' ? (
         <>
-      {/* TOP CONFIG — collapsible */}
-      <RutaPanel className="p-3">
-        <button
-          className="flex w-full items-center justify-between gap-2 text-left"
-          onClick={() => setConfigPanelOpen(prev => !prev)}
-          type="button"
-        >
-          <div className="flex items-center gap-2">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{background:"rgba(34,211,238,0.09)",color:"var(--cc-cyan, #0891b2)"}}>
-              <Route size={16} />
-            </span>
-            <span className="text-sm font-black text-[var(--text-main)]">Configuración de ruta</span>
-            <span className="text-[10px] font-bold text-[var(--cc-muted)]">{configPanelOpen ? 'Ocultar' : 'Mostrar'} · Visitador, fechas, inicio, params</span>
-          </div>
-          <ChevronDown size={16} className={`text-[var(--cc-muted)] transition-transform ${configPanelOpen ? 'rotate-180' : ''}`} />
-        </button>
-        {configPanelOpen ? (
-        <div className="mt-3 grid gap-3 xl:grid-cols-[280px_1fr_280px]">
-        <RutaPanel className="route-calendar-card-pro cc-route-calendar-zone rounded-xl border p-4">
-          <RouteMonthCalendar
-            selectedDate={fechaVisita}
-            onSelectDate={(d) => { setFechaVisita(d); }}
-            visitsByDate={visitsByDate}
-          />
-        </RutaPanel>
+          {/* KPI row — 4 cards */}
+          <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
+            <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString("es-CL")} subtitle="Total del día" icon={<CalendarDays size={18} />} tone="blue" />
+            <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString("es-CL")} subtitle="Gestionadas" icon={<Save size={18} />} tone="green" />
+            <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString("es-CL")}%`} subtitle="Efectividad" icon={<Route size={18} />} tone="blue" />
+            <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString("es-CL")} subtitle="En ruta" icon={<Search size={18} />} tone="red" />
+          </section>
 
-        <RutaPanel className="route-hero-pro cc-route-ticket-primary rounded-xl border p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{background:"rgba(34,211,238,0.09)",color:"var(--cc-cyan, #0891b2)"}}>
-              <Route size={18} />
-            </span>
-            <h2 className="route-hero-header-pro cc-route-ticket-header text-base font-black">Configuraci&oacute;n de ruta</h2>
-            <span className="cc-route-badge shrink-0">Operaci&oacute;n diaria</span>
-          </div>
-          <p className="cc-route-subtitle mb-3 text-xs">Define visitador, fechas, punto de inicio y par&aacute;metros operativos para la jornada seleccionada.</p>
-          {importedEligibleCount > 0 ? (
-            <p className="mb-3 rounded-lg border border-blue-100 bg-blue-50 px-3 py-2 text-xs font-semibold text-blue-800">
-              Reclamos importados elegibles disponibles como contexto: {importedEligibleCount.toLocaleString('es-CL')}. La ruta mantiene búsqueda/CRM como fuente de paradas.
-            </p>
-          ) : null}
-          <label className="grid gap-2">
-            <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
-              <UserRound size={15} />
-              Visitador
-            </span>
-            <input
-              className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              aria-label="Nombre del visitador"
-              onChange={(event) => setVisitador(event.target.value)}
-              value={visitador}
-            />
-          </label>
+          {/* Controls — compact row */}
+          <RutaPanel className="p-3">
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="cc-route-segmented flex rounded-lg border">
+                <button aria-pressed={searchMode === "ticket"} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === "ticket" ? "bg-blue-600 text-white" : "text-[var(--cc-muted)] hover:text-[var(--text-main)]"}`} onClick={() => setSearchMode("ticket")} type="button">Por Ticket</button>
+                <button aria-pressed={searchMode === "rut"} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === "rut" ? "bg-blue-600 text-white" : "text-[var(--cc-muted)] hover:text-[var(--text-main)]"}`} onClick={() => setSearchMode("rut")} type="button">Por RUT</button>
+              </div>
+              <form className="flex gap-2 min-w-0 flex-1" onSubmit={(event) => { event.preventDefault(); void handleSearch(); }}>
+                <input className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label={searchMode === "ticket" ? "ID ticket" : "RUT"} placeholder={searchMode === "ticket" ? "Ej: FAC-4821" : "Ej: 12.345.678-9"} onChange={(event) => setSearchValue(event.target.value)} value={searchValue} />
+                <button className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit" aria-label="Buscar">{loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}<span>Agregar</span></button>
+              </form>
+              <span className="text-xs font-bold text-[var(--cc-muted)]">|</span>
+              <button className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" onClick={() => setShowBulkInput(prev => !prev)} type="button">Carga masiva</button>
+              <input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none" type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} />
+              <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button" title="Exportar CSV"><Download size={13} /></button>
+              <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button" title="Limpiar tickets"><Trash2 size={13} /></button>
+            </div>
+            {showBulkInput ? (
+              <form className="mt-2 flex gap-2" onSubmit={(event) => { event.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(""); void addTicketIds(ids); }}>
+                <textarea className="h-16 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Carga masiva de tickets" placeholder="IDs separados por coma, punto y coma o salto de línea..." onChange={(event) => setBulkTicketIds(event.target.value)} value={bulkTicketIds} />
+                <button className="flex h-16 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit"><span>Cargar</span></button>
+              </form>
+            ) : null}
+          </RutaPanel>
 
-          <div className="route-hero-grid-pro grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-2">
-              <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
-                <CalendarDays size={15} />
-                Fecha de carga
-              </span>
-              <input
-                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                onChange={(event) => setFechaCarga(event.target.value)}
-                type="date"
-                value={fechaCarga}
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
-                <CalendarDays size={15} />
-                Fecha de visita
-              </span>
-              <input
-                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                onChange={(event) => setFechaVisita(event.target.value)}
-                type="date"
-                value={fechaVisita}
-              />
-            </label>
-          </div>
-
-          <label className="grid gap-2">
-            <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
-              <MapPin size={15} />
-              Punto de inicio
-            </span>
-            <input
-              className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              aria-label="Punto de inicio"
-              onChange={(event) => {
-                setStartPoint(event.target.value);
-                setSelectedStartPoint(null);
-                setSelectingStartPoint(false);
-                setOptimizedRoute(null);
-              }}
-              value={startPoint}
-            />
-          </label>
+          {/* Action buttons */}
           <div className="flex flex-wrap items-center gap-2">
-            <button
-              className={`h-9 rounded-lg px-3 text-xs font-bold transition ${
-                selectingStartPoint ? 'bg-amber-50 text-amber-700 ring-1 ring-amber-200' : 'border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100'
-              }`}
-              onClick={() => {
-                setSelectingStartPoint(true);
-                setMessage('Haz click en el mapa para definir el punto de partida');
-              }}
-              type="button"
-            >
-              Seleccionar en mapa
-            </button>
-            <button
-              className="h-9 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60"
-              disabled={!selectedStartPoint && !startPoint}
-              onClick={clearStartPoint}
-              type="button"
-            >
-              Limpiar inicio
-            </button>
+            <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60" disabled={saving || stops.length === 0 || !visitador.trim()} onClick={() => void saveDailyVisits()} type="button">{saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />} Guardar visitas</button>
+            <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={stops.length === 0 || optimizing || !startPoint.trim()} onClick={optimizeRoute} type="button">{optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />} Optimizar ruta</button>
           </div>
-          <span
-            className={`w-fit rounded-md px-2 py-1 text-xs font-bold ${
-              selectingStartPoint
-                ? 'bg-amber-50 text-amber-700'
-                : selectedStartPoint
-                  ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-[var(--bg-card)] text-[var(--cc-muted)]'
-            }`}
-          >
-            {selectingStartPoint ? 'Selecciona punto en el mapa' : selectedStartPoint ? 'Inicio validado' : 'Inicio sin validar'}
-          </span>
 
-          <label className="grid gap-2">
-            <span className="text-xs font-bold text-[var(--text-main)]">Minutos por visita</span>
-            <input
-              className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              min={10}
-              onChange={(event) => setServiceMinutesPerStop(Math.max(Number(event.target.value) || 10, 10))}
-              type="number"
-              value={serviceMinutesPerStop}
-            />
-            <span className="text-xs font-medium text-[var(--cc-muted)]">Se suma por cada parada, no incluye el punto de inicio.</span>
-          </label>
-
-          <div className="route-hero-grid-pro grid gap-3 sm:grid-cols-2">
-            <label className="grid gap-2">
-              <span className="text-xs font-bold text-[var(--text-main)]">Rendimiento km/L</span>
-              <input
-                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                min={1}
-                onChange={(event) => setFuelEfficiency(Math.max(Number(event.target.value) || 1, 1))}
-                step="0.1"
-                type="number"
-                value={fuelEfficiency}
-              />
-            </label>
-            <label className="grid gap-2">
-              <span className="text-xs font-bold text-[var(--text-main)]">Precio combustible</span>
-              <input
-                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                min={0}
-                onChange={(event) => setFuelPrice(Math.max(Number(event.target.value) || 0, 0))}
-                step={10}
-                type="number"
-                value={fuelPrice}
-              />
-            </label>
-          </div>
-        </RutaPanel>
-        {/* Weather card - enhanced */}
-        <RutaPanel className="route-weather-compact-pro cc-route-weather-hero rounded-xl border p-2">
-          <div className="route-weather-header-pro flex items-center gap-2 mb-2">
-            <span className="cc-route-label text-[10px] font-bold">Clima de ruta</span>
-            <span className="cc-route-badge" style={{fontSize:"0.5rem"}}>{weatherSummary?.source === 'openweather' ? 'OpenWeather' : weatherSummary?.source === 'open-meteo' ? 'Open-Meteo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
-            <select className="cc-route-input h-6 w-auto max-w-[120px] px-1 text-[9px] font-bold rounded-lg border" value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)}>
-              {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
-            </select>
-          </div>
-          {weatherLoading ? <p className="cc-route-stop-meta text-[10px]"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando...</p> : null}
-          {weatherError ? <p className="cc-route-stop-meta text-[10px] leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError}</p> : null}
-          {weatherSummary && !weatherLoading ? (
-            <div className="route-weather-content-pro flex flex-wrap items-center gap-2">
-              <div className="route-weather-icon-pro cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>
-                {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}
-              </div>
-              <div className="cc-route-weather-main">
-                <div className="route-weather-temp-pro cc-route-weather-condition text-base">{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C</div>
-                <div className="text-[10px] font-semibold cc-text-secondary">{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</div>
-              </div>
-              <div className="route-weather-meta-pro cc-route-weather-metrics text-[10px]">
-                {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
-                {weatherSummary.current?.precipitation != null ? <span> · Lluvia {weatherSummary.current.precipitation} mm</span> : weatherSummary.precipitationSum != null ? <span> · Lluvia {weatherSummary.precipitationSum} mm</span> : null}
-              </div>
-              <span className={'route-weather-badge-pro cc-route-weather-alert ' + (weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-alert-high' : weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-alert-warning' : 'cc-route-weather-alert-normal')}>
-                {weatherSummary.riskLevel === 'alto' ? '⚠️ Alto' : weatherSummary.riskLevel === 'precaucion' ? '⚡ Precaución' : '✅ Normal'}
-              </span>
+          {/* Config toggle — minimal, collapsed by default */}
+          <button className="inline-flex h-8 items-center gap-1.5 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--cc-muted)] transition hover:bg-[var(--bg-main)]" onClick={() => setConfigPanelOpen(prev => !prev)} type="button">
+            <Settings size={13} />
+            <span>Configuración de ruta</span>
+            <ChevronDown size={12} className={`transition-transform ${configPanelOpen ? "rotate-180" : ""}`} />
+          </button>
+          {configPanelOpen ? (
+            <div className="grid gap-3 xl:grid-cols-[280px_1fr_280px]">
+              <RutaPanel className="route-calendar-card-pro cc-route-calendar-zone rounded-xl border p-3">
+                <RouteMonthCalendar selectedDate={fechaVisita} onSelectDate={(d) => { setFechaVisita(d); }} visitsByDate={visitsByDate} />
+              </RutaPanel>
+              <RutaPanel className="route-hero-pro cc-route-ticket-primary rounded-xl border p-3">
+                <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-3">
+                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><UserRound size={12} /> Visitador</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Nombre del visitador" onChange={(event) => setVisitador(event.target.value)} value={visitador} /></label>
+                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><CalendarDays size={12} /> Fecha carga</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" onChange={(event) => setFechaCarga(event.target.value)} type="date" value={fechaCarga} /></label>
+                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><CalendarDays size={12} /> Fecha visita</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" onChange={(event) => setFechaVisita(event.target.value)} type="date" value={fechaVisita} /></label>
+                  <label className="grid gap-1"><span className="flex items-center gap-1 text-[10px] font-bold text-[var(--text-main)]"><MapPin size={12} /> Punto inicio</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Punto de inicio" onChange={(event) => { setStartPoint(event.target.value); setSelectedStartPoint(null); setSelectingStartPoint(false); setOptimizedRoute(null); }} value={startPoint} /></label>
+                  <label className="grid gap-1"><span className="text-[10px] font-bold text-[var(--text-main)]">Min/visita</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" min={10} onChange={(event) => setServiceMinutesPerStop(Math.max(Number(event.target.value) || 10, 10))} type="number" value={serviceMinutesPerStop} /></label>
+                  <label className="grid gap-1"><span className="text-[10px] font-bold text-[var(--text-main)]">Km/L</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" min={1} onChange={(event) => setFuelEfficiency(Math.max(Number(event.target.value) || 1, 1))} step="0.1" type="number" value={fuelEfficiency} /></label>
+                  <label className="grid gap-1"><span className="text-[10px] font-bold text-[var(--text-main)]">Precio comb.</span><input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" min={0} onChange={(event) => setFuelPrice(Math.max(Number(event.target.value) || 0, 0))} step={10} type="number" value={fuelPrice} /></label>
+                </div>
+                <div className="mt-2 flex flex-wrap items-center gap-2">
+                  <button className={`h-7 rounded-md px-2 text-[10px] font-bold transition ${selectingStartPoint ? "bg-amber-50 text-amber-700 ring-1 ring-amber-200" : "border border-blue-200 bg-blue-50 text-blue-700 hover:bg-blue-100"}`} onClick={() => { setSelectingStartPoint(true); setMessage("Haz click en el mapa para definir el punto de partida"); }} type="button">Seleccionar en mapa</button>
+                  <button className="h-7 rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-[10px] font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={!selectedStartPoint && !startPoint} onClick={clearStartPoint} type="button">Limpiar</button>
+                  <span className={`rounded-md px-2 py-1 text-[10px] font-bold ${selectingStartPoint ? "bg-amber-50 text-amber-700" : selectedStartPoint ? "bg-emerald-50 text-emerald-700" : "bg-[var(--bg-card)] text-[var(--cc-muted)]"}`}>{selectingStartPoint ? "Selecciona punto en mapa" : selectedStartPoint ? "Inicio validado" : "Sin validar"}</span>
+                </div>
+              </RutaPanel>
+              <RutaPanel className="route-weather-compact-pro cc-route-weather-hero rounded-xl border p-2">
+                <div className="route-weather-header-pro flex items-center gap-2 mb-2">
+                  <span className="cc-route-label text-[10px] font-bold">Clima de ruta</span>
+                  <select className="cc-route-input h-6 w-auto max-w-[120px] px-1 text-[9px] font-bold rounded-lg border" value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)}>{KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}</select>
+                </div>
+                {weatherLoading ? <p className="cc-route-stop-meta text-[10px]"><span style={{color:"var(--cc-cyan,#0891b2)"}}>⟳</span> Consultando...</p> : null}
+                {weatherError ? <p className="cc-route-stop-meta text-[10px] leading-tight"><span style={{color:"var(--cc-orange,#f97316)"}}>⚠</span> {weatherError}</p> : null}
+                {weatherSummary && !weatherLoading ? <div className="flex flex-wrap items-center gap-2"><div className="route-weather-icon-pro cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}</div><span className="text-sm font-bold text-[var(--text-main)]">{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</span><span className="text-[10px] text-[var(--cc-muted)]">{weatherSummary.current?.windSpeed10m != null ? `Viento ${weatherSummary.current.windSpeed10m} km/h` : weatherSummary.windSpeedMax != null ? `Viento máx ${weatherSummary.windSpeedMax} km/h` : null}</span></div> : null}
+              </RutaPanel>
             </div>
           ) : null}
-        </RutaPanel>
-        </div>
-        ) : null}
-      </RutaPanel>
-      {/* END collapsible config */}
 
-      {/* Ticket controls — compact row */}
-      <RutaPanel className="p-3">
-        <div className="flex flex-wrap items-center gap-2">
-          <div className="cc-route-segmented flex rounded-lg border">
-            <button aria-pressed={searchMode === 'ticket'} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`} onClick={() => setSearchMode('ticket')} type="button">Por Ticket</button>
-            <button aria-pressed={searchMode === 'rut'} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`} onClick={() => setSearchMode('rut')} type="button">Por RUT</button>
-          </div>
-          <form className="flex gap-2 min-w-0 flex-1" onSubmit={(event) => { event.preventDefault(); void handleSearch(); }}>
-            <input className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'} placeholder={searchMode === 'ticket' ? 'Ej: FAC-4821' : 'Ej: 12.345.678-9'} onChange={(event) => setSearchValue(event.target.value)} value={searchValue} />
-            <button className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit" aria-label="Buscar">{loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}<span>Agregar</span></button>
-          </form>
-          <span className="text-xs font-bold text-[var(--cc-muted)]">|</span>
-          <button className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" onClick={() => setShowBulkInput(prev => !prev)} type="button">Carga masiva</button>
-          <input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none" type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} />
-          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button"><Download size={13} /></button>
-          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button"><Trash2 size={13} /></button>
-        </div>
-        {showBulkInput ? (
-          <form className="mt-2 flex gap-2" onSubmit={(event) => { event.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(''); void addTicketIds(ids); }}>
-            <textarea className="h-16 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Carga masiva de tickets" placeholder="IDs separados por coma, punto y coma o salto de línea..." onChange={(event) => setBulkTicketIds(event.target.value)} value={bulkTicketIds} />
-            <button className="flex h-16 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit"><span>Cargar</span></button>
-          </form>
-        ) : null}
-      </RutaPanel>
-
-      {/* Actions — compact row */}
-      <div className="flex flex-wrap items-center gap-2">
-        <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60" disabled={saving || stops.length === 0 || !visitador.trim()} onClick={() => void saveDailyVisits()} type="button">{saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />}
-            Guardar visitas
-          </button>
-          <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={stops.length === 0 || optimizing || !startPoint.trim()} onClick={optimizeRoute} type="button">
-            {optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />}
-            Optimizar ruta
-          </button>
-          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
-            <Download size={13} />
-            Exportar CSV
-          </button>
-          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button">
-            <Trash2 size={13} />
-            Limpiar tickets
-          </button>
-        </div>
-      {/* END aside (removed in restructure) */}
-
-      {/* KPI row — 4 cards responsive */}
-        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString('es-CL')} subtitle="Total del día" icon={<CalendarDays size={18} />} tone="blue" />
-          <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString('es-CL')} subtitle="Gestionadas" icon={<Save size={18} />} tone="green" />
-          <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString('es-CL')}%`} subtitle="Efectividad" icon={<Route size={18} />} tone="blue" />
-          <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString('es-CL')} subtitle="En ruta" icon={<Search size={18} />} tone="red" />
-        </section>
-
-        {message || redZonesError || optimizedRoute ? (
-          <RutaPanel className="p-3">
-            {message ? <p className="text-sm font-semibold text-[var(--text-main)]">{message}</p> : null}
-            {optimizedRoute ? (
-              <p className="mt-1 text-xs font-semibold text-blue-700">
-                Distancia total {formatDistance(optimizedRoute.distance_m)} · Tiempo conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} · Tiempo atención {formatDuration(getRouteServiceDuration(optimizedRoute))} · Tiempo total estimado {formatDuration(optimizedRoute.duration_s)}
-              </p>
-            ) : null}
-            {redZonesError ? <p className="mt-1 text-xs font-semibold cc-orange">{redZonesError}. La vista sigue funcionando con el estado de zona roja informado por backend.</p> : null}
-          </RutaPanel>        ) : null}
+          {message || redZonesError || optimizedRoute ? (
+            <RutaPanel className="p-3">
+              {message ? <p className="text-sm font-semibold text-[var(--text-main)]">{message}</p> : null}
+              {optimizedRoute ? <p className="mt-1 text-xs font-semibold text-blue-700">Distancia {formatDistance(optimizedRoute.distance_m)} · Conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} · Atención {formatDuration(getRouteServiceDuration(optimizedRoute))} · Total {formatDuration(optimizedRoute.duration_s)}</p> : null}
+              {redZonesError ? <p className="mt-1 text-xs font-semibold cc-orange">{redZonesError}</p> : null}
+            </RutaPanel>
+          ) : null}
         </>
       ) : (
         <RutaPanel className="route-territory-toolbar-pro rounded-xl border p-4">
