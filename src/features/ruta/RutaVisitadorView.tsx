@@ -73,19 +73,34 @@ function RutaPanel({
   return <section className={`cc-route-card rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm ${className}`}>{children}</section>;
 }
 
-function RutaMetricCard({ label, value, tone = 'blue' }: { label: string; value: string; tone?: 'blue' | 'green' | 'red' | 'amber' | 'slate' }) {
-  const toneClass = {
-    blue: 'bg-blue-50 text-blue-700',
-    green: 'bg-emerald-50 text-emerald-700',
-    red: 'bg-red-50 text-red-700',
-    amber: 'bg-amber-50 text-amber-700',
+function RutaMetricCard({ label, value, subtitle, icon, tone = 'blue' }: { label: string; value: string; subtitle?: string; icon?: ReactNode; tone?: 'blue' | 'green' | 'red' | 'amber' | 'slate' }) {
+  const accentRing: Record<string, string> = {
+    blue: 'bg-blue-100 text-blue-600 dark:bg-blue-900/25 dark:text-blue-300',
+    green: 'bg-emerald-100 text-emerald-600 dark:bg-emerald-900/25 dark:text-emerald-300',
+    red: 'bg-red-100 text-red-600 dark:bg-red-900/25 dark:text-red-300',
+    amber: 'bg-amber-100 text-amber-600 dark:bg-amber-900/25 dark:text-amber-300',
     slate: 'bg-[var(--bg-card)] text-[var(--text-main)]',
-  }[tone];
+  };
+  const valueColor: Record<string, string> = {
+    blue: 'text-blue-700 dark:text-blue-200',
+    green: 'text-emerald-700 dark:text-emerald-200',
+    red: 'text-red-700 dark:text-red-200',
+    amber: 'text-amber-700 dark:text-amber-200',
+    slate: 'text-[var(--text-main)]',
+  };
 
   return (
-    <RutaPanel className="cc-route-kpi cc-kpi-card-pro p-3">
-      <p className="cc-route-kpi-label cc-kpi-label-pro">{label}</p>
-      <p className={`cc-route-kpi-value cc-kpi-value-pro mt-2 ${toneClass}`}>{value}</p>
+    <RutaPanel className="relative flex items-center gap-3 overflow-hidden rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-4 shadow-sm">
+      {icon ? (
+        <span className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full ${accentRing[tone]}`}>
+          {icon}
+        </span>
+      ) : null}
+      <div className="min-w-0 flex-1">
+        <p className="truncate text-xs font-semibold text-[var(--cc-muted)]">{label}</p>
+        <p className={`mt-0.5 text-2xl font-black leading-none tracking-tight ${valueColor[tone]}`}>{value}</p>
+        {subtitle ? <p className="mt-1 truncate text-[11px] font-medium text-[var(--cc-muted)]">{subtitle}</p> : null}
+      </div>
     </RutaPanel>
   );
 }
@@ -1357,10 +1372,10 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
       {/* KPI row — 4 cards responsive */}
         <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
-          <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString('es-CL')} />
-          <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
-          <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString('es-CL')}%`} tone="blue" />
-          <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString('es-CL')} tone="amber" />
+          <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString('es-CL')} subtitle="Total del día" icon={<CalendarDays size={18} />} tone="blue" />
+          <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString('es-CL')} subtitle="Gestionadas" icon={<Save size={18} />} tone="green" />
+          <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString('es-CL')}%`} subtitle="Efectividad" icon={<Route size={18} />} tone="blue" />
+          <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString('es-CL')} subtitle="En ruta" icon={<Search size={18} />} tone="red" />
         </section>
 
         {message || redZonesError || optimizedRoute ? (
