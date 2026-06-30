@@ -59,6 +59,7 @@ import type { RoutePeriod, RouteDailyMetrics } from '../features/ruta/routeDaily
 import type { RedZone } from '../features/red-zones/redZoneTypes';
 import { fetchDashboardDailyVisits, type DashboardDailyResponse } from '../services/dashboardApi';
 import { fetchDashboardDatabase, type DashboardClaim, type DashboardDatabaseResponse } from '../services/dashboardDatabaseApi';
+import { applyDashboardTheme, loadStoredTheme } from '../lib/theme';
 import { TailAdminTopbar } from '../features/layout/TailAdminTopbar';
 import { TailAdminSidePanel } from '../features/layout/TailAdminSidePanel';
 import { TailAdminRightPanel } from '../features/layout/TailAdminRightPanel';
@@ -160,7 +161,7 @@ const DEFAULT_FILTERS: DashboardFilters = {
   status: 'todos',
   location: 'all',
 };
-const THEME_STORAGE_KEY = 'dashboard-theme';
+// THEME_STORAGE_KEY moved to src/lib/theme.ts as THEME_KEY — import from there
 const MONTH_LABELS = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 const MONTH_NUMBER_BY_LABEL: Record<string, number> = {
@@ -2089,11 +2090,7 @@ function RouteMetricsSummary({
 export default function Dashboard() {
   const { hasPermission, isAdmin } = useAuth();
   const designConfig = useDesignConfig();
-  const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>(() => {
-    if (typeof window === 'undefined') return 'default';
-    const storedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-    return storedTheme === 'dark-premium' ? 'dark-premium' : 'default';
-  });
+  const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>(loadStoredTheme);
   const [showImportModal, setShowImportModal] = useState(false);
   const [importedRows, setImportedRows] = useState<{ rm: ImportedDashboardRow[]; regiones: ImportedDashboardRow[] }>(loadImportedDashboardRows);
 
@@ -2248,12 +2245,7 @@ export default function Dashboard() {
   }, [hasPermission, viewMode]);
 
   useEffect(() => {
-    const root = document.documentElement;
-    const isDarkPremium = dashboardTheme === 'dark-premium';
-
-    root.dataset.theme = dashboardTheme;
-    root.classList.toggle('dark', isDarkPremium);
-    window.localStorage.setItem(THEME_STORAGE_KEY, dashboardTheme);
+    applyDashboardTheme(dashboardTheme);
   }, [dashboardTheme]);
 
 useEffect(() => {
