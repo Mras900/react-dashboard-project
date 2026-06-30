@@ -1159,7 +1159,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                           <LayerGroup>
                             {stops.map((stop, index) =>
                               Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? (
-                                <CircleMarker key={stop.id} center={[stop.lat, stop.lng]} radius={9}
+                                <CircleMarker key={stop.id} center={[stop.lat!, stop.lng!]} radius={9}
                                   pathOptions={{ color: '#ffffff', fillColor: stop.isRedZone ? '#ef4444' : stop.status === 'exitosa' ? '#10b981' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b', fillOpacity: 0.85, weight: 2 }}>
                                   <Popup><strong>{index + 1}. {stop.clientName}</strong><br />Ref: {stop.referencia}<br />Estado: {STATUS_LABELS[stop.status]}</Popup>
                                 </CircleMarker>

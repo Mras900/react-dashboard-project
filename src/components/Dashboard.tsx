@@ -1798,7 +1798,7 @@ function DashboardSlot({
 
   return <div id={domId} className={className}>{widget.content}</div>;
 }
-function RouteMiniMap({ hasRouteTickets }: { hasRouteTickets: boolean }) {
+function _RouteMiniMap({ hasRouteTickets }: { hasRouteTickets: boolean }) {
   return (
     <div className="relative h-32 min-w-[150px] flex-1 overflow-hidden rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)]">
       <div className="absolute inset-0 opacity-80" style={{ backgroundImage: 'linear-gradient(90deg, rgba(148,163,184,.18) 1px, transparent 1px), linear-gradient(rgba(148,163,184,.18) 1px, transparent 1px)', backgroundSize: '22px 22px' }} />
@@ -1819,110 +1819,91 @@ const getDesignWidgetSizeClass = (size?: DesignWidgetSize) => {
 const sortDesignSections = (sections: DesignSectionConfig[]) => [...sections].sort((a, b) => a.order - b.order);
 const sortDesignWidgets = (widgets: ConfiguredDashboardWidget[]) => [...widgets].sort((a, b) => (a.order ?? 0) - (b.order ?? 0));
 
-function RouteMetricsSummary({
+function DailyOperationSummary({
   routeMetrics,
   routePeriod,
   setRoutePeriod,
   routeDateBase,
   setRouteDateBase,
-  onOptimizeRoute,
-  onViewPending,
+  onGoToRouteView,
 }: {
   routeMetrics: RouteDailyMetrics;
   routePeriod: RoutePeriod;
   setRoutePeriod: (period: RoutePeriod) => void;
   routeDateBase: string;
   setRouteDateBase: (date: string) => void;
-  onOptimizeRoute?: () => void;
-  onViewPending?: () => void;
+  onGoToRouteView?: () => void;
 }) {
-  const hasRouteTickets = routeMetrics.ticketsRuta > 0;
+  void routePeriod; void setRoutePeriod; void routeDateBase; void setRouteDateBase;
+  const hasData = routeMetrics.ticketsRuta > 0;
+  const pct = routeMetrics.ticketsRuta > 0 ? Math.round((routeMetrics.exitosas / routeMetrics.ticketsRuta) * 100) : 0;
 
   return (
-    <Panel className="cc-route-summary-card h-full rounded-xl border p-4">
-      <div className="grid gap-4 lg:grid-cols-[minmax(0,1fr)_170px] xl:grid-cols-1 2xl:grid-cols-[minmax(0,1fr)_170px]">
-        <div className="min-w-0">
-          <div className="flex flex-wrap items-start justify-between gap-3">
-            <div>
-              <h2 className="cc-section-title text-lg font-black">Ruta Visitador</h2>
-              <p className="cc-muted mt-1 text-xs font-semibold">Planifica y revisa la cobertura territorial de visitas.</p>
-            </div>
-            <div className="flex flex-wrap items-center gap-2">
-              <button
-                className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800 disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={!hasRouteTickets}
-                onClick={onOptimizeRoute}
-                title={hasRouteTickets ? undefined : 'Disponible al cargar tickets.'}
-                type="button"
-              >
-                <Route size={15} /> Optimizar ruta
-              </button>
-              <button
-                className="inline-flex h-9 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-black text-[var(--text-main)] hover:bg-[var(--bg-main)] disabled:cursor-not-allowed disabled:opacity-50"
-                disabled={!hasRouteTickets}
-                onClick={onViewPending}
-                title={hasRouteTickets ? undefined : 'Disponible al cargar tickets.'}
-                type="button"
-              >
-                <ClipboardCheck size={15} /> Ver pendientes
-              </button>
-            </div>
-          </div>
-
-          <div className="mt-4 flex flex-wrap items-center gap-2">
-            <div className="cc-segmented flex rounded-lg border">
-              {(['dia', 'semana', 'mes'] as const).map((period) => (
-                <button
-                  key={period}
-                  aria-selected={routePeriod === period}
-                  className={`px-3 py-1.5 text-xs font-black transition ${routePeriod === period ? '' : 'cc-text-secondary hover:cc-text'}`}
-                  onClick={() => setRoutePeriod(period)}
-                  type="button"
-                >
-                  {period === 'dia' ? 'Día' : period === 'semana' ? 'Semana' : 'Mes'}
-                </button>
-              ))}
-            </div>
-            <input
-              className="cc-input h-9 rounded-lg border px-3 text-xs font-bold"
-              onChange={(event) => setRouteDateBase(event.target.value)}
-              type="date"
-              value={routeDateBase}
-            />
-          </div>
+    <Panel className="h-full rounded-xl border p-4">
+      <div className="flex flex-wrap items-start justify-between gap-3 mb-3">
+        <div>
+          <h2 className="cc-section-title text-lg font-black">Operaci&oacute;n diaria</h2>
+          <p className="cc-muted mt-1 text-xs font-semibold">Resumen de visitas cargadas para el d&iacute;a seleccionado</p>
         </div>
-        <RouteMiniMap hasRouteTickets={hasRouteTickets} />
+        <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800" onClick={onGoToRouteView} type="button">
+          Ir a Ruta diaria
+        </button>
       </div>
 
-      <div className="cc-stat-grid mt-4 grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-2 2xl:grid-cols-3">
-        <div className="cc-kpi-card cc-card rounded-xl border p-3">
-          <p className="cc-kpi-label text-xs font-bold">Tickets ruta</p>
-          <p className="cc-kpi-value mt-1 text-lg font-black">{routeMetrics.ticketsRuta.toLocaleString('es-CL')}</p>
+      {!hasData ? (
+        <div className="flex flex-col items-center justify-center py-8 text-center">
+          <p className="text-sm font-bold text-[var(--text-main)]">Sin visitas cargadas para el d&iacute;a seleccionado</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Usa la pesta&ntilde;a Ruta diaria para cargar tickets y visitas.</p>
+          <button className="mt-3 inline-flex h-8 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800" onClick={onGoToRouteView} type="button">
+            Ir a Ruta diaria
+          </button>
         </div>
-        <div className="cc-kpi-card cc-card rounded-xl border p-3">
-          <p className="cc-kpi-label text-xs font-bold">Exitosas</p>
-          <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.exitosas.toLocaleString('es-CL')}</p>
+      ) : (
+        <div className="cc-stat-grid grid grid-cols-2 gap-3 md:grid-cols-3 xl:grid-cols-3 2xl:grid-cols-6">
+          <div className="cc-kpi-card cc-card rounded-xl border p-3" onClick={onGoToRouteView} style={{cursor:"pointer"}}>
+            <p className="cc-kpi-label text-xs font-bold">Visitas hoy</p>
+            <p className="cc-kpi-value mt-1 text-lg font-black">{routeMetrics.ticketsRuta.toLocaleString("es-CL")}</p>
+          </div>
+          <div className="cc-kpi-card cc-card rounded-xl border p-3">
+            <p className="cc-kpi-label text-xs font-bold">Exitosas</p>
+            <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.exitosas.toLocaleString("es-CL")}</p>
+          </div>
+          <div className="cc-kpi-card cc-card rounded-xl border p-3">
+            <p className="cc-kpi-label text-xs font-bold">No exitosas</p>
+            <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.noExitosas.toLocaleString("es-CL")}</p>
+          </div>
+          <div className="cc-kpi-card cc-card rounded-xl border p-3">
+            <p className="cc-kpi-label text-xs font-bold">Pendientes</p>
+            <p className="cc-kpi-value mt-1 text-lg font-black" style={{color:"var(--cc-orange, #f97316)"}}>{routeMetrics.pendientes.toLocaleString("es-CL")}</p>
+          </div>
+          <div className="cc-kpi-card cc-card rounded-xl border p-3">
+            <p className="cc-kpi-label text-xs font-bold">Cumplimiento</p>
+            <p className="cc-kpi-value mt-1 text-lg font-black" style={{color:"var(--cc-blue, #2563eb)"}}>{pct}%</p>
+          </div>
+          <div className="cc-kpi-card cc-card rounded-xl border p-3">
+            <p className="cc-kpi-label text-xs font-bold">En zona roja</p>
+            <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.zonasRojas.toLocaleString("es-CL")}</p>
+          </div>
         </div>
-        <div className="cc-kpi-card cc-card rounded-xl border p-3">
-          <p className="cc-kpi-label text-xs font-bold">No exitosas</p>
-          <p className="cc-kpi-value mt-1 text-lg font-black cc-red">{routeMetrics.noExitosas.toLocaleString('es-CL')}</p>
+      )}
+
+      {hasData ? (
+        <div className="mt-3 flex flex-wrap items-center gap-3 text-xs">
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[var(--cc-muted)]">Total valorizado:</span>
+            <span className="font-black text-[var(--text-main)]">{routeMetrics.totalValorizado.toLocaleString("es-CL", {style:"currency", currency:"CLP", maximumFractionDigits:0})}</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="font-bold text-[var(--cc-muted)]">Proyectado m&aacute;x:</span>
+            <span className="font-black" style={{color:"var(--cc-blue, #2563eb)"}}>{routeMetrics.proyectadoMaximo.toLocaleString("es-CL", {style:"currency", currency:"CLP", maximumFractionDigits:0})}</span>
+          </div>
         </div>
-        <div className="cc-kpi-card cc-card rounded-xl border p-3">
-          <p className="cc-kpi-label text-xs font-bold">Pendientes</p>
-          <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-orange, #f97316)' }}>{routeMetrics.pendientes.toLocaleString('es-CL')}</p>
-        </div>
-        <div className="cc-kpi-card cc-card rounded-xl border p-3">
-          <p className="cc-kpi-label text-xs font-bold">Total valorizado</p>
-          <p className="cc-kpi-value mt-1 text-lg font-black cc-green">{routeMetrics.totalValorizado.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
-        </div>
-        <div className="cc-kpi-card cc-card rounded-xl border p-3">
-          <p className="cc-kpi-label text-xs font-bold">Proyectado máximo</p>
-          <p className="cc-kpi-value mt-1 text-lg font-black" style={{ color: 'var(--cc-blue, #2563eb)' }}>{routeMetrics.proyectadoMaximo.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</p>
-        </div>
-      </div>
+      ) : null}
     </Panel>
   );
-}function ExecutiveDashboardLayout({
+}
+
+function ExecutiveDashboardLayout({
   widgets,
   routeMetrics,
   routePeriod,
@@ -1936,6 +1917,7 @@ function RouteMetricsSummary({
   onShowTerritorialEvidence,
   onOptimizeRoute,
   onViewRoutePending,
+  onGoToRouteView,
   designSections,
 }: {
   widgets: ConfiguredDashboardWidget[];
@@ -1952,6 +1934,7 @@ function RouteMetricsSummary({
   onShowTerritorialEvidence?: (comuna: string) => void;
   onOptimizeRoute?: () => void;
   onViewRoutePending?: () => void;
+  onGoToRouteView?: () => void;
   designSections?: DesignSectionConfig[];
 }) {
   if (designSections) {
@@ -1997,15 +1980,14 @@ function RouteMetricsSummary({
                 ) : null}
                 {hasRouteSummary ? (
                   <div id="dashboard-route-section" className="md:col-span-2 xl:col-span-4">
-                    <RouteMetricsSummary
-                      routeMetrics={routeMetrics}
-                      routePeriod={routePeriod}
-                      setRoutePeriod={setRoutePeriod}
-                      routeDateBase={routeDateBase}
-                      setRouteDateBase={setRouteDateBase}
-                      onOptimizeRoute={onOptimizeRoute}
-                      onViewPending={onViewRoutePending}
-                    />
+                    <DailyOperationSummary
+            routeMetrics={routeMetrics}
+            routePeriod={routePeriod}
+            setRoutePeriod={setRoutePeriod}
+            routeDateBase={routeDateBase}
+            setRouteDateBase={setRouteDateBase}
+            onGoToRouteView={onGoToRouteView}
+          />
                   </div>
                 ) : null}
               </div>
@@ -2074,14 +2056,13 @@ function RouteMetricsSummary({
       <section className="flex-shrink-0 grid grid-cols-1 gap-4 xl:grid-cols-[minmax(0,1.5fr)_minmax(360px,1fr)]">
         <DashboardSlot widgets={widgets} id="tablaComunas" domId="dashboard-evidence-section" />
         <div id="dashboard-route-section">
-          <RouteMetricsSummary
+          <DailyOperationSummary
             routeMetrics={routeMetrics}
             routePeriod={routePeriod}
             setRoutePeriod={setRoutePeriod}
             routeDateBase={routeDateBase}
             setRouteDateBase={setRouteDateBase}
-            onOptimizeRoute={onOptimizeRoute}
-            onViewPending={onViewRoutePending}
+            onGoToRouteView={onGoToRouteView}
           />
         </div>
       </section>
@@ -2226,6 +2207,7 @@ export default function Dashboard() {
     scrollToDashboardSection('dashboard-evidence-section');
   }, [scrollToDashboardSection]);
 
+  const openRouteView = useCallback(() => setActiveTab("ruta"), []);
   const openRouteOptimization = useCallback(() => {
     setActiveTab('ruta');
     console.info('Abrir optimización de Ruta Visitador');
@@ -3783,6 +3765,7 @@ const dateFilterError = useMemo(() => {
                   onOpenTerritorialExplanation={() => setShowTerritorialExplanation(true)}
                   onOpenTerritorialComuna={(comuna) => setTerritorialComunaDetail(comuna)}
                   onShowTerritorialEvidence={showEvidenceForComuna}
+                  onGoToRouteView={openRouteView}
                   onOptimizeRoute={openRouteOptimization}
                   onViewRoutePending={openRoutePending}
                   designSections={hasActiveDesignConfig ? activeDesignConfig?.sections : undefined}
