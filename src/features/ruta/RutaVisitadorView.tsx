@@ -1,4 +1,4 @@
-import { CalendarDays, Download, Loader2, MapPin, Route, Save, Search, Trash2, UserRound } from 'lucide-react';
+import { CalendarDays, ChevronDown, Download, Loader2, MapPin, Route, Save, Search, Trash2, UserRound } from 'lucide-react';
 import type { ReactNode } from 'react';
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import L, { type LatLngTuple, type Layer } from 'leaflet';
@@ -366,6 +366,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const [redZonesError, setRedZonesError] = useState('');
   const [redZonePanelOpen, setRedZonePanelOpen] = useState(false);
   const [showBulkInput, setShowBulkInput] = useState(false);
+  const [configPanelOpen, setConfigPanelOpen] = useState(false);
   const [redZoneDraft, setRedZoneDraft] = useState<RedZoneDraft | null>(null);
   const [redZonePicking, setRedZonePicking] = useState(false);
   const [redZoneSaving, setRedZoneSaving] = useState(false);
@@ -1106,8 +1107,24 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
       {activeRouteTab === 'operation' ? (
         <>
-      {/* TOP GRID */}
-      <div className="cc-route-top-grid-v2">
+      {/* TOP CONFIG — collapsible */}
+      <RutaPanel className="p-3">
+        <button
+          className="flex w-full items-center justify-between gap-2 text-left"
+          onClick={() => setConfigPanelOpen(prev => !prev)}
+          type="button"
+        >
+          <div className="flex items-center gap-2">
+            <span className="flex h-8 w-8 items-center justify-center rounded-lg" style={{background:"rgba(34,211,238,0.09)",color:"var(--cc-cyan, #0891b2)"}}>
+              <Route size={16} />
+            </span>
+            <span className="text-sm font-black text-[var(--text-main)]">Configuración de ruta</span>
+            <span className="text-[10px] font-bold text-[var(--cc-muted)]">{configPanelOpen ? 'Ocultar' : 'Mostrar'} · Visitador, fechas, inicio, params</span>
+          </div>
+          <ChevronDown size={16} className={`text-[var(--cc-muted)] transition-transform ${configPanelOpen ? 'rotate-180' : ''}`} />
+        </button>
+        {configPanelOpen ? (
+        <div className="mt-3 grid gap-3 xl:grid-cols-[280px_1fr_280px]">
         <RutaPanel className="route-calendar-card-pro cc-route-calendar-zone rounded-xl border p-4">
           <RouteMonthCalendar
             selectedDate={fechaVisita}
@@ -1259,164 +1276,68 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
         </RutaPanel>
         {/* Weather card - enhanced */}
-        <RutaPanel className="route-weather-compact-pro cc-route-weather-hero rounded-xl border p-3">
+        <RutaPanel className="route-weather-compact-pro cc-route-weather-hero rounded-xl border p-2">
           <div className="route-weather-header-pro flex items-center gap-2 mb-2">
-            <span className="cc-route-label text-xs">Clima de ruta</span>
-            <span className="cc-route-badge" style={{fontSize:"0.55rem"}}>{weatherSummary?.source === 'openweather' ? 'OpenWeather' : weatherSummary?.source === 'open-meteo' ? 'Open-Meteo respaldo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
-            <select
-              className="cc-route-input h-7 w-auto max-w-[160px] px-2 text-[10px] font-bold rounded-lg border"
-              value={weatherComuna}
-              onChange={(e) => setWeatherComuna(e.target.value)}
-            >
+            <span className="cc-route-label text-[10px] font-bold">Clima de ruta</span>
+            <span className="cc-route-badge" style={{fontSize:"0.5rem"}}>{weatherSummary?.source === 'openweather' ? 'OpenWeather' : weatherSummary?.source === 'open-meteo' ? 'Open-Meteo' : weatherSummary?.source === 'meteochile' ? 'MeteoChile' : 'Sin datos'}</span>
+            <select className="cc-route-input h-6 w-auto max-w-[120px] px-1 text-[9px] font-bold rounded-lg border" value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)}>
               {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
             </select>
           </div>
-          {weatherLoading ? <p className="cc-route-stop-meta text-xs"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando clima...</p> : null}
-          {weatherError ? <p className="cc-route-stop-meta text-xs leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError}</p> : null}
+          {weatherLoading ? <p className="cc-route-stop-meta text-[10px]"><span style={{color:'var(--cc-cyan,#0891b2)'}}>⟳</span> Consultando...</p> : null}
+          {weatherError ? <p className="cc-route-stop-meta text-[10px] leading-tight"><span style={{color:'var(--cc-orange,#f97316)'}}>⚠</span> {weatherError}</p> : null}
           {weatherSummary && !weatherLoading ? (
-            <div className="route-weather-content-pro flex flex-wrap items-center gap-3">
+            <div className="route-weather-content-pro flex flex-wrap items-center gap-2">
               <div className="route-weather-icon-pro cc-route-weather-avatar" data-tone={getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).tone}>
                 {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}
               </div>
               <div className="cc-route-weather-main">
-                <div className="route-weather-temp-pro cc-route-weather-condition text-lg">
-                  {weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C
-                </div>
-                <div className="text-xs font-semibold cc-text-secondary">
-                  {getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}
-                </div>
+                <div className="route-weather-temp-pro cc-route-weather-condition text-base">{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? '--'}°C</div>
+                <div className="text-[10px] font-semibold cc-text-secondary">{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</div>
               </div>
-              <div className="route-weather-meta-pro cc-route-weather-metrics">
+              <div className="route-weather-meta-pro cc-route-weather-metrics text-[10px]">
                 {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
-                {weatherSummary.current?.precipitation != null ? <span>Lluvia {weatherSummary.current.precipitation} mm</span> : weatherSummary.precipitationSum != null ? <span>Lluvia {weatherSummary.precipitationSum} mm</span> : null}
-                {weatherSummary.precipitationProbabilityMax != null ? <span>Prob. {weatherSummary.precipitationProbabilityMax}%</span> : null}
+                {weatherSummary.current?.precipitation != null ? <span> · Lluvia {weatherSummary.current.precipitation} mm</span> : weatherSummary.precipitationSum != null ? <span> · Lluvia {weatherSummary.precipitationSum} mm</span> : null}
               </div>
-              <span className={'route-weather-badge-pro cc-route-weather-alert ' + (
-                weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-alert-high' :
-                weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-alert-warning' :
-                weatherSummary.riskLevel === 'sin_datos' ? 'cc-route-weather-alert-normal' :
-                'cc-route-weather-alert-normal'
-              )}>
-                {weatherSummary.riskLevel === 'alto' ? '⚠️' : weatherSummary.riskLevel === 'precaucion' ? '⚡' : weatherSummary.riskLevel === 'sin_datos' ? 'ℹ️' : '✅'} {weatherSummary.riskLevel === 'alto' ? 'Alto' : weatherSummary.riskLevel === 'precaucion' ? 'Precaución' : weatherSummary.riskLevel === 'sin_datos' ? 'Sin datos' : 'Normal'}
+              <span className={'route-weather-badge-pro cc-route-weather-alert ' + (weatherSummary.riskLevel === 'alto' ? 'cc-route-weather-alert-high' : weatherSummary.riskLevel === 'precaucion' ? 'cc-route-weather-alert-warning' : 'cc-route-weather-alert-normal')}>
+                {weatherSummary.riskLevel === 'alto' ? '⚠️ Alto' : weatherSummary.riskLevel === 'precaucion' ? '⚡ Precaución' : '✅ Normal'}
               </span>
             </div>
           ) : null}
         </RutaPanel>
+        </div>
+        ) : null}
+      </RutaPanel>
+      {/* END collapsible config */}
 
-        {/* Ticket controls — compact row */}
-        <RutaPanel className="p-3">
-          <div className="flex flex-wrap items-center gap-2">
-            {/* Search tabs */}
-            <div className="cc-route-segmented flex rounded-lg border">
-              <button
-                aria-pressed={searchMode === 'ticket'}
-                className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
-                onClick={() => setSearchMode('ticket')}
-                type="button"
-              >
-                Por Ticket
-              </button>
-              <button
-                aria-pressed={searchMode === 'rut'}
-                className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
-                onClick={() => setSearchMode('rut')}
-                type="button"
-              >
-                Por RUT
-              </button>
-            </div>
-
-            {/* Search input + add */}
-            <form
-              className="flex gap-2 min-w-0 flex-1"
-              onSubmit={(event) => {
-                event.preventDefault();
-                void handleSearch();
-              }}
-            >
-              <input
-                className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'}
-                placeholder={searchMode === 'ticket' ? 'Ej: FAC-4821' : 'Ej: 12.345.678-9'}
-                onChange={(event) => setSearchValue(event.target.value)}
-                value={searchValue}
-              />
-              <button
-                className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
-                disabled={loading}
-                type="submit"
-                aria-label="Buscar"
-              >
-                {loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}
-                <span>Agregar</span>
-              </button>
-            </form>
-
-            {/* Bulk load toggle/button */}
-            <span className="text-xs font-bold text-[var(--cc-muted)]">|</span>
-            <button
-              className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60"
-              onClick={() => setShowBulkInput(prev => !prev)}
-              type="button"
-            >
-              Carga masiva
-            </button>
-
-            <input
-              className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none"
-              type="date"
-              value={fechaVisita}
-              onChange={(e) => setFechaVisita(e.target.value)}
-            />
-
-            {/* Export + Clear */}
-            <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
-              <Download size={13} />
-            </button>
-            <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button">
-              <Trash2 size={13} />
-            </button>
-          </div>
-
-          {/* Bulk input — collapsible */}
-          {showBulkInput ? (
-            <form
-              className="mt-2 flex gap-2"
-              onSubmit={(event) => {
-                event.preventDefault();
-                const ids = parseTicketIds(bulkTicketIds);
-                setBulkTicketIds('');
-                void addTicketIds(ids);
-              }}
-            >
-              <textarea
-                className="h-16 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                aria-label="Carga masiva de tickets"
-                placeholder="IDs separados por coma, punto y coma o salto de línea..."
-                onChange={(event) => setBulkTicketIds(event.target.value)}
-                value={bulkTicketIds}
-              />
-              <button
-                className="flex h-16 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
-                disabled={loading}
-                type="submit"
-              >
-                <span>Cargar</span>
-              </button>
-            </form>
-          ) : null}
-        </RutaPanel>
-        </div>{/* END top grid */}
-
-        {/* Actions — compact row */}
+      {/* Ticket controls — compact row */}
+      <RutaPanel className="p-3">
         <div className="flex flex-wrap items-center gap-2">
-          <button
-            className="flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
-            disabled={saving || stops.length === 0 || !visitador.trim()}
-            onClick={() => void saveDailyVisits()}
-            type="button"
-          >
-            {saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />}
+          <div className="cc-route-segmented flex rounded-lg border">
+            <button aria-pressed={searchMode === 'ticket'} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`} onClick={() => setSearchMode('ticket')} type="button">Por Ticket</button>
+            <button aria-pressed={searchMode === 'rut'} className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`} onClick={() => setSearchMode('rut')} type="button">Por RUT</button>
+          </div>
+          <form className="flex gap-2 min-w-0 flex-1" onSubmit={(event) => { event.preventDefault(); void handleSearch(); }}>
+            <input className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'} placeholder={searchMode === 'ticket' ? 'Ej: FAC-4821' : 'Ej: 12.345.678-9'} onChange={(event) => setSearchValue(event.target.value)} value={searchValue} />
+            <button className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit" aria-label="Buscar">{loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}<span>Agregar</span></button>
+          </form>
+          <span className="text-xs font-bold text-[var(--cc-muted)]">|</span>
+          <button className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" onClick={() => setShowBulkInput(prev => !prev)} type="button">Carga masiva</button>
+          <input className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none" type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} />
+          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button"><Download size={13} /></button>
+          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button"><Trash2 size={13} /></button>
+        </div>
+        {showBulkInput ? (
+          <form className="mt-2 flex gap-2" onSubmit={(event) => { event.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(''); void addTicketIds(ids); }}>
+            <textarea className="h-16 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100" aria-label="Carga masiva de tickets" placeholder="IDs separados por coma, punto y coma o salto de línea..." onChange={(event) => setBulkTicketIds(event.target.value)} value={bulkTicketIds} />
+            <button className="flex h-16 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={loading} type="submit"><span>Cargar</span></button>
+          </form>
+        ) : null}
+      </RutaPanel>
+
+      {/* Actions — compact row */}
+      <div className="flex flex-wrap items-center gap-2">
+        <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60" disabled={saving || stops.length === 0 || !visitador.trim()} onClick={() => void saveDailyVisits()} type="button">{saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />}
             Guardar visitas
           </button>
           <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={stops.length === 0 || optimizing || !startPoint.trim()} onClick={optimizeRoute} type="button">
