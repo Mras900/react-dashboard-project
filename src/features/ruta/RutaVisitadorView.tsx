@@ -1616,49 +1616,62 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               <p className="text-xs font-medium text-[var(--cc-muted)]">Marca resultado de visita, observación y revisión territorial.</p>
             </div>
 
-            <div className="divide-y divide-slate-100">
-              {stops.length === 0 ? (
-                <div className="p-6 text-center">
-                  <p className="text-sm font-bold text-[var(--text-main)]">Sin tickets cargados</p>
-                  <p className="mt-1 text-xs font-medium text-[var(--cc-muted)]">Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
-                </div>
-              ) : (
-                stops.map((stop, index) => (
-                  <article key={stop.id} className="cc-list-card-pro grid gap-2 p-3 lg:grid-cols-[minmax(0,1fr)_200px]">
-                    <div className="min-w-0">
-                      <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-[var(--bg-card)] px-2 py-1 text-xs font-bold text-[var(--text-main)]">#{index + 1}</span>
-                        <h4 className="truncate text-sm font-bold text-[var(--text-main)] max-w-[300px]" title={stop.clientName}>{stop.clientName}</h4>
-                        <span className={`rounded-md border px-2 py-1 text-xs font-bold ${STATUS_CLASSES[stop.status]}`}>{STATUS_LABELS[stop.status]}</span>
-                        {stop.isRedZone ? <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold text-red-700">Zona roja</span> : null}
-                        {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">Sin coord.</span> : null}
-                      </div>
-                      <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">
-                        {stop.referencia} · Reclamos {stop.claimsCount.toLocaleString('es-CL')} · {stop.address ? <span className="line-clamp-1" title={stop.address}>{stop.address}</span> : 'Sin dirección'}
-                      </p>
-                    </div>
-
-                    <div className="flex flex-wrap items-center gap-2">
-                      <select
-                        className="h-8 flex-1 min-w-[100px] rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none"
-                        onChange={(event) => updateStopStatus(stop.id, event.target.value as RutaVisitStatus)}
-                        value={stop.status}
-                      >
-                        <option value="pendiente">Pendiente</option>
-                        <option value="exitosa">Exitosa</option>
-                        <option value="no_exitosa">No exitosa</option>
-                      </select>
-                      <span className="text-xs font-bold text-[var(--cc-muted)] whitespace-nowrap">
-                        {calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}
-                      </span>
-                      <button className="flex h-8 items-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 hover:bg-red-100" onClick={() => removeStop(stop.id)} type="button">
-                        <Trash2 size={12} />
-                      </button>
-                    </div>
-                  </article>
-                ))
-              )}
-            </div>
+            {stops.length === 0 ? (
+              <div className="p-6 text-center">
+                <p className="text-sm font-bold text-[var(--text-main)]">Sin tickets cargados</p>
+                <p className="mt-1 text-xs font-medium text-[var(--cc-muted)]">Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
+              </div>
+            ) : (
+              <div className="overflow-x-auto">
+                <table className="w-full text-left text-xs">
+                  <thead>
+                    <tr className="border-b border-[var(--border-main)] bg-[var(--bg-card)] text-[10px] font-bold uppercase tracking-wider text-[var(--cc-muted)]">
+                      <th className="px-3 py-2">N°</th>
+                      <th className="px-3 py-2">Ticket</th>
+                      <th className="px-3 py-2">Cliente / Dirección</th>
+                      <th className="px-3 py-2">Reclamos</th>
+                      <th className="px-3 py-2">Estado</th>
+                      <th className="px-3 py-2">Zona roja</th>
+                      <th className="px-3 py-2">Valor</th>
+                      <th className="px-3 py-2 w-20">Acción</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-[var(--border-main)]">
+                    {stops.map((stop, index) => (
+                      <tr key={stop.id} className="hover:bg-[var(--bg-main)]/40 transition-colors">
+                        <td className="px-3 py-2 font-bold text-[var(--text-main)]">{index + 1}</td>
+                        <td className="px-3 py-2"><span className="font-mono text-[10px] text-[var(--text-secondary)]">{stop.referencia}</span></td>
+                        <td className="px-3 py-2 min-w-0">
+                          <p className="truncate max-w-[200px] font-semibold text-[var(--text-main)]" title={stop.clientName}>{stop.clientName}</p>
+                          {stop.address ? <p className="truncate max-w-[200px] text-[10px] text-[var(--cc-muted)]" title={stop.address}>{stop.address}</p> : null}
+                        </td>
+                        <td className="px-3 py-2 text-[var(--cc-muted)]">{stop.claimsCount.toLocaleString('es-CL')}</td>
+                        <td className="px-3 py-2">
+                          <span className={`inline-flex items-center gap-1 rounded-full border px-2 py-0.5 text-[10px] font-bold ${STATUS_CLASSES[stop.status]}`}>
+                            <span className={`inline-block h-1.5 w-1.5 rounded-full ${stop.status === 'exitosa' ? 'bg-emerald-500' : stop.status === 'no_exitosa' ? 'bg-red-500' : 'bg-amber-500'}`} />
+                            {STATUS_LABELS[stop.status]}
+                          </span>
+                        </td>
+                        <td className="px-3 py-2">
+                          {stop.isRedZone ? <span className="inline-flex items-center gap-1 rounded-full bg-red-50 px-2 py-0.5 text-[10px] font-bold text-red-700 dark:bg-red-950/30 dark:text-red-300">Zona roja</span> : <span className="text-[var(--cc-muted)]">—</span>}
+                        </td>
+                        <td className="px-3 py-2 font-bold text-[var(--text-main)] whitespace-nowrap">{calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</td>
+                        <td className="px-3 py-2">
+                          <div className="flex items-center gap-1">
+                            <select className="h-7 w-16 rounded border border-[var(--border-main)] bg-[var(--bg-card)] px-1 text-[10px] font-bold text-[var(--text-main)] outline-none" aria-label="Estado de visita" onChange={(event) => updateStopStatus(stop.id, event.target.value as RutaVisitStatus)} value={stop.status}>
+                              <option value="pendiente">Pend.</option>
+                              <option value="exitosa">Ok</option>
+                              <option value="no_exitosa">No</option>
+                            </select>
+                            <button className="flex h-7 w-7 items-center justify-center rounded border border-red-100 bg-red-50 text-red-700 hover:bg-red-100 dark:border-red-900/30 dark:bg-red-950/20 dark:text-red-300" onClick={() => removeStop(stop.id)} type="button" title="Eliminar"><Trash2 size={11} /></button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
           </RutaPanel>
 
           <RutaPanel className="route-totals-panel-pro self-start p-4">
