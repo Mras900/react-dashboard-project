@@ -56,10 +56,10 @@ const createEmptyRedZoneDraft = (): RedZoneDraft => ({
 });
 
 const redZoneInputClass =
-  'h-9 rounded-lg border border-slate-300 bg-white px-3 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500';
+  'h-9 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm text-[var(--text-main)] outline-none placeholder:text-[var(--cc-muted)] focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-[var(--border-main)] dark:bg-[var(--bg-card)] dark:text-[var(--text-main)] dark:placeholder:text-[var(--cc-muted)]';
 
 const redZoneTextareaClass =
-  'min-h-16 rounded-lg border border-slate-300 bg-white px-3 py-2 text-sm text-slate-900 outline-none placeholder:text-slate-400 focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-100 dark:placeholder:text-slate-500';
+  'min-h-16 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-sm text-[var(--text-main)] outline-none placeholder:text-[var(--cc-muted)] focus:border-blue-400 focus:ring-2 focus:ring-blue-500/30 dark:border-[var(--border-main)] dark:bg-[var(--bg-card)] dark:text-[var(--text-main)] dark:placeholder:text-[var(--cc-muted)]';
 
 const CHILE_COMUNAS_LAYER_PATH = '/data/map-layers/chile_comunas_simplified.geojson';
 
@@ -70,7 +70,7 @@ function RutaPanel({
   children: ReactNode;
   className?: string;
 }) {
-  return <section className={`cc-route-card rounded-lg border border-slate-200 bg-white text-slate-900 shadow-sm ${className}`}>{children}</section>;
+  return <section className={`cc-route-card rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--text-main)] shadow-sm ${className}`}>{children}</section>;
 }
 
 function RutaMetricCard({ label, value, tone = 'blue' }: { label: string; value: string; tone?: 'blue' | 'green' | 'red' | 'amber' | 'slate' }) {
@@ -79,7 +79,7 @@ function RutaMetricCard({ label, value, tone = 'blue' }: { label: string; value:
     green: 'bg-emerald-50 text-emerald-700',
     red: 'bg-red-50 text-red-700',
     amber: 'bg-amber-50 text-amber-700',
-    slate: 'bg-slate-100 text-slate-700',
+    slate: 'bg-[var(--bg-card)] text-[var(--text-main)]',
   }[tone];
 
   return (
@@ -1019,16 +1019,16 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           color: #f8fafc !important;
         }
         .cc-route-daily-premium p,
-        .cc-route-daily-premium .text-slate-300,
-        .cc-route-daily-premium .text-slate-400,
+        .cc-route-daily-premium .text-[var(--text-main)],
+        .cc-route-daily-premium .text-[var(--cc-muted)],
         .cc-route-daily-premium .cc-route-subtitle,
         .cc-route-daily-premium .cc-route-stop-meta,
         .cc-route-daily-premium .cc-text-secondary {
           color: #64748b !important;
         }
         .dark .cc-route-daily-premium p,
-        .dark .cc-route-daily-premium .text-slate-300,
-        .dark .cc-route-daily-premium .text-slate-400,
+        .dark .cc-route-daily-premium .text-[var(--text-main)],
+        .dark .cc-route-daily-premium .text-[var(--cc-muted)],
         .dark .cc-route-daily-premium .cc-route-subtitle,
         .dark .cc-route-daily-premium .cc-route-stop-meta,
         .dark .cc-route-daily-premium .cc-text-secondary {
@@ -1062,16 +1062,16 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         .cc-route-daily-premium .bg-slate-950\/70,
         .cc-route-daily-premium .bg-slate-950\/80,
         .cc-route-daily-premium .bg-slate-950\/95,
-        .cc-route-daily-premium .bg-slate-900\/80 { background: #f8fafc !important; }
+        .cc-route-daily-premium .bg-[var(--bg-card)]\/80 { background: #f8fafc !important; }
         .dark .cc-route-daily-premium .bg-slate-950\/70,
         .dark .cc-route-daily-premium .bg-slate-950\/80,
         .dark .cc-route-daily-premium .bg-slate-950\/95,
-        .dark .cc-route-daily-premium .bg-slate-900\/80 { background: rgba(15, 23, 42, 0.82) !important; }
-        .cc-route-daily-premium .border-slate-700,
-        .cc-route-daily-premium .border-slate-800,
+        .dark .cc-route-daily-premium .bg-[var(--bg-card)]\/80 { background: rgba(15, 23, 42, 0.82) !important; }
+        .cc-route-daily-premium .border-[var(--border-main)],
+        .cc-route-daily-premium .border-[var(--border-main)],
         .cc-route-daily-premium .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #cbd5e1 !important; }
-        .dark .cc-route-daily-premium .border-slate-700,
-        .dark .cc-route-daily-premium .border-slate-800,
+        .dark .cc-route-daily-premium .border-[var(--border-main)],
+        .dark .cc-route-daily-premium .border-[var(--border-main)],
         .dark .cc-route-daily-premium .divide-slate-800 > :not([hidden]) ~ :not([hidden]) { border-color: #334155 !important; }
         .cc-route-daily-premium button.text-white,
         .cc-route-daily-premium a.text-white { color: #ffffff !important; }
@@ -1081,7 +1081,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           <div>
             <p className="cc-route-label text-xs">Ruta diaria</p>
             <h2 className="mt-1 text-2xl font-black text-white">Ruta diaria</h2>
-            <p className="mt-1 text-sm font-semibold text-slate-400">Planificación operativa, visitas y seguimiento en terreno</p>
+            <p className="mt-1 text-sm font-semibold text-[var(--cc-muted)]">Planificación operativa, visitas y seguimiento en terreno</p>
           </div>
           <div className="grid gap-2 sm:grid-cols-2 xl:min-w-[360px]">
             {([
@@ -1091,7 +1091,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               <button
                 key={tab.id}
                 aria-pressed={activeRouteTab === tab.id}
-                className={`h-11 rounded-lg border px-4 text-sm font-black transition ${activeRouteTab === tab.id ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-950/30' : 'border-slate-300 bg-white text-slate-600 hover:bg-slate-50 hover:text-slate-900 dark:border-slate-700 dark:bg-slate-950/70 dark:text-slate-300 dark:hover:bg-slate-900 dark:hover:text-white'}`}
+                className={`h-11 rounded-lg border px-4 text-sm font-black transition ${activeRouteTab === tab.id ? 'border-blue-500 bg-blue-600 text-white shadow-lg shadow-blue-950/30' : 'border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] hover:bg-[var(--bg-main)] hover:text-[var(--text-main)] dark:border-[var(--border-main)] dark:bg-[var(--bg-card)] dark:text-[var(--text-main)] dark:hover:bg-[var(--bg-card)] dark:hover:text-white'}`}
                 onClick={() => setActiveRouteTab(tab.id)}
                 type="button"
               >
@@ -1129,12 +1129,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </p>
           ) : null}
           <label className="grid gap-2">
-            <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+            <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
               <UserRound size={15} />
               Visitador
             </span>
             <input
-              className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               aria-label="Nombre del visitador"
               onChange={(event) => setVisitador(event.target.value)}
               value={visitador}
@@ -1143,24 +1143,24 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
           <div className="route-hero-grid-pro grid gap-3 sm:grid-cols-2">
             <label className="grid gap-2">
-              <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
                 <CalendarDays size={15} />
                 Fecha de carga
               </span>
               <input
-                className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => setFechaCarga(event.target.value)}
                 type="date"
                 value={fechaCarga}
               />
             </label>
             <label className="grid gap-2">
-              <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+              <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
                 <CalendarDays size={15} />
                 Fecha de visita
               </span>
               <input
-                className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 onChange={(event) => setFechaVisita(event.target.value)}
                 type="date"
                 value={fechaVisita}
@@ -1169,12 +1169,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
 
           <label className="grid gap-2">
-            <span className="flex items-center gap-2 text-xs font-bold text-slate-700">
+            <span className="flex items-center gap-2 text-xs font-bold text-[var(--text-main)]">
               <MapPin size={15} />
               Punto de inicio
             </span>
             <input
-              className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               aria-label="Punto de inicio"
               onChange={(event) => {
                 setStartPoint(event.target.value);
@@ -1199,7 +1199,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               Seleccionar en mapa
             </button>
             <button
-              className="h-9 rounded-lg border border-slate-200 bg-white px-3 text-xs font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60"
+              className="h-9 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60"
               disabled={!selectedStartPoint && !startPoint}
               onClick={clearStartPoint}
               type="button"
@@ -1213,29 +1213,29 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 ? 'bg-amber-50 text-amber-700'
                 : selectedStartPoint
                   ? 'bg-emerald-50 text-emerald-700'
-                  : 'bg-slate-100 text-slate-600'
+                  : 'bg-[var(--bg-card)] text-[var(--cc-muted)]'
             }`}
           >
             {selectingStartPoint ? 'Selecciona punto en el mapa' : selectedStartPoint ? 'Inicio validado' : 'Inicio sin validar'}
           </span>
 
           <label className="grid gap-2">
-            <span className="text-xs font-bold text-slate-700">Minutos por visita</span>
+            <span className="text-xs font-bold text-[var(--text-main)]">Minutos por visita</span>
             <input
-              className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               min={10}
               onChange={(event) => setServiceMinutesPerStop(Math.max(Number(event.target.value) || 10, 10))}
               type="number"
               value={serviceMinutesPerStop}
             />
-            <span className="text-xs font-medium text-slate-500">Se suma por cada parada, no incluye el punto de inicio.</span>
+            <span className="text-xs font-medium text-[var(--cc-muted)]">Se suma por cada parada, no incluye el punto de inicio.</span>
           </label>
 
           <div className="route-hero-grid-pro grid gap-3 sm:grid-cols-2">
             <label className="grid gap-2">
-              <span className="text-xs font-bold text-slate-700">Rendimiento km/L</span>
+              <span className="text-xs font-bold text-[var(--text-main)]">Rendimiento km/L</span>
               <input
-                className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 min={1}
                 onChange={(event) => setFuelEfficiency(Math.max(Number(event.target.value) || 1, 1))}
                 step="0.1"
@@ -1244,9 +1244,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               />
             </label>
             <label className="grid gap-2">
-              <span className="text-xs font-bold text-slate-700">Precio combustible</span>
+              <span className="text-xs font-bold text-[var(--text-main)]">Precio combustible</span>
               <input
-                className="h-10 rounded-lg border border-slate-200 bg-slate-50 px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                 min={0}
                 onChange={(event) => setFuelPrice(Math.max(Number(event.target.value) || 0, 0))}
                 step={10}
@@ -1312,7 +1312,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             <div className="cc-route-segmented flex rounded-lg border">
               <button
                 aria-pressed={searchMode === 'ticket'}
-                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? '' : 'text-[#466083] hover:text-[#071b4d]'}`}
+                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? '' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
                 onClick={() => setSearchMode('ticket')}
                 type="button"
               >
@@ -1320,7 +1320,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </button>
               <button
                 aria-pressed={searchMode === 'rut'}
-                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? '' : 'text-[#466083] hover:text-[#071b4d]'}`}
+                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? '' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
                 onClick={() => setSearchMode('rut')}
                 type="button"
               >
@@ -1359,10 +1359,10 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               void addTicketIds(ids);
             }}
           >
-            <span className="text-xs font-bold text-slate-700">Carga masiva de tickets</span>
-            <p className="text-xs font-medium text-slate-500">Acepta saltos de línea, comas o punto y coma.</p>
+            <span className="text-xs font-bold text-[var(--text-main)]">Carga masiva de tickets</span>
+            <p className="text-xs font-medium text-[var(--cc-muted)]">Acepta saltos de línea, comas o punto y coma.</p>
             <textarea
-              className="min-h-24 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+              className="min-h-24 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
               aria-label="Carga masiva de tickets"
               onChange={(event) => setBulkTicketIds(event.target.value)}
               value={bulkTicketIds}
@@ -1390,7 +1390,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             {optimizing ? <Loader2 className="animate-spin" size={17} /> : <Route size={17} />}
             Optimizar ruta
           </button>
-          <button className="flex h-10 items-center justify-center gap-2 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 transition hover:bg-slate-50 disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
+          <button className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-card)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
             <Download size={17} />
             Exportar CSV
           </button>
@@ -1414,7 +1414,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
         {message || redZonesError || optimizedRoute ? (
           <RutaPanel className="p-3">
-            {message ? <p className="text-sm font-semibold text-slate-700">{message}</p> : null}
+            {message ? <p className="text-sm font-semibold text-[var(--text-main)]">{message}</p> : null}
             {optimizedRoute ? (
               <p className="mt-1 text-xs font-semibold text-blue-700">
                 Distancia total {formatDistance(optimizedRoute.distance_m)} · Tiempo conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} · Tiempo atención {formatDuration(getRouteServiceDuration(optimizedRoute))} · Tiempo total estimado {formatDuration(optimizedRoute.duration_s)}
@@ -1429,12 +1429,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             <div>
               <p className="cc-route-label text-xs">Mapa territorial</p>
               <h3 className="mt-1 text-xl font-black text-white">Cobertura territorial de visitas</h3>
-              <p className="mt-1 text-sm font-semibold text-slate-400">Busca y revisa concentración por comuna con las visitas cargadas.</p>
-              <label className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-slate-700 bg-slate-950/80 px-4">
-                <Search size={18} className="text-slate-400" />
+              <p className="mt-1 text-sm font-semibold text-[var(--cc-muted)]">Busca y revisa concentración por comuna con las visitas cargadas.</p>
+              <label className="mt-4 flex h-12 items-center gap-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] px-4">
+                <Search size={18} className="text-[var(--cc-muted)]" />
                 <input
                   aria-label="Buscar dirección, ticket o comuna"
-                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-white outline-none placeholder:text-slate-500"
+                  className="min-w-0 flex-1 bg-transparent text-sm font-semibold text-white outline-none placeholder:text-[var(--cc-muted)]"
                   onChange={(event) => setTerritorialSearch(event.target.value)}
                   placeholder="Buscar dirección, ticket o comuna..."
                   value={territorialSearch}
@@ -1445,20 +1445,20 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               <p className="cc-route-label text-xs">Capas activas</p>
               <div className="grid grid-cols-2 gap-2">
                 {['Visitas', 'Heatmap', 'Zonas rojas', 'Comunas'].map((layer) => (
-                  <span key={layer} className="rounded-lg border border-slate-700 bg-slate-950/70 px-3 py-2 text-xs font-black text-slate-200">
+                  <span key={layer} className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-xs font-black text-[var(--text-main)]">
                     {layer}
                   </span>
                 ))}
               </div>
-              <p className="text-xs font-semibold text-slate-500">Heatmap usa soporte disponible de puntos/capas existentes; sin datos cargados no dibuja puntos.</p>
+              <p className="text-xs font-semibold text-[var(--cc-muted)]">Heatmap usa soporte disponible de puntos/capas existentes; sin datos cargados no dibuja puntos.</p>
             </div>
           </div>
         </RutaPanel>
       )}
 
         <RutaPanel className="route-map-section-pro overflow-hidden">
-          <div className="border-b border-slate-200 px-4 py-3">
-            <h3 className="text-base font-bold text-[#071b4d]">Mapa de ruta</h3>
+          <div className="border-b border-[var(--border-main)] px-4 py-3">
+            <h3 className="text-base font-bold text-[var(--text-main)]">Mapa de ruta</h3>
           </div>
           <div className="cc-route-map-compact relative overflow-hidden rounded-xl">
             <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>
@@ -1540,14 +1540,14 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               ) : null}
             </MapContainer>
             {redZonePanelOpen ? (
-              <div className="absolute left-4 right-4 top-16 z-[500] max-h-[70%] overflow-y-auto rounded-xl border border-slate-700 bg-slate-950/95 shadow-xl md:left-auto md:right-4 md:w-[320px] md:max-h-[85%]">
-                <div className="sticky top-0 border-b border-slate-800 bg-slate-950/95 px-4 py-3">
+              <div className="absolute left-4 right-4 top-16 z-[500] max-h-[70%] overflow-y-auto rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-xl md:left-auto md:right-4 md:w-[320px] md:max-h-[85%]">
+                <div className="sticky top-0 border-b border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
                   <div className="flex items-center justify-between gap-3">
                     <div>
-                      <p className="text-xs font-black uppercase tracking-wide text-slate-300">Zonas rojas</p>
-                      <p className="mt-1 text-[11px] font-medium text-slate-400">Activas en PostgreSQL y capa histórica solo de referencia.</p>
+                      <p className="text-xs font-black uppercase tracking-wide text-[var(--text-main)]">Zonas rojas</p>
+                      <p className="mt-1 text-[11px] font-medium text-[var(--cc-muted)]">Activas en PostgreSQL y capa histórica solo de referencia.</p>
                     </div>
-                    <button className="rounded-md border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800" onClick={() => setRedZonePanelOpen(false)} type="button">
+                    <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={() => setRedZonePanelOpen(false)} type="button">
                       Ocultar
                     </button>
                   </div>
@@ -1567,35 +1567,35 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
                 <div className="space-y-4 p-4">
                   <div className="space-y-2">
-                    <p className="text-[11px] font-black uppercase tracking-wide text-slate-400">Zonas activas ({activeRedZones.length})</p>
-                    {activeRedZones.length === 0 ? <p className="text-xs text-slate-400">No hay zonas activas guardadas. Puedes crear una nueva o convertir una zona histórica.</p> : null}
+                    <p className="text-[11px] font-black uppercase tracking-wide text-[var(--cc-muted)]">Zonas activas ({activeRedZones.length})</p>
+                    {activeRedZones.length === 0 ? <p className="text-xs text-[var(--cc-muted)]">No hay zonas activas guardadas. Puedes crear una nueva o convertir una zona histórica.</p> : null}
                     {activeRedZones.map((zone) => (
                       <button
                         key={zone.id}
-                        className={`w-full rounded-lg border px-3 py-2 text-left transition ${selectedRedZoneId === zone.id ? 'border-red-400 bg-red-950/60' : 'border-slate-800 bg-slate-900/80 hover:bg-slate-900'}`}
+                        className={`w-full rounded-lg border px-3 py-2 text-left transition ${selectedRedZoneId === zone.id ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-100' : 'border-[var(--border-main)] bg-[var(--bg-card)] hover:bg-[var(--bg-main)]'}`}
                         onClick={() => selectRedZone(zone)}
                         type="button"
                       >
                         <div className="flex items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-slate-100">{zone.name}</span>
-                          <span className="rounded-md bg-slate-800 px-2 py-0.5 text-[10px] font-bold uppercase text-slate-300">{zone.severity}</span>
+                          <span className="text-xs font-bold text-[var(--text-main)]">{zone.name}</span>
+                          <span className="rounded-md bg-[var(--bg-card)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--text-main)]">{zone.severity}</span>
                         </div>
-                        <p className="mt-1 text-[11px] text-slate-400">{zone.comuna || 'Sin comuna'} · {Math.round(zone.radius_m)} m</p>
+                        <p className="mt-1 text-[11px] text-[var(--cc-muted)]">{zone.comuna || 'Sin comuna'} · {Math.round(zone.radius_m)} m</p>
                         <span className="mt-2 inline-flex text-[11px] font-bold text-blue-300">Editar</span>
                       </button>
                     ))}
-                    <p className="pt-1 text-[11px] font-medium text-slate-500">Zonas históricas: disponibles como capa de referencia en el selector de capas.</p>
+                    <p className="pt-1 text-[11px] font-medium text-[var(--cc-muted)]">Zonas históricas: disponibles como capa de referencia en el selector de capas.</p>
                   </div>
 
                   {redZoneDraft ? (
-                    <div className="space-y-3 rounded-xl border border-slate-800 bg-slate-900/80 p-3" ref={redZoneFormRef}>
+                    <div className="space-y-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-3" ref={redZoneFormRef}>
                       <div className="flex items-start justify-between gap-3">
                         <div>
                           <h4 className="text-sm font-bold text-white">{redZoneDraft.id ? 'Editar zona roja' : 'Nueva zona roja'}</h4>
-                          <p className="mt-1 text-[11px] text-slate-400">{redZoneDraft.id ? 'Actualiza la zona seleccionada.' : 'Define una nueva zona activa.'}</p>
+                          <p className="mt-1 text-[11px] text-[var(--cc-muted)]">{redZoneDraft.id ? 'Actualiza la zona seleccionada.' : 'Define una nueva zona activa.'}</p>
                         </div>
                         <button
-                          className="rounded-md border border-slate-700 px-2 py-1 text-[11px] font-bold text-slate-200 hover:bg-slate-800"
+                          className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-bold text-[var(--text-main)] hover:bg-[var(--bg-card)]"
                           onClick={() => {
                             setRedZoneDraft(null);
                             setRedZonePicking(false);
@@ -1631,7 +1631,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                         <input aria-label="Longitud de zona roja" className={redZoneInputClass} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, lon: Number(event.target.value) })} step="any" type="number" value={redZoneDraft.lon ?? ''} />
                       </div>
 
-                      <label className="grid gap-1 text-xs font-bold text-slate-200">
+                      <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
                         Radio: {Math.round(redZoneDraft.radius_m)} m
                         <input max={3000} min={100} onChange={(event) => setRedZoneDraft({ ...redZoneDraft, radius_m: Number(event.target.value) })} step={50} type="range" value={redZoneDraft.radius_m} />
                       </label>
@@ -1669,13 +1669,13 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                       </div>
                     </div>
                   ) : (
-                    <p className="text-xs text-slate-400">Selecciona una zona activa, crea una nueva o convierte una zona histórica para editarla.</p>
+                    <p className="text-xs text-[var(--cc-muted)]">Selecciona una zona activa, crea una nueva o convierte una zona histórica para editarla.</p>
                   )}
                 </div>
               </div>
             ) : (
               <button
-                className="absolute right-4 top-16 z-[500] rounded-xl border border-slate-700 bg-slate-950/95 px-4 py-2 text-xs font-black text-slate-100 shadow-xl"
+                className="absolute right-4 top-16 z-[500] rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-xl"
                 onClick={() => setRedZonePanelOpen(true)}
                 type="button"
               >
@@ -1688,27 +1688,27 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         {activeRouteTab === 'operation' ? (
         <section className="route-bottom-grid-pro grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <RutaPanel className="route-stops-panel-pro overflow-hidden">
-            <div className="border-b border-slate-200 px-4 py-3">
-              <h3 className="text-base font-bold text-[#071b4d]">Visitas planificadas</h3>
-              <p className="text-xs font-medium text-slate-500">Marca resultado de visita, observación y revisión territorial.</p>
+            <div className="border-b border-[var(--border-main)] px-4 py-3">
+              <h3 className="text-base font-bold text-[var(--text-main)]">Visitas planificadas</h3>
+              <p className="text-xs font-medium text-[var(--cc-muted)]">Marca resultado de visita, observación y revisión territorial.</p>
             </div>
 
             <div className="divide-y divide-slate-100">
               {stops.length === 0 ? (
                 <div className="p-6 text-center">
-                  <p className="text-sm font-bold text-slate-700">Sin tickets cargados</p>
-                  <p className="mt-1 text-xs font-medium text-slate-500">Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
+                  <p className="text-sm font-bold text-[var(--text-main)]">Sin tickets cargados</p>
+                  <p className="mt-1 text-xs font-medium text-[var(--cc-muted)]">Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
                 </div>
               ) : (
                 stops.map((stop, index) => (
                   <article key={stop.id} className="cc-list-card-pro grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
-                        <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-700">#{index + 1}</span>
-                        <h4 className="break-words text-sm font-bold text-[#071b4d]">{stop.clientName}</h4>
+                        <span className="rounded-md bg-[var(--bg-card)] px-2 py-1 text-xs font-bold text-[var(--text-main)]">#{index + 1}</span>
+                        <h4 className="break-words text-sm font-bold text-[var(--text-main)]">{stop.clientName}</h4>
                         <span className={`rounded-md border px-2 py-1 text-xs font-bold ${STATUS_CLASSES[stop.status]}`}>{STATUS_LABELS[stop.status]}</span>
                         {stop.isRedZone ? <span className="cc-badge-pro" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>Zona roja</span> : null}
-                        {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-slate-100 px-2 py-1 text-xs font-bold text-slate-600">Sin coordenadas — dirección requiere corrección</span> : null}
+                        {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-[var(--bg-card)] px-2 py-1 text-xs font-bold text-[var(--cc-muted)]">Sin coordenadas — dirección requiere corrección</span> : null}
                       </div>
                       <p className="cc-route-stop-meta mt-2 text-xs font-semibold">
                         {stop.referencia} · Reclamos {stop.claimsCount.toLocaleString('es-CL')}
@@ -1720,14 +1720,14 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                         <span>Correo: {stop.email ?? 'No informado'}</span>
                       </div>
                       {stop.error ? <p className="mt-2 text-xs font-semibold text-amber-700">{stop.error}</p> : null}
-                      <div className="mt-3 rounded-lg border border-slate-200 bg-slate-50 p-3">
+                      <div className="mt-3 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-slate-700">Corregir dirección</span>
-                          {Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? <span className="text-xs font-semibold text-slate-500">Ubicación editable</span> : <span className="text-xs font-semibold text-amber-700">Requiere coordenadas</span>}
+                          <span className="text-xs font-bold text-[var(--text-main)]">Corregir dirección</span>
+                          {Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? <span className="text-xs font-semibold text-[var(--cc-muted)]">Ubicación editable</span> : <span className="text-xs font-semibold text-amber-700">Requiere coordenadas</span>}
                         </div>
                         <div className="mt-2 flex flex-col gap-2 sm:flex-row">
                           <input
-                            className="h-10 min-w-0 flex-1 rounded-lg border border-slate-200 bg-white px-3 text-sm font-medium text-slate-900 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                            className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                             aria-label={`Corregir dirección de ${stop.clientName}`}
                             onChange={(event) => updateAddressQuery(stop.id, event.target.value)}
                             value={addressQueries[stop.id] ?? stop.cleanAddress ?? stop.address}
@@ -1745,9 +1745,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                         {addressSuggestions[stop.id]?.length ? (
                           <div className="mt-2 grid gap-2">
                             {addressSuggestions[stop.id].map((suggestion) => (
-                              <div key={`${suggestion.label}-${suggestion.lat}-${suggestion.lon}`} className="grid gap-2 rounded-lg border border-slate-200 bg-white p-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                                <p className="text-xs font-medium leading-snug text-slate-700">{suggestion.label}</p>
-                                <p className="text-xs font-semibold text-slate-500">Buscado como: {suggestion.query_used}</p>
+                              <div key={`${suggestion.label}-${suggestion.lat}-${suggestion.lon}`} className="grid gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
+                                <p className="text-xs font-medium leading-snug text-[var(--text-main)]">{suggestion.label}</p>
+                                <p className="text-xs font-semibold text-[var(--cc-muted)]">Buscado como: {suggestion.query_used}</p>
                                 <button
                                   className="h-9 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1]"
                                   onClick={() => applyAddressSuggestion(stop.id, suggestion)}
@@ -1766,7 +1766,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
                     <div className="grid gap-2">
                       <select
-                        className="h-10 rounded-lg border border-slate-200 bg-white px-3 text-sm font-bold text-slate-700 outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-bold text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         onChange={(event) => updateStopStatus(stop.id, event.target.value as RutaVisitStatus)}
                         value={stop.status}
                       >
@@ -1775,7 +1775,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                         <option value="no_exitosa">No exitosa</option>
                       </select>
                       <textarea
-                        className="min-h-20 rounded-lg border border-slate-200 bg-slate-50 px-3 py-2 text-sm font-medium text-slate-900 outline-none disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="min-h-20 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-sm font-medium text-[var(--text-main)] outline-none disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                         aria-label={`Observación de ${stop.clientName}`}
                         disabled={stop.status === 'pendiente'}
                         onChange={(event) => updateStopObservation(stop.id, event.target.value)}
@@ -1798,55 +1798,55 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </RutaPanel>
 
           <RutaPanel className="route-totals-panel-pro self-start p-4">
-            <h3 className="text-base font-bold text-[#071b4d]">Valorización del día</h3>
+            <h3 className="text-base font-bold text-[var(--text-main)]">Valorización del día</h3>
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex justify-between gap-3">
-                <span className="font-medium text-slate-600">Tramo actual</span>
+                <span className="font-medium text-[var(--cc-muted)]">Tramo actual</span>
                 <span className="font-bold cc-text">{stops.length >= 13 ? '13 o más tickets' : 'Menos de 13 tickets'}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="font-medium text-slate-600">Tarifa exitosa</span>
+                <span className="font-medium text-[var(--cc-muted)]">Tarifa exitosa</span>
                 <span className="font-bold text-emerald-700">{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
               </div>
               <div className="flex justify-between gap-3">
-                <span className="font-medium text-slate-600">Tarifa no exitosa</span>
+                <span className="font-medium text-[var(--cc-muted)]">Tarifa no exitosa</span>
                 <span className="font-bold text-red-700">{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
               </div>
               {optimizedRoute ? (
                 <div className="cc-route-divider border-t pt-3">
                   <div className="flex justify-between gap-3">
-                    <span className="font-medium text-slate-600">Kilómetros totales</span>
+                    <span className="font-medium text-[var(--cc-muted)]">Kilómetros totales</span>
                     <span className="font-bold text-blue-700">{routeFuelSummary ? formatKilometers(routeFuelSummary.totalKm) : formatDistance(optimizedRoute.distance_m)}</span>
                   </div>
                   <div className="mt-2 flex justify-between gap-3">
-                    <span className="font-medium text-slate-600">Tiempo conducción</span>
+                    <span className="font-medium text-[var(--cc-muted)]">Tiempo conducción</span>
                     <span className="font-bold text-blue-700">{formatDuration(getRouteTravelDuration(optimizedRoute))}</span>
                   </div>
                   <div className="mt-2 flex justify-between gap-3">
-                    <span className="font-medium text-slate-600">Tiempo atención</span>
+                    <span className="font-medium text-[var(--cc-muted)]">Tiempo atención</span>
                     <span className="font-bold text-blue-700">{formatDuration(getRouteServiceDuration(optimizedRoute))}</span>
                   </div>
                   <div className="mt-2 flex justify-between gap-3">
-                    <span className="font-medium text-slate-600">Tiempo total estimado</span>
+                    <span className="font-medium text-[var(--cc-muted)]">Tiempo total estimado</span>
                     <span className="font-bold text-blue-700">{formatDuration(optimizedRoute.duration_s)}</span>
                   </div>
                   {routeFuelSummary ? (
                     <>
                       <div className="mt-2 flex justify-between gap-3">
-                        <span className="font-medium text-slate-600">Litros estimados</span>
+                        <span className="font-medium text-[var(--cc-muted)]">Litros estimados</span>
                         <span className="font-bold text-blue-700">{formatLiters(routeFuelSummary.estimatedLiters)}</span>
                       </div>
                       <div className="mt-2 flex justify-between gap-3">
-                        <span className="font-medium text-slate-600">Costo combustible</span>
+                        <span className="font-medium text-[var(--cc-muted)]">Costo combustible</span>
                         <span className="font-bold text-blue-700">{formatClp(routeFuelSummary.estimatedFuelCost)}</span>
                       </div>
                     </>
                   ) : null}
                 </div>
               ) : null}
-              <div className="border-t border-slate-200 pt-3">
+              <div className="border-t border-[var(--border-main)] pt-3">
                 <div className="flex justify-between gap-3">
-                  <span className="font-bold text-slate-700">Total valorizado</span>
+                  <span className="font-bold text-[var(--text-main)]">Total valorizado</span>
                   <span className="cc-route-valuation-title font-extrabold">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
@@ -1856,21 +1856,21 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         ) : (
           <section className="route-territory-panels-pro grid gap-4 xl:grid-cols-[minmax(0,1fr)_320px]">
             <RutaPanel className="route-territory-concentration-pro overflow-hidden rounded-xl border">
-              <div className="border-b border-slate-800 px-4 py-3">
+              <div className="border-b border-[var(--border-main)] px-4 py-3">
                 <h3 className="text-base font-bold text-white">Panel de concentración por comuna</h3>
-                <p className="text-xs font-medium text-slate-400">Derivado desde coordenadas y capa comunal existente.</p>
+                <p className="text-xs font-medium text-[var(--cc-muted)]">Derivado desde coordenadas y capa comunal existente.</p>
               </div>
               <div className="divide-y divide-slate-800">
                 {visibleTerritorialConcentration.length > 0 ? visibleTerritorialConcentration.map((item) => (
                   <article key={item.comuna} className="grid gap-2 px-4 py-3 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
                     <div className="min-w-0">
                       <h4 className="truncate text-sm font-black text-white">{item.comuna}</h4>
-                      <p className="mt-1 text-xs font-semibold text-slate-400">{item.completadas} completadas · {item.pendientes} pendientes · {item.zonasRojas} zonas rojas</p>
+                      <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">{item.completadas} completadas · {item.pendientes} pendientes · {item.zonasRojas} zonas rojas</p>
                     </div>
                     <span className="rounded-lg bg-blue-500/15 px-3 py-2 text-sm font-black text-blue-200">{item.visitas}</span>
                   </article>
                 )) : (
-                  <div className="p-6 text-center text-sm font-bold text-slate-400">Sin visitas georreferenciadas para mostrar concentración.</div>
+                  <div className="p-6 text-center text-sm font-bold text-[var(--cc-muted)]">Sin visitas georreferenciadas para mostrar concentración.</div>
                 )}
               </div>
             </RutaPanel>
@@ -1878,10 +1878,10 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             <RutaPanel className="route-territory-layer-panel-pro self-start rounded-xl border p-4">
               <h3 className="text-base font-bold text-white">Panel de capas activas</h3>
               <div className="mt-4 grid gap-2 text-sm">
-                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Visitas cargadas</span><span className="font-black text-white">{stops.length.toLocaleString('es-CL')}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Con coordenadas</span><span className="font-black text-white">{stopPoints.length.toLocaleString('es-CL')}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Zonas rojas activas</span><span className="font-black text-red-300">{activeRedZones.length.toLocaleString('es-CL')}</span></div>
-                <div className="flex justify-between gap-3"><span className="font-medium text-slate-400">Comunas detectadas</span><span className="font-black text-white">{territorialConcentration.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Visitas cargadas</span><span className="font-black text-white">{stops.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Con coordenadas</span><span className="font-black text-white">{stopPoints.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Zonas rojas activas</span><span className="font-black text-red-300">{activeRedZones.length.toLocaleString('es-CL')}</span></div>
+                <div className="flex justify-between gap-3"><span className="font-medium text-[var(--cc-muted)]">Comunas detectadas</span><span className="font-black text-white">{territorialConcentration.length.toLocaleString('es-CL')}</span></div>
               </div>
             </RutaPanel>
           </section>

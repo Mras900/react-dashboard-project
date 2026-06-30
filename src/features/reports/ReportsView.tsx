@@ -108,7 +108,7 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
         .reports-ai-premium .text-white,
         .reports-ai-premium .text-slate-100,
         .reports-ai-premium .text-\[\#071b4d\],
-        .reports-ai-premium .text-slate-700 {
+        .reports-ai-premium .text-[var(--text-main)] {
           color: #0f172a !important;
         }
         .dark .reports-ai-premium h2,
@@ -118,20 +118,20 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
         .dark .reports-ai-premium .text-white,
         .dark .reports-ai-premium .text-slate-100,
         .dark .reports-ai-premium .text-\[\#071b4d\],
-        .dark .reports-ai-premium .text-slate-700 {
+        .dark .reports-ai-premium .text-[var(--text-main)] {
           color: #f8fafc !important;
         }
         .reports-ai-premium p,
-        .reports-ai-premium .text-slate-400,
-        .reports-ai-premium .text-slate-500,
+        .reports-ai-premium .text-[var(--cc-muted)],
+        .reports-ai-premium .text-[var(--cc-muted)],
         .reports-ai-premium .text-slate-600,
         .reports-ai-premium .text-\[\#7A90A8\],
         .reports-ai-premium .text-\[\#C8D7EA\] {
           color: #64748b !important;
         }
         .dark .reports-ai-premium p,
-        .dark .reports-ai-premium .text-slate-400,
-        .dark .reports-ai-premium .text-slate-500,
+        .dark .reports-ai-premium .text-[var(--cc-muted)],
+        .dark .reports-ai-premium .text-[var(--cc-muted)],
         .dark .reports-ai-premium .text-slate-600,
         .dark .reports-ai-premium .text-\[\#7A90A8\],
         .dark .reports-ai-premium .text-\[\#C8D7EA\] {
@@ -164,11 +164,11 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
         .dark .reports-ai-premium .bg-slate-950\/60,
         .dark .reports-ai-premium .bg-slate-950\/70 { background-color: rgba(15, 23, 42, 0.68) !important; }
         .reports-ai-premium .border-slate-200,
-        .reports-ai-premium .border-slate-700,
-        .reports-ai-premium .border-slate-800 { border-color: #cbd5e1 !important; }
+        .reports-ai-premium .border-[var(--border-main)],
+        .reports-ai-premium .border-[var(--border-main)] { border-color: #cbd5e1 !important; }
         .dark .reports-ai-premium .border-slate-200,
-        .dark .reports-ai-premium .border-slate-700,
-        .dark .reports-ai-premium .border-slate-800 { border-color: #22304d !important; }
+        .dark .reports-ai-premium .border-[var(--border-main)],
+        .dark .reports-ai-premium .border-[var(--border-main)] { border-color: #22304d !important; }
         .reports-ai-premium button { border-radius: 10px; }
         .reports-ai-premium .recharts-wrapper text { fill: #64748b; }
         .dark .reports-ai-premium .recharts-wrapper text { fill: #94a3b8; }
@@ -181,10 +181,10 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
           <div>
             <p className="text-xs font-black uppercase tracking-[0.24em] text-cyan-300">Reportes</p>
             <h2 className="mt-2 text-3xl font-black text-white">Reportes</h2>
-            <p className="mt-2 max-w-3xl text-sm font-semibold text-slate-400">Análisis ejecutivo, informes e inteligencia territorial</p>
+            <p className="mt-2 max-w-3xl text-sm font-semibold text-[var(--cc-muted)]">Análisis ejecutivo, informes e inteligencia territorial</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a className="inline-flex h-10 items-center gap-2 rounded-lg border border-slate-700 bg-slate-950/70 px-4 text-sm font-black text-slate-100" href="#informe-ejecutivo">
+            <a className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-sm font-black text-[var(--text-main)]" href="#informe-ejecutivo">
               <FileText size={16} /> Generar reporte
             </a>
             <a className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white shadow-lg shadow-blue-950/30" href="#informe-ejecutivo">
@@ -197,35 +197,35 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
       <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <article className="report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Reportes generados</p>
+            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Reportes generados</p>
             <FileText className="text-cyan-300" size={18} />
           </div>
           <p className="mt-3 text-3xl font-black text-white">{formatNumber(charts.length)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Biblioteca de gráficos guardados</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Biblioteca de gráficos guardados</p>
         </article>
         <article className="report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Reclamos analizados</p>
+            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Reclamos analizados</p>
             <BarChart3 className="text-blue-300" size={18} />
           </div>
           <p className="mt-3 text-3xl font-black text-white">{formatNumber(reportStats.totalClaims)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">RM {formatNumber(reportStats.rmClaims)} · Regiones {formatNumber(reportStats.regionClaims)}</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">RM {formatNumber(reportStats.rmClaims)} · Regiones {formatNumber(reportStats.regionClaims)}</p>
         </article>
         <article className="report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Alertas detectadas</p>
+            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Alertas detectadas</p>
             <AlertTriangle className="text-amber-300" size={18} />
           </div>
           <p className="mt-3 text-3xl font-black text-white">{formatNumber(reportStats.territorialAlerts + reportStats.highPriority)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Prioridad alta y riesgo territorial</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Prioridad alta y riesgo territorial</p>
         </article>
         <article className="report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Recomendaciones IA</p>
+            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Recomendaciones IA</p>
             <Sparkles className="text-emerald-300" size={18} />
           </div>
           <p className="mt-3 text-2xl font-black text-white">Bajo demanda</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Usa resumen IA existente</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Usa resumen IA existente</p>
         </article>
       </section>
 
@@ -236,41 +236,41 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
             <div>
               <p className="text-xs font-black uppercase tracking-wide text-cyan-300">Resumen IA del periodo</p>
               <h3 className="mt-1 text-xl font-black text-white">Estado de análisis</h3>
-              <p className="mt-2 text-sm font-semibold text-slate-400">La generación IA vive en Informe ejecutivo y Reclamos similares. No se crean respuestas falsas: el resumen aparece al ejecutar endpoints existentes.</p>
+              <p className="mt-2 text-sm font-semibold text-[var(--cc-muted)]">La generación IA vive en Informe ejecutivo y Reclamos similares. No se crean respuestas falsas: el resumen aparece al ejecutar endpoints existentes.</p>
             </div>
           </div>
           <div className="mt-5 grid gap-3 md:grid-cols-3">
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-              <p className="text-xs font-black uppercase text-slate-500">Periodo base</p>
+            <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
+              <p className="text-xs font-black uppercase text-[var(--cc-muted)]">Periodo base</p>
               <p className="mt-1 text-lg font-black text-white">Configurable</p>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-              <p className="text-xs font-black uppercase text-slate-500">Cobertura</p>
+            <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
+              <p className="text-xs font-black uppercase text-[var(--cc-muted)]">Cobertura</p>
               <p className="mt-1 text-lg font-black text-white">{formatNumber(reportStats.communes)} comunas</p>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
-              <p className="text-xs font-black uppercase text-slate-500">Facturación</p>
+            <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
+              <p className="text-xs font-black uppercase text-[var(--cc-muted)]">Facturación</p>
               <p className="mt-1 text-lg font-black text-white">{formatCurrency(reportStats.totalBilling)}</p>
             </div>
           </div>
         </article>
 
         <article className="report-card rounded-xl border p-5">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Comparación RM vs Regiones</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Comparación RM vs Regiones</p>
           <div className="mt-4 grid gap-3">
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+            <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-bold text-slate-300">RM</span>
+                <span className="text-sm font-bold text-[var(--text-main)]">RM</span>
                 <span className="text-sm font-black text-white">{formatNumber(reportStats.rmClaims)} reclamos</span>
               </div>
-              <p className="mt-1 text-xs font-semibold text-slate-500">{formatCurrency(reportStats.rmBilling)}</p>
+              <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">{formatCurrency(reportStats.rmBilling)}</p>
             </div>
-            <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+            <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
               <div className="flex items-center justify-between gap-3">
-                <span className="text-sm font-bold text-slate-300">Regiones</span>
+                <span className="text-sm font-bold text-[var(--text-main)]">Regiones</span>
                 <span className="text-sm font-black text-white">{formatNumber(reportStats.regionClaims)} reclamos</span>
               </div>
-              <p className="mt-1 text-xs font-semibold text-slate-500">{formatCurrency(reportStats.regionBilling)}</p>
+              <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">{formatCurrency(reportStats.regionBilling)}</p>
             </div>
           </div>
         </article>
@@ -286,24 +286,24 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
 
       <section className="grid gap-4 xl:grid-cols-4">
         <article className="report-card rounded-xl border p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Comunas críticas</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Comunas críticas</p>
           <p className="mt-3 text-3xl font-black text-white">{formatNumber(reportStats.communes)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Comunas presentes en datos</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Comunas presentes en datos</p>
         </article>
         <article className="report-card rounded-xl border p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Alta prioridad</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Alta prioridad</p>
           <p className="mt-3 text-3xl font-black text-amber-200">{formatNumber(reportStats.highPriority)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Derivado de prioridad existente</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Derivado de prioridad existente</p>
         </article>
         <article className="report-card rounded-xl border p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Concentración territorial</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Concentración territorial</p>
           <p className="mt-3 text-3xl font-black text-red-200">{formatNumber(reportStats.territorialAlerts)}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Riesgo o zona roja informada</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Riesgo o zona roja informada</p>
         </article>
         <article className="report-card rounded-xl border p-4">
-          <p className="text-xs font-black uppercase tracking-wide text-slate-400">Variación facturación</p>
+          <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Variación facturación</p>
           <p className="mt-3 text-2xl font-black text-white">{formatCurrency(Math.abs(reportStats.rmBilling - reportStats.regionBilling))}</p>
-          <p className="mt-1 text-xs font-semibold text-slate-500">Diferencia RM / Regiones</p>
+          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Diferencia RM / Regiones</p>
         </article>
       </section>
 
@@ -320,22 +320,22 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
           <ChartBuilder value={draft} onChange={setDraft} onSave={saveDraft} />
           <section className="report-card rounded-xl border p-4">
             <div className="mb-3">
-              <p className="text-xs font-black uppercase tracking-wide text-slate-400">Biblioteca</p>
+              <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Biblioteca</p>
               <h2 className="text-xl font-black text-white">Gráficos guardados</h2>
             </div>
 
             <div className="grid gap-3">
               {charts.length ? charts.map((chart) => (
-                <article key={chart.id} className="rounded-lg border border-slate-800 bg-slate-950/60 p-3">
+                <article key={chart.id} className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
                   <h3 className="font-black text-white">{chart.title}</h3>
-                  <p className="mt-1 text-xs font-bold text-slate-500">
+                  <p className="mt-1 text-xs font-bold text-[var(--cc-muted)]">
                     {chart.type} · {chart.scope} · {chart.metric}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button className="rounded-md border border-slate-700 px-3 py-2 text-xs font-black text-slate-100" onClick={() => setDraft(chart)} type="button">
+                    <button className="rounded-md border border-[var(--border-main)] px-3 py-2 text-xs font-black text-[var(--text-main)]" onClick={() => setDraft(chart)} type="button">
                       Editar
                     </button>
-                    <button className="rounded-md border border-slate-700 px-3 py-2 text-xs font-black text-slate-100" onClick={() => duplicateChart(chart.id)} type="button">
+                    <button className="rounded-md border border-[var(--border-main)] px-3 py-2 text-xs font-black text-[var(--text-main)]" onClick={() => duplicateChart(chart.id)} type="button">
                       Duplicar
                     </button>
                     <button className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-black text-red-200" onClick={() => removeChart(chart.id)} type="button">
@@ -344,7 +344,7 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
                   </div>
                 </article>
               )) : (
-                <div className="rounded-lg border border-slate-800 bg-slate-950/60 p-4 text-sm font-semibold text-slate-400">Sin gráficos guardados.</div>
+                <div className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-4 text-sm font-semibold text-[var(--cc-muted)]">Sin gráficos guardados.</div>
               )}
             </div>
           </section>
@@ -352,7 +352,7 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
 
         <section className="report-card rounded-xl border p-4">
           <div className="mb-3">
-            <p className="text-xs font-black uppercase tracking-wide text-slate-400">Vista previa</p>
+            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Vista previa</p>
             <h2 className="text-xl font-black text-white">{draft.title}</h2>
           </div>
           <ChartRenderer config={draft} data={previewData} />
