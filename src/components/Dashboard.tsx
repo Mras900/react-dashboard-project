@@ -539,6 +539,7 @@ function SidebarIcon({
     </button>
   );
 }
+void SidebarIcon;
 
 function FilterControl({
   icon,
@@ -2936,7 +2937,7 @@ const dateFilterError = useMemo(() => {
     tablaComunas: 'table-evidencia',
   };
 
-  const { editMode, enterEditMode, exitEditMode, selectedComponentId, setSelectedComponentId, updateComponentInDraft } = designConfig;
+  const { editMode, enterEditMode, exitEditMode, selectedComponentId, setSelectedComponentId, updateComponentInDraft } = designConfig; void enterEditMode;
   const designCssVariables = useMemo<React.CSSProperties | undefined>(() => {
     if (!activeDesignConfig || !hasActiveDesignConfig) return undefined;
     const tokens = activeDesignConfig.tokens;
@@ -3560,54 +3561,84 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-16 flex-col items-center border-r border-[var(--border-main)] bg-[var(--bg-card)] py-4 dark:border-[#22304D] dark:bg-[#0B1020]">
-        <div className="cc-sidebar-logo mb-6 flex h-10 w-10 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
-          <Navigation size={22} />
+      <aside className="cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex w-64 flex-col border-r border-[var(--border-main)] bg-[var(--bg-card)] py-4 dark:border-[#22304D] dark:bg-[#0B1020]">
+        <div className="flex items-center gap-3 px-4 mb-8">
+          <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
+            <Navigation size={22} />
+          </div>
+          <div className="min-w-0">
+            <p className="text-sm font-black text-[var(--text-main)]">Visor</p>
+            <p className="truncate text-[10px] font-semibold text-[var(--cc-muted)]">Facturacion y Reclamos</p>
+          </div>
         </div>
 
-        <nav className="flex flex-col items-center gap-3">
+        <nav className="flex flex-col gap-1 px-3">
           {navItems.filter((item) => item.visible !== false && hasPermission(item.permission)).map((item) => {
             const Icon = item.icon;
 
             return (
-              <SidebarIcon key={item.id} active={activeTab === item.id} badge={item.badge} label={item.label} onClick={() => setActiveTab(item.id)}>
-                <Icon size={19} />
-              </SidebarIcon>
+              <button
+                key={item.id}
+                aria-label={item.label}
+                data-active={activeTab === item.id ? "true" : "false"}
+                className={"flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-bold transition " + (
+                  activeTab === item.id
+                    ? "bg-[#2563EB]/10 text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-300"
+                    : "text-[var(--cc-muted)] hover:bg-[var(--bg-main)] hover:text-[var(--text-main)]"
+                )}
+                onClick={() => setActiveTab(item.id)}
+                type="button"
+              >
+                <Icon size={19} className="shrink-0" />
+                <span className="truncate">{item.label}</span>
+                {item.badge ? <span className="ml-auto h-2 w-2 rounded-full bg-red-500" /> : null}
+              </button>
             );
           })}
         </nav>
 
-        <div className="mt-auto flex flex-col items-center gap-3">
+        <div className="mt-auto flex flex-col gap-1 px-3 pt-4">
           {bottomNavItems.filter((item) => item.visible !== false && hasPermission(item.permission)).map((item) => {
             const Icon = item.icon;
 
             return (
-              <SidebarIcon key={item.id} active={activeTab === item.id} label={item.label} onClick={() => setActiveTab(item.id)}>
-                <Icon size={19} />
-              </SidebarIcon>
+              <button
+                key={item.id}
+                aria-label={item.label}
+                data-active={activeTab === item.id ? "true" : "false"}
+                className={"flex h-10 items-center gap-3 rounded-lg px-3 text-sm font-bold transition " + (
+                  activeTab === item.id
+                    ? "bg-[#2563EB]/10 text-[#2563EB] dark:bg-blue-500/15 dark:text-blue-300"
+                    : "text-[var(--cc-muted)] hover:bg-[var(--bg-main)] hover:text-[var(--text-main)]"
+                )}
+                onClick={() => setActiveTab(item.id)}
+                type="button"
+              >
+                <Icon size={19} className="shrink-0" />
+                <span className="truncate">{item.label}</span>
+              </button>
             );
           })}
           {isAdmin ? (
             <button
-              className={`mt-1 flex h-10 w-10 items-center justify-center rounded-full border-2 transition ${
-                editMode ? 'border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-200' : 'border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] hover:border-blue-300 hover:text-blue-600 dark:border-[var(--border-main)] dark:bg-slate-900 dark:text-[var(--text-main)] dark:hover:border-blue-500 dark:hover:text-blue-200'
-              }`}
-              onClick={() => editMode ? exitEditMode() : enterEditMode()}
-              title={editMode ? 'Salir modo edicion' : 'Editar dashboard'}
+              className={"mt-1 flex h-10 w-10 items-center justify-center rounded-full border-2 transition " + (
+                activeTab === "settings"
+                  ? "border-blue-500 bg-blue-100 text-blue-700 dark:bg-blue-950/60 dark:text-blue-200"
+                  : "border-[var(--border-main)] bg-[var(--bg-card)] text-[var(--cc-muted)] hover:border-blue-300 hover:text-blue-600 dark:border-[var(--border-main)] dark:bg-slate-900 dark:text-[var(--text-main)] dark:hover:border-blue-500 dark:hover:text-blue-200"
+              )}
+              onClick={() => setActiveTab("settings")}
               type="button"
+              aria-label="Configuracion"
             >
-              <Pen size={18} />
+              <UserCog size={19} />
             </button>
           ) : null}
-          <button className="cc-sidebar-action mt-2 flex h-10 w-10 items-center justify-center rounded-full bg-[#2563EB] text-white shadow-lg shadow-blue-950/35" type="button" title="Contraer menú lateral" aria-label="Contraer menú lateral">
-            <ChevronsLeft size={19} />
-          </button>
         </div>
       </aside>
 
-      <main className="cc-main cc-page print-full ml-16 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[var(--bg-main)] p-4 text-[var(--text-main)] dark:bg-[#070B14] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible">
+      <main className="cc-main cc-page print-full ml-64 flex min-w-0 flex-1 flex-col h-screen overflow-hidden bg-[var(--bg-main)] p-4 text-[var(--text-main)] dark:bg-[#070B14] dark:text-slate-100 print:ml-0 print:h-auto print:overflow-visible">
         <div className="cc-page-content print-full flex flex-col h-full min-h-0">
-          {isComponentVisible('header') ? (
+          {activeTab !== 'ruta' && isComponentVisible('header') ? (
           <TailAdminTopbar
             emptyViewMessage={emptyViewMessage}
             isDarkPremium={dashboardTheme === 'dark-premium'}

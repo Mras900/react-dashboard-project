@@ -34,7 +34,6 @@ export function TailAdminTopbar({
       <div className="min-w-0">
         <div className="flex flex-wrap items-center gap-2">
           <span className="h-2.5 w-2.5 rounded-full bg-[#1B4FD8] shadow-[0_0_0_4px_rgba(27,79,216,0.16)]" aria-hidden="true" />
-          <p className="text-[11px] font-black uppercase tracking-[0.18em] text-[var(--cc-muted)]">Dashboard administrativo</p>
         </div>
         <h1 className="mt-1 truncate text-xl font-black tracking-tight text-[var(--text-main)] 2xl:text-2xl">{title}</h1>
         <p className="mt-1 truncate text-xs font-semibold text-[var(--cc-muted)] 2xl:text-sm">{subtitle}</p>
