@@ -365,10 +365,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   const [activeRedZones, setActiveRedZones] = useState<RedZone[]>([]);
   const [redZonesError, setRedZonesError] = useState('');
   const [redZonePanelOpen, setRedZonePanelOpen] = useState(false);
+  const [showBulkInput, setShowBulkInput] = useState(false);
   const [redZoneDraft, setRedZoneDraft] = useState<RedZoneDraft | null>(null);
   const [redZonePicking, setRedZonePicking] = useState(false);
   const [redZoneSaving, setRedZoneSaving] = useState(false);
   const [redZoneManageError, setRedZoneManageError] = useState('');
+  void addressSuggestions; void addressLoading; void addressSearched;
   const [redZoneDetectMessage, setRedZoneDetectMessage] = useState('');
   const [weatherSummary, setWeatherSummary] = useState<RouteWeatherSummary | null>(null);
   const [weatherLoading, setWeatherLoading] = useState(false);
@@ -803,11 +805,11 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
     setOptimizedRoute(null);
   };
 
-  const updateAddressQuery = (id: string, value: string) => {
+  const updateAddressQuery = (id: string, value: string) => { void updateAddressQuery;
     setAddressQueries((current) => ({ ...current, [id]: value }));
   };
 
-  const searchStopAddress = async (stop: RutaStop) => {
+  const searchStopAddress = async (stop: RutaStop) => { void searchStopAddress;
     const query = (addressQueries[stop.id] ?? stop.address).trim();
 
     if (query.length < 4) {
@@ -831,7 +833,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
     }
   };
 
-  const applyAddressSuggestion = (stopId: string, suggestion: AddressSuggestion) => {
+  const applyAddressSuggestion = (stopId: string, suggestion: AddressSuggestion) => { void applyAddressSuggestion;
     setStops((current) =>
       current.map((stop) =>
         stop.id === stopId
@@ -870,7 +872,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
     );
   };
 
-  const updateStopObservation = (id: string, observation: string) => {
+  const updateStopObservation = (id: string, observation: string) => { void updateStopObservation;
     setStops((current) => current.map((stop) => (stop.id === id ? { ...stop, observation } : stop)));
   };
 
@@ -1054,7 +1056,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         .cc-route-daily-premium textarea::placeholder { color: #94a3b8 !important; }
         .dark .cc-route-daily-premium input::placeholder,
         .dark .cc-route-daily-premium textarea::placeholder { color: #64748b !important; }
-        .cc-route-daily-premium .route-map-section-pro .cc-route-map-compact { min-height: 560px; }
+        .cc-route-daily-premium .route-map-section-pro .cc-route-map-compact { min-height: 360px; }
         .cc-route-daily-premium table thead { background: #f1f5f9; }
         .dark .cc-route-daily-premium table thead { background: rgba(2, 6, 23, 0.58); }
         .cc-route-daily-premium .cc-list-card-pro { background: #f8fafc; }
@@ -1301,18 +1303,14 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           ) : null}
         </RutaPanel>
 
-        <RutaPanel className="route-ticket-card-pro grid gap-3 p-4">
-          <form
-            className="grid gap-3"
-            onSubmit={(event) => {
-              event.preventDefault();
-              void handleSearch();
-            }}
-          >
+        {/* Ticket controls — compact row */}
+        <RutaPanel className="p-3">
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search tabs */}
             <div className="cc-route-segmented flex rounded-lg border">
               <button
                 aria-pressed={searchMode === 'ticket'}
-                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? '' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
+                className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'ticket' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
                 onClick={() => setSearchMode('ticket')}
                 type="button"
               >
@@ -1320,7 +1318,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </button>
               <button
                 aria-pressed={searchMode === 'rut'}
-                className={`flex-1 h-9 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? '' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
+                className={`px-3 h-8 rounded-md text-xs font-bold transition ${searchMode === 'rut' ? 'bg-blue-600 text-white' : 'text-[var(--cc-muted)] hover:text-[var(--text-main)]'}`}
                 onClick={() => setSearchMode('rut')}
                 type="button"
               >
@@ -1328,88 +1326,120 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </button>
             </div>
 
-            <label className="grid gap-2">
-              <span className="cc-route-label text-xs">Ingresar ticket de visita</span>
-              <div className="flex gap-2">
-                <input
-                  className="cc-route-input h-10 min-w-0 flex-1 px-3 text-sm font-medium"
-                  aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'}
-                  placeholder={searchMode === 'ticket' ? 'Ej: FAC-4821' : 'Ej: 12.345.678-9'}
-                  onChange={(event) => setSearchValue(event.target.value)}
-                  value={searchValue}
-                />
-                <button
-                  className="flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg bg-[#0f5fcf] px-4 text-sm font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
-                  disabled={loading}
-                  type="submit"
-                  aria-label="Buscar"
-                >
-                  {loading ? <Loader2 className="animate-spin" size={18} /> : <Search size={18} />}<span>Agregar</span>
-                </button>
-              </div>
-            </label>
-          </form>
+            {/* Search input + add */}
+            <form
+              className="flex gap-2 min-w-0 flex-1"
+              onSubmit={(event) => {
+                event.preventDefault();
+                void handleSearch();
+              }}
+            >
+              <input
+                className="h-8 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                aria-label={searchMode === 'ticket' ? 'ID ticket' : 'RUT'}
+                placeholder={searchMode === 'ticket' ? 'Ej: FAC-4821' : 'Ej: 12.345.678-9'}
+                onChange={(event) => setSearchValue(event.target.value)}
+                value={searchValue}
+              />
+              <button
+                className="flex h-8 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
+                disabled={loading}
+                type="submit"
+                aria-label="Buscar"
+              >
+                {loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}
+                <span>Agregar</span>
+              </button>
+            </form>
 
-          <form
-            className="grid gap-2"
-            onSubmit={(event) => {
-              event.preventDefault();
-              const ids = parseTicketIds(bulkTicketIds);
-              setBulkTicketIds('');
-              void addTicketIds(ids);
-            }}
-          >
-            <span className="text-xs font-bold text-[var(--text-main)]">Carga masiva de tickets</span>
-            <p className="text-xs font-medium text-[var(--cc-muted)]">Acepta saltos de línea, comas o punto y coma.</p>
-            <textarea
-              className="min-h-24 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-              aria-label="Carga masiva de tickets"
-              onChange={(event) => setBulkTicketIds(event.target.value)}
-              value={bulkTicketIds}
-            />
-            <button className="h-10 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60" disabled={loading} type="submit">
-              Cargar tickets
+            {/* Bulk load toggle/button */}
+            <span className="text-xs font-bold text-[var(--cc-muted)]">|</span>
+            <button
+              className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60"
+              onClick={() => setShowBulkInput(prev => !prev)}
+              type="button"
+            >
+              Carga masiva
             </button>
-          </form>
-        </RutaPanel>
 
+            <input
+              className="h-8 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none"
+              type="date"
+              value={fechaVisita}
+              onChange={(e) => setFechaVisita(e.target.value)}
+            />
+
+            {/* Export + Clear */}
+            <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
+              <Download size={13} />
+            </button>
+            <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button">
+              <Trash2 size={13} />
+            </button>
+          </div>
+
+          {/* Bulk input — collapsible */}
+          {showBulkInput ? (
+            <form
+              className="mt-2 flex gap-2"
+              onSubmit={(event) => {
+                event.preventDefault();
+                const ids = parseTicketIds(bulkTicketIds);
+                setBulkTicketIds('');
+                void addTicketIds(ids);
+              }}
+            >
+              <textarea
+                className="h-16 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                aria-label="Carga masiva de tickets"
+                placeholder="IDs separados por coma, punto y coma o salto de línea..."
+                onChange={(event) => setBulkTicketIds(event.target.value)}
+                value={bulkTicketIds}
+              />
+              <button
+                className="flex h-16 shrink-0 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-black text-white transition hover:bg-[#0d47a1] disabled:opacity-60"
+                disabled={loading}
+                type="submit"
+              >
+                <span>Cargar</span>
+              </button>
+            </form>
+          ) : null}
+        </RutaPanel>
         </div>{/* END top grid */}
 
-        {/* Actions */}
-        <RutaPanel className="route-action-strip-pro cc-route-actions p-4">
+        {/* Actions — compact row */}
+        <div className="flex flex-wrap items-center gap-2">
           <button
-            className="flex h-10 items-center justify-center gap-2 rounded-lg bg-emerald-600 px-3 text-sm font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
+            className="flex h-8 items-center justify-center gap-1 rounded-lg bg-emerald-600 px-3 text-xs font-bold text-white transition hover:bg-emerald-700 disabled:opacity-60"
             disabled={saving || stops.length === 0 || !visitador.trim()}
             onClick={() => void saveDailyVisits()}
             type="button"
           >
-            {saving ? <Loader2 className="animate-spin" size={17} /> : <Save size={17} />}
-            Guardar visitas del día
+            {saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />}
+            Guardar visitas
           </button>
-          <button className="flex h-10 items-center justify-center gap-2 rounded-lg bg-[#0f5fcf] px-3 text-sm font-bold text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={stops.length === 0 || optimizing || !startPoint.trim()} onClick={optimizeRoute} type="button">
-            {optimizing ? <Loader2 className="animate-spin" size={17} /> : <Route size={17} />}
+          <button className="flex h-8 items-center justify-center gap-1 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1] disabled:opacity-60" disabled={stops.length === 0 || optimizing || !startPoint.trim()} onClick={optimizeRoute} type="button">
+            {optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />}
             Optimizar ruta
           </button>
-          <button className="flex h-10 items-center justify-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-card)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
-            <Download size={17} />
+          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] transition hover:bg-[var(--bg-main)] disabled:opacity-60" disabled={stops.length === 0} onClick={exportCsv} type="button">
+            <Download size={13} />
             Exportar CSV
           </button>
-          <button className="flex h-10 items-center justify-center gap-2 rounded-lg border border-red-100 bg-red-50 px-3 text-sm font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button">
-            <Trash2 size={17} />
+          <button className="flex h-8 items-center justify-center gap-1 rounded-lg border border-red-100 bg-red-50 px-3 text-xs font-bold text-red-700 transition hover:bg-red-100 disabled:opacity-60" disabled={stops.length === 0} onClick={clearStops} type="button">
+            <Trash2 size={13} />
             Limpiar tickets
           </button>
-        </RutaPanel>
+        </div>
       {/* END aside (removed in restructure) */}
 
-      {/* BOTTOM: KPIs + Map + Stops + Valuation */}
-        <section className="route-kpi-strip-pro cc-route-kpi-grid" style={{marginTop:"0"}}>
+      {/* KPI row — 4 cards responsive */}
+        <section className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-3">
           <RutaMetricCard label="Visitas planificadas" value={summary.ticketsToday.toLocaleString('es-CL')} />
           <RutaMetricCard label="Visitas completadas" value={summary.successful.toLocaleString('es-CL')} tone="green" />
           <RutaMetricCard label="% Cumplimiento" value={`${routeCompletionPct.toLocaleString('es-CL')}%`} tone="blue" />
           <RutaMetricCard label="Reclamos del día" value={routeClaimsToday.toLocaleString('es-CL')} tone="amber" />
-          <RutaMetricCard label="Zonas rojas" value={summary.redZones.toLocaleString('es-CL')} tone="red" />
-          <RutaMetricCard label="Total valorizado" value={summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })} tone="green" />
-          <RutaMetricCard label="Proyectado máximo" value={summary.projectedMax.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })} tone="blue" />
         </section>
 
         {message || redZonesError || optimizedRoute ? (
@@ -1456,11 +1486,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         </RutaPanel>
       )}
 
+      {activeRouteTab !== 'operation' ? (
         <RutaPanel className="route-map-section-pro overflow-hidden">
           <div className="border-b border-[var(--border-main)] px-4 py-3">
             <h3 className="text-base font-bold text-[var(--text-main)]">Mapa de ruta</h3>
           </div>
-          <div className="cc-route-map-compact relative overflow-hidden rounded-xl">
+          <div className="cc-route-map-compact relative overflow-hidden rounded-xl" style={{minHeight:"360px", maxHeight:"420px"}}>
             <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>
               <ZoomControl position="topleft" />
               <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
@@ -1684,9 +1715,183 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             )}
           </div>
         </RutaPanel>
+      ) : null}
+
+        <RutaPanel className="route-map-section-pro overflow-hidden">
+          <div className="border-b border-[var(--border-main)] px-4 py-3">
+            <h3 className="text-base font-bold text-[var(--text-main)]">Mapa de ruta</h3>
+          </div>
+          <div className="cc-route-map-compact relative overflow-hidden rounded-xl" style={{minHeight:"360px", maxHeight:"420px"}}>
+            <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false}>
+              <ZoomControl position="topleft" />
+              <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
+              <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZoneCenter} />
+              <RouteMapBounds points={boundsPoints} />
+              <SelectedRedZoneFocus zone={redZoneDraft} />
+              <BaseMapLayers>
+                <ActiveRedZonesLayers onSelect={selectRedZone} redZoneMode="manage" selectedZoneId={selectedRedZoneId} zones={activeRedZones} />
+                {redZones ? (
+                  <LayersControl.Overlay name="Zonas rojas históricas">
+                    <GeoJSON
+                      data={redZones}
+                      style={RED_ZONE_STYLE}
+                      onEachFeature={onEachHistoricalZone}
+                    />
+                  </LayersControl.Overlay>
+                ) : null}
+                {optimizedLine.length > 1 || (optimizedLine.length === 0 && stopPoints.length > 1) ? (
+                  <LayersControl.Overlay checked name="Ruta optimizada">
+                    <LayerGroup>
+                      <Polyline positions={optimizedLine.length > 1 ? optimizedLine : stopPoints} pathOptions={{ color: '#0f5fcf', weight: optimizedLine.length > 1 ? 5 : 4, opacity: optimizedLine.length > 1 ? 0.82 : 0.72 }} />
+                    </LayerGroup>
+                  </LayersControl.Overlay>
+                ) : null}
+                {stops.length > 0 ? (
+                  <LayersControl.Overlay checked name="Paradas / tickets">
+                    <LayerGroup>
+                      {stops.map((stop, index) =>
+                        Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? (
+                          <CircleMarker
+                            key={stop.id}
+                            center={[stop.lat as number, stop.lng as number]}
+                            pathOptions={{
+                              color: '#ffffff',
+                              fillColor: stop.isRedZone ? '#ef4444' : stop.status === 'exitosa' ? '#10b981' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b',
+                              fillOpacity: 0.85,
+                              weight: 2,
+                            }}
+                            radius={9}
+                          >
+                            <Popup>
+                              <strong>
+                                {index + 1}. {stop.clientName}
+                              </strong>
+                              <br />
+                              Ref: {stop.referencia}
+                              <br />
+                              Estado: {STATUS_LABELS[stop.status]}
+                            </Popup>
+                          </CircleMarker>
+                        ) : null,
+                      )}
+                    </LayerGroup>
+                  </LayersControl.Overlay>
+                ) : null}
+              </BaseMapLayers>
+              {selectedStartPoint ? (
+                <CircleMarker
+                  center={[selectedStartPoint.lat, selectedStartPoint.lon]}
+                  pathOptions={{
+                    color: '#ffffff',
+                    fillColor: '#10b981',
+                    fillOpacity: 0.95,
+                    weight: 3,
+                  }}
+                  radius={11}
+                >
+                  <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>
+                    Inicio de ruta
+                  </Tooltip>
+                  <Popup>
+                    <strong>Punto de inicio</strong>
+                    <br />
+                    {selectedStartPoint.label}
+                  </Popup>
+                </CircleMarker>
+              ) : null}
+            </MapContainer>
+            {redZonePanelOpen ? (
+              <div className="absolute left-4 right-4 top-16 z-[500] max-h-[70%] overflow-y-auto rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] shadow-xl md:left-auto md:right-4 md:w-[320px] md:max-h-[85%]">
+                <div className="sticky top-0 border-b border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-3">
+                  <div className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-xs font-black uppercase tracking-wide text-[var(--text-main)]">Zonas rojas</p>
+                      <p className="mt-1 text-[11px] font-medium text-[var(--cc-muted)]">Activas en PostgreSQL y capa histórica solo de referencia.</p>
+                    </div>
+                    <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={() => setRedZonePanelOpen(false)} type="button">
+                      Ocultar
+                    </button>
+                  </div>
+                  <button
+                    className="mt-3 flex h-9 w-full items-center justify-center gap-2 rounded-lg bg-red-600 px-3 text-xs font-bold text-white transition hover:bg-red-700"
+                    onClick={() => {
+                      const newDraft = createEmptyRedZoneDraft();
+                      newDraft.lat = activeRedZones.length > 0 ? activeRedZones[0].lat : null;
+                      newDraft.lon = activeRedZones.length > 0 ? activeRedZones[0].lon : null;
+                      setRedZoneDraft(newDraft);
+                      setRedZonePicking(true);
+                      setMessage('Haz clic en el mapa para definir el centro de la nueva zona roja');
+                    }}
+                    type="button"
+                  >
+                    + Nueva zona roja
+                  </button>
+                </div>
+                <div className="p-4">
+                  {activeRedZones.length > 0 ? (
+                    <div className="grid gap-2">
+                      {activeRedZones.map((zone) => (
+                        <button
+                          key={zone.id}
+                          className={`w-full rounded-lg border px-3 py-2 text-left transition ${selectedRedZoneId === zone.id ? 'border-red-400 bg-red-50 text-red-700 dark:bg-red-950/40 dark:text-red-100' : 'border-[var(--border-main)] bg-[var(--bg-card)] hover:bg-[var(--bg-main)]'}`}
+                          onClick={() => selectRedZone(zone)}
+                          type="button"
+                        >
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="text-xs font-bold text-[var(--text-main)]">{zone.name}</span>
+                            <span className="rounded-md bg-[var(--bg-card)] px-2 py-0.5 text-[10px] font-bold uppercase text-[var(--text-main)]">{zone.severity}</span>
+                          </div>
+                          <p className="mt-1 text-[11px] text-[var(--cc-muted)]">{zone.comuna || 'Sin comuna'} · {Math.round(zone.radius_m)} m</p>
+                          <span className="mt-2 inline-flex text-[11px] font-bold text-blue-300">Editar</span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : null}
+                  <p className="pt-1 text-[11px] font-medium text-[var(--cc-muted)]">Zonas históricas: disponibles como capa de referencia en el selector de capas.</p>
+                  <div className="mt-4 space-y-3 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-3" ref={redZoneFormRef}>
+                    <p className="text-xs font-bold text-[var(--text-main)]">Nueva zona roja</p>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
+                        Nombre
+                        <input className="rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none" onChange={(e) => setRedZoneDraft(prev => prev ? {...prev, name: e.target.value} : null)} value={redZoneDraft?.name ?? ''} />
+                      </label>
+                      <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
+                        Comuna
+                        <input className="rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none" onChange={(e) => setRedZoneDraft(prev => prev ? {...prev, comuna: e.target.value} : null)} value={redZoneDraft?.comuna ?? ''} />
+                      </label>
+                    </div>
+                    <label className="grid gap-1 text-xs font-bold text-[var(--text-main)]">
+                      Radio (m)
+                      <input className="rounded-md border border-[var(--border-main)] bg-[var(--bg-card)] px-2 py-1 text-xs font-medium text-[var(--text-main)] outline-none" max={2000} min={50} onChange={(e) => setRedZoneDraft(prev => prev ? {...prev, radius_m: Number(e.target.value)} : null)} type="number" value={redZoneDraft?.radius_m ?? 350} />
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <button
+                        className="flex h-9 flex-1 items-center justify-center gap-2 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white disabled:opacity-60"
+                        disabled={redZoneSaving}
+                        onClick={() => void saveRedZone()}
+                        type="button"
+                      >
+                        {redZoneSaving ? <Loader2 className="animate-spin" size={14} /> : <Save size={14} />}
+                        Guardar
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            ) : (
+              <button
+                className="absolute right-4 top-16 z-[500] rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-xl"
+                onClick={() => setRedZonePanelOpen(true)}
+                type="button"
+              >
+                Zonas rojas
+              </button>
+            )}
+          </div>
+        </RutaPanel>
 
         {activeRouteTab === 'operation' ? (
-        <section className="route-bottom-grid-pro grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
+        <section className="grid gap-4 2xl:grid-cols-[minmax(0,1fr)_320px]">
           <RutaPanel className="route-stops-panel-pro overflow-hidden">
             <div className="border-b border-[var(--border-main)] px-4 py-3">
               <h3 className="text-base font-bold text-[var(--text-main)]">Visitas planificadas</h3>
@@ -1701,72 +1906,23 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 </div>
               ) : (
                 stops.map((stop, index) => (
-                  <article key={stop.id} className="cc-list-card-pro grid gap-3 p-4 lg:grid-cols-[minmax(0,1fr)_220px]">
+                  <article key={stop.id} className="cc-list-card-pro grid gap-2 p-3 lg:grid-cols-[minmax(0,1fr)_200px]">
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-2">
                         <span className="rounded-md bg-[var(--bg-card)] px-2 py-1 text-xs font-bold text-[var(--text-main)]">#{index + 1}</span>
-                        <h4 className="break-words text-sm font-bold text-[var(--text-main)]">{stop.clientName}</h4>
+                        <h4 className="truncate text-sm font-bold text-[var(--text-main)] max-w-[300px]" title={stop.clientName}>{stop.clientName}</h4>
                         <span className={`rounded-md border px-2 py-1 text-xs font-bold ${STATUS_CLASSES[stop.status]}`}>{STATUS_LABELS[stop.status]}</span>
-                        {stop.isRedZone ? <span className="cc-badge-pro" style={{background:"rgba(239,68,68,0.08)",color:"var(--cc-red)"}}>Zona roja</span> : null}
-                        {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-[var(--bg-card)] px-2 py-1 text-xs font-bold text-[var(--cc-muted)]">Sin coordenadas — dirección requiere corrección</span> : null}
+                        {stop.isRedZone ? <span className="rounded-md bg-red-50 px-2 py-1 text-[10px] font-bold text-red-700">Zona roja</span> : null}
+                        {!Number.isFinite(stop.lat) || !Number.isFinite(stop.lng) ? <span className="rounded-md bg-amber-50 px-2 py-1 text-[10px] font-bold text-amber-700">Sin coord.</span> : null}
                       </div>
-                      <p className="cc-route-stop-meta mt-2 text-xs font-semibold">
-                        {stop.referencia} · Reclamos {stop.claimsCount.toLocaleString('es-CL')}
+                      <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">
+                        {stop.referencia} · Reclamos {stop.claimsCount.toLocaleString('es-CL')} · {stop.address ? <span className="line-clamp-1" title={stop.address}>{stop.address}</span> : 'Sin dirección'}
                       </p>
-                      <p className="cc-route-stop-name mt-1 text-sm font-medium">{stop.address || 'Sin dirección'}</p>
-                      <div className="cc-route-stop-meta mt-2 grid gap-1 text-xs font-medium sm:grid-cols-3">
-                        <span>RUT: {stop.rut ?? 'No informado'}</span>
-                        <span>Tel: {stop.phone ?? 'No informado'}</span>
-                        <span>Correo: {stop.email ?? 'No informado'}</span>
-                      </div>
-                      {stop.error ? <p className="mt-2 text-xs font-semibold text-amber-700">{stop.error}</p> : null}
-                      <div className="mt-3 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
-                        <div className="flex flex-wrap items-center justify-between gap-2">
-                          <span className="text-xs font-bold text-[var(--text-main)]">Corregir dirección</span>
-                          {Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? <span className="text-xs font-semibold text-[var(--cc-muted)]">Ubicación editable</span> : <span className="text-xs font-semibold text-amber-700">Requiere coordenadas</span>}
-                        </div>
-                        <div className="mt-2 flex flex-col gap-2 sm:flex-row">
-                          <input
-                            className="h-10 min-w-0 flex-1 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-medium text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                            aria-label={`Corregir dirección de ${stop.clientName}`}
-                            onChange={(event) => updateAddressQuery(stop.id, event.target.value)}
-                            value={addressQueries[stop.id] ?? stop.cleanAddress ?? stop.address}
-                          />
-                          <button
-                            className="flex h-10 items-center justify-center gap-2 rounded-lg border border-blue-200 bg-blue-50 px-3 text-sm font-bold text-blue-700 transition hover:bg-blue-100 disabled:opacity-60"
-                            disabled={addressLoading[stop.id]}
-                            onClick={() => void searchStopAddress(stop)}
-                            type="button"
-                          >
-                            {addressLoading[stop.id] ? <Loader2 className="animate-spin" size={16} /> : <Search size={16} />}
-                            Buscar dirección
-                          </button>
-                        </div>
-                        {addressSuggestions[stop.id]?.length ? (
-                          <div className="mt-2 grid gap-2">
-                            {addressSuggestions[stop.id].map((suggestion) => (
-                              <div key={`${suggestion.label}-${suggestion.lat}-${suggestion.lon}`} className="grid gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] p-2 sm:grid-cols-[minmax(0,1fr)_auto] sm:items-center">
-                                <p className="text-xs font-medium leading-snug text-[var(--text-main)]">{suggestion.label}</p>
-                                <p className="text-xs font-semibold text-[var(--cc-muted)]">Buscado como: {suggestion.query_used}</p>
-                                <button
-                                  className="h-9 rounded-lg bg-[#0f5fcf] px-3 text-xs font-bold text-white transition hover:bg-[#0d47a1]"
-                                  onClick={() => applyAddressSuggestion(stop.id, suggestion)}
-                                  type="button"
-                                >
-                                  Usar esta ubicación
-                                </button>
-                              </div>
-                            ))}
-                          </div>
-                        ) : addressSearched[stop.id] && !addressLoading[stop.id] ? (
-                          <p className="cc-route-stop-meta mt-2 text-xs font-semibold">No se encontraron direcciones</p>
-                        ) : null}
-                      </div>
                     </div>
 
-                    <div className="grid gap-2">
+                    <div className="flex flex-wrap items-center gap-2">
                       <select
-                        className="h-10 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-sm font-bold text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
+                        className="h-8 flex-1 min-w-[100px] rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-2 text-xs font-bold text-[var(--text-main)] outline-none"
                         onChange={(event) => updateStopStatus(stop.id, event.target.value as RutaVisitStatus)}
                         value={stop.status}
                       >
@@ -1774,22 +1930,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                         <option value="exitosa">Exitosa</option>
                         <option value="no_exitosa">No exitosa</option>
                       </select>
-                      <textarea
-                        className="min-h-20 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 py-2 text-sm font-medium text-[var(--text-main)] outline-none disabled:cursor-not-allowed disabled:opacity-60 focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
-                        aria-label={`Observación de ${stop.clientName}`}
-                        disabled={stop.status === 'pendiente'}
-                        onChange={(event) => updateStopObservation(stop.id, event.target.value)}
-                        value={stop.observation}
-                      />
-                      <div className="flex items-center justify-between gap-2">
-                        <span className="cc-route-stop-meta text-xs font-bold">
-                          {calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}
-                        </span>
-                        <button className="cc-danger-button flex h-9 items-center gap-2 px-3 text-xs font-bold" onClick={() => removeStop(stop.id)} type="button">
-                          <Trash2 size={15} />
-                          Eliminar
-                        </button>
-                      </div>
+                      <span className="text-xs font-bold text-[var(--cc-muted)] whitespace-nowrap">
+                        {calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}
+                      </span>
+                      <button className="flex h-8 items-center gap-1 rounded-lg border border-red-100 bg-red-50 px-2 text-xs font-bold text-red-700 hover:bg-red-100" onClick={() => removeStop(stop.id)} type="button">
+                        <Trash2 size={12} />
+                      </button>
                     </div>
                   </article>
                 ))
@@ -1802,7 +1948,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             <div className="mt-4 grid gap-3 text-sm">
               <div className="flex justify-between gap-3">
                 <span className="font-medium text-[var(--cc-muted)]">Tramo actual</span>
-                <span className="font-bold cc-text">{stops.length >= 13 ? '13 o más tickets' : 'Menos de 13 tickets'}</span>
+                <span className="font-bold text-[var(--text-main)]">{stops.length >= 13 ? '13 o más tickets' : 'Menos de 13 tickets'}</span>
               </div>
               <div className="flex justify-between gap-3">
                 <span className="font-medium text-[var(--cc-muted)]">Tarifa exitosa</span>
@@ -1813,7 +1959,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 <span className="font-bold text-red-700">{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
               </div>
               {optimizedRoute ? (
-                <div className="cc-route-divider border-t pt-3">
+                <div className="border-t border-[var(--border-main)] pt-3">
                   <div className="flex justify-between gap-3">
                     <span className="font-medium text-[var(--cc-muted)]">Kilómetros totales</span>
                     <span className="font-bold text-blue-700">{routeFuelSummary ? formatKilometers(routeFuelSummary.totalKm) : formatDistance(optimizedRoute.distance_m)}</span>
@@ -1847,7 +1993,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               <div className="border-t border-[var(--border-main)] pt-3">
                 <div className="flex justify-between gap-3">
                   <span className="font-bold text-[var(--text-main)]">Total valorizado</span>
-                  <span className="cc-route-valuation-title font-extrabold">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
+                  <span className="font-extrabold text-[var(--text-main)]">{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span>
                 </div>
               </div>
             </div>
