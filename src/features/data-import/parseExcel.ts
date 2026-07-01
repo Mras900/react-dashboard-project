@@ -1,4 +1,3 @@
-import * as XLSX from 'xlsx';
 import type { RawImportedRow } from './importTypes';
 import { detectRowsImportSchema } from './detectDatasetScope';
 
@@ -7,6 +6,7 @@ function nonEmptyRows(rows: RawImportedRow[]) {
 }
 
 export async function parseExcel(file: File): Promise<RawImportedRow[]> {
+  const XLSX = await import('xlsx');
   const buffer = await file.arrayBuffer();
   const workbook = XLSX.read(buffer, { type: 'array' });
   const candidates = workbook.SheetNames.map((sheetName) => {
@@ -23,3 +23,4 @@ export async function parseExcel(file: File): Promise<RawImportedRow[]> {
 
   return candidates.find((candidate) => candidate.rows.length > 0)?.rows ?? [];
 }
+

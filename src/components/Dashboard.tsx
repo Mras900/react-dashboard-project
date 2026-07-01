@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { lazy, Suspense, useCallback, useEffect, useMemo, useState } from 'react';
 import {
   AlertTriangle,
   Building2,
@@ -43,18 +43,13 @@ import {
 } from '@tanstack/react-table';
 import { GeoJSON, LayersControl, MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import { monthlyFacturacion, sourceSummary, type ComunaMetric } from '../data/dashboardData';
-import { DataImportModal } from '../features/data-import/DataImportModal';
 import { aggregateImportedRows, loadRegionImportedRows, loadRmImportedRows } from '../features/data-import/importStorage';
 import type { ImportedDashboardRow, ImportedVisitStatus } from '../features/data-import/importTypes';
 import type { DashboardWidget } from '../features/layout/types';
-import { MapView } from '../features/mapa/MapView';
-import { ReportsView } from '../features/reports/ReportsView';
-import { RutaVisitadorView } from '../features/ruta/RutaVisitadorView';
 import { UserMenu } from '../features/user/UserMenu';
 import { ProtectedView } from '../features/auth/ProtectedView';
 import type { AppViewKey } from '../features/auth/authTypes';
 import { useAuth } from '../features/auth/useAuth';
-import { UserManagementView } from '../features/users/UserManagementView';
 import { loadRegionalGeoLayer } from '../features/maps/loadRegionalGeoLayer';
 import { normalizeMapJoinKey } from '../features/maps/normalizeMapJoinKey';
 import { RegionClaimsLayer } from '../features/maps/RegionClaimsLayer';
@@ -86,10 +81,16 @@ import { ComponentEditPanel } from '../features/design-center/ComponentEditPanel
 import type { KpiDataSources } from '../features/design-center/kpiCalculations';
 import type { DesignComponentConfig, DesignComponentId, DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
+
 import { Badge } from './ui/badge';
 import { Button } from './ui/button';
 import { Card, CardContent } from './ui/card';
 import { Input } from './ui/input';
+const DataImportModal = lazy(() => import('../features/data-import/DataImportModal').then((module) => ({ default: module.DataImportModal })));
+const ReportsView = lazy(() => import('../features/reports/ReportsView').then((module) => ({ default: module.ReportsView })));
+const RutaVisitadorView = lazy(() => import('../features/ruta/RutaVisitadorView').then((module) => ({ default: module.RutaVisitadorView })));
+const MapView = lazy(() => import('../features/mapa/MapView').then((module) => ({ default: module.MapView })));
+const UserManagementView = lazy(() => import('../features/users/UserManagementView').then((module) => ({ default: module.UserManagementView })));
 
 type ActiveTab = 'dashboard' | 'ruta' | 'reports' | 'billing' | 'settings' | 'arqueo' | 'alerts' | 'map' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
@@ -1799,7 +1800,7 @@ function SettingsView({
       <div className="settings-control-premium grid gap-4">
         {settingsPremiumStyles}
         {renderSectionHeader('Usuarios y permisos', 'Administración de accesos del sistema')}
-        <UserManagementView />
+        <Suspense fallback={null}><UserManagementView /></Suspense>
       </div>
     );
   }
@@ -4042,16 +4043,18 @@ const dateFilterError = useMemo(() => {
             </ProtectedView>
           ) : activeTab === 'map' ? (
             <ProtectedView viewKey="dashboard">
-              <MapView
-                activeRedZones={activeRedZones}
-                comunaMetrics={filteredMapData}
-                historicalRedZones={zonasRojasGeoJson}
-                maxVisitas={maxVisitas}
-                rmComunasLayer={mapLayers.comunasKml}
-              />
+              <Suspense fallback={null}>
+                <MapView
+                  activeRedZones={activeRedZones}
+                  comunaMetrics={filteredMapData}
+                  historicalRedZones={zonasRojasGeoJson}
+                  maxVisitas={maxVisitas}
+                  rmComunasLayer={mapLayers.comunasKml}
+                />
+              </Suspense>
             </ProtectedView>
           ) : activeTab === 'ruta' ? (
-            <ProtectedView viewKey="ruta"><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></ProtectedView>
+            <ProtectedView viewKey="ruta"><Suspense fallback={null}><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></Suspense></ProtectedView>
           ) : activeTab === 'billing' ? (
             <ProtectedView viewKey="dashboard"><BillingView tableRows={tableRows} claims={databaseDashboardData?.reclamos ?? []} totals={totals} regionByComuna={regionByComuna} /></ProtectedView>
           ) : activeTab === 'settings' ? (
@@ -4072,9 +4075,9 @@ const dateFilterError = useMemo(() => {
               />
             </ProtectedView>
           ) : activeTab === 'reports' ? (
-            <ProtectedView viewKey="reportes"><ReportsView rmRows={tableRows} /></ProtectedView>
+            <ProtectedView viewKey="reportes"><Suspense fallback={null}><ReportsView rmRows={tableRows} /></Suspense></ProtectedView>
           ) : activeTab === 'users' ? (
-            <ProtectedView viewKey="usuarios"><UserManagementView /></ProtectedView>
+            <ProtectedView viewKey="usuarios"><Suspense fallback={null}><UserManagementView /></Suspense></ProtectedView>
           ) : (
             <Panel className="flex min-h-[620px] flex-col items-center justify-center p-10 text-center">
               <AlertTriangle className="mb-4 text-blue-600" size={44} />
@@ -4086,7 +4089,7 @@ const dateFilterError = useMemo(() => {
           </div> {/* close scroll-wrapper */}
         </div>
 
-        {showImportModal && hasPermission('importaciones') ? <DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /> : null}
+        {showImportModal && hasPermission('importaciones') ? <Suspense fallback={null}><DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /></Suspense> : null}
         {editMode && selectedComponentId ? (
           <ComponentEditPanel
             component={activeDesignConfig?.components.find((c) => c.id === selectedComponentId) ?? activeDesignConfig?.components[0]!}
