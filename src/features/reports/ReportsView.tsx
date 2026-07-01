@@ -1,5 +1,7 @@
 import { useMemo, useState } from 'react';
 import { AlertTriangle, BarChart3, Brain, Download, FileText, Sparkles } from 'lucide-react';
+import { Badge as TremorBadge, Card as TremorCard, Metric, Text, Title } from '@tremor/react';
+import { Button } from '../../components/ui/button';
 import { ChartRenderer } from '../../components/charts/ChartRenderer';
 import type { ChartConfig } from './chart-types';
 import { buildChartData } from './chart-utils';
@@ -81,101 +83,7 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
   };
 
   return (
-    <div className="reports-ai-premium grid gap-5">
-      <style>{`
-        .reports-ai-premium { color: #0f172a; }
-        .dark .reports-ai-premium { color: #e2e8f0; }
-        .reports-ai-premium .report-card,
-        .reports-ai-premium > section,
-        .reports-ai-premium section.rounded-lg {
-          background: #ffffff !important;
-          border-color: #e2e8f0 !important;
-          color: #0f172a !important;
-          border-radius: 16px !important;
-          box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
-        }
-        .dark .reports-ai-premium .report-card,
-        .dark .reports-ai-premium > section,
-        .dark .reports-ai-premium section.rounded-lg {
-          background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98)) !important;
-          border-color: #22304d !important;
-          color: #e2e8f0 !important;
-          box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
-        }
-        .reports-ai-premium h2,
-        .reports-ai-premium h3,
-        .reports-ai-premium h4,
-        .reports-ai-premium label,
-        .reports-ai-premium .text-white,
-        .reports-ai-premium .text-slate-100,
-        .reports-ai-premium .text-\[\#071b4d\],
-        .reports-ai-premium .text-[var(--text-main)] {
-          color: #0f172a !important;
-        }
-        .dark .reports-ai-premium h2,
-        .dark .reports-ai-premium h3,
-        .dark .reports-ai-premium h4,
-        .dark .reports-ai-premium label,
-        .dark .reports-ai-premium .text-white,
-        .dark .reports-ai-premium .text-slate-100,
-        .dark .reports-ai-premium .text-\[\#071b4d\],
-        .dark .reports-ai-premium .text-[var(--text-main)] {
-          color: #f8fafc !important;
-        }
-        .reports-ai-premium p,
-        .reports-ai-premium .text-[var(--cc-muted)],
-        .reports-ai-premium .text-[var(--cc-muted)],
-        .reports-ai-premium .text-slate-600,
-        .reports-ai-premium .text-\[\#7A90A8\],
-        .reports-ai-premium .text-\[\#C8D7EA\] {
-          color: #64748b !important;
-        }
-        .dark .reports-ai-premium p,
-        .dark .reports-ai-premium .text-[var(--cc-muted)],
-        .dark .reports-ai-premium .text-[var(--cc-muted)],
-        .dark .reports-ai-premium .text-slate-600,
-        .dark .reports-ai-premium .text-\[\#7A90A8\],
-        .dark .reports-ai-premium .text-\[\#C8D7EA\] {
-          color: #94a3b8 !important;
-        }
-        .reports-ai-premium input,
-        .reports-ai-premium textarea,
-        .reports-ai-premium select {
-          background: #ffffff !important;
-          border-color: #cbd5e1 !important;
-          color: #0f172a !important;
-        }
-        .dark .reports-ai-premium input,
-        .dark .reports-ai-premium textarea,
-        .dark .reports-ai-premium select {
-          background: rgba(15, 23, 42, 0.9) !important;
-          border-color: #22304d !important;
-          color: #f8fafc !important;
-        }
-        .reports-ai-premium input::placeholder,
-        .reports-ai-premium textarea::placeholder { color: #94a3b8 !important; }
-        .dark .reports-ai-premium input::placeholder,
-        .dark .reports-ai-premium textarea::placeholder { color: #64748b !important; }
-        .reports-ai-premium .bg-white,
-        .reports-ai-premium .bg-slate-50,
-        .reports-ai-premium .bg-slate-950\/60,
-        .reports-ai-premium .bg-slate-950\/70 { background-color: #f8fafc !important; }
-        .dark .reports-ai-premium .bg-white,
-        .dark .reports-ai-premium .bg-slate-50,
-        .dark .reports-ai-premium .bg-slate-950\/60,
-        .dark .reports-ai-premium .bg-slate-950\/70 { background-color: rgba(15, 23, 42, 0.68) !important; }
-        .reports-ai-premium .border-slate-200,
-        .reports-ai-premium .border-[var(--border-main)],
-        .reports-ai-premium .border-[var(--border-main)] { border-color: #cbd5e1 !important; }
-        .dark .reports-ai-premium .border-slate-200,
-        .dark .reports-ai-premium .border-[var(--border-main)],
-        .dark .reports-ai-premium .border-[var(--border-main)] { border-color: #22304d !important; }
-        .reports-ai-premium button { border-radius: 10px; }
-        .reports-ai-premium .recharts-wrapper text { fill: #64748b; }
-        .dark .reports-ai-premium .recharts-wrapper text { fill: #94a3b8; }
-        .reports-ai-premium button.text-white,
-        .reports-ai-premium a.text-white { color: #ffffff !important; }
-      `}</style>
+    <div className="cc-reports-shell reports-ai-premium grid gap-5">
 
       <section className="report-card overflow-hidden rounded-xl border p-5">
         <div className="grid gap-4 xl:grid-cols-[minmax(0,1fr)_auto] xl:items-end">
@@ -185,49 +93,45 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
             <p className="mt-2 max-w-3xl text-sm font-semibold text-[var(--cc-muted)]">Análisis ejecutivo, informes e inteligencia territorial</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <a className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-sm font-black text-[var(--text-main)]" href="#informe-ejecutivo">
-              <FileText size={16} /> Generar reporte
-            </a>
-            <a className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white shadow-lg shadow-blue-950/30" href="#informe-ejecutivo">
-              <Download size={16} /> Exportar
-            </a>
+            <Button asChild className="h-10 rounded-lg font-black" variant="outline"><a href="#informe-ejecutivo"><FileText size={16} /> Generar reporte</a></Button>
+            <Button asChild className="h-10 rounded-lg font-black"><a href="#informe-ejecutivo"><Download size={16} /> Exportar</a></Button>
           </div>
         </div>
       </section>
 
-      <section className="grid gap-3 md:grid-cols-2 xl:grid-cols-4">
-        <article className="report-card rounded-xl border p-4">
+      <section className="cc-reports-grid grid gap-3 md:grid-cols-2 xl:grid-cols-4">
+        <TremorCard className="cc-report-card report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Reportes generados</p>
+            <Text>Reportes generados</Text>
             <FileText className="text-cyan-300" size={18} />
           </div>
-          <p className="mt-3 text-3xl font-black text-white">{formatNumber(charts.length)}</p>
-          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Biblioteca de gráficos guardados</p>
-        </article>
-        <article className="report-card rounded-xl border p-4">
+          <Metric className="mt-3">{formatNumber(charts.length)}</Metric>
+          <Text className="mt-1">Biblioteca de graficos guardados</Text>
+        </TremorCard>
+        <TremorCard className="cc-report-card report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Reclamos analizados</p>
+            <Text>Reclamos analizados</Text>
             <BarChart3 className="text-blue-300" size={18} />
           </div>
-          <p className="mt-3 text-3xl font-black text-white">{formatNumber(reportStats.totalClaims)}</p>
-          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">RM {formatNumber(reportStats.rmClaims)} · Regiones {formatNumber(reportStats.regionClaims)}</p>
-        </article>
-        <article className="report-card rounded-xl border p-4">
+          <Metric className="mt-3">{formatNumber(reportStats.totalClaims)}</Metric>
+          <Text className="mt-1">RM {formatNumber(reportStats.rmClaims)} - Regiones {formatNumber(reportStats.regionClaims)}</Text>
+        </TremorCard>
+        <TremorCard className="cc-report-card report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Alertas detectadas</p>
+            <Text>Alertas detectadas</Text>
             <AlertTriangle className="text-amber-300" size={18} />
           </div>
-          <p className="mt-3 text-3xl font-black text-white">{formatNumber(reportStats.territorialAlerts + reportStats.highPriority)}</p>
-          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Prioridad alta y riesgo territorial</p>
-        </article>
-        <article className="report-card rounded-xl border p-4">
+          <Metric className="mt-3">{formatNumber(reportStats.territorialAlerts + reportStats.highPriority)}</Metric>
+          <Text className="mt-1">Prioridad alta y riesgo territorial</Text>
+        </TremorCard>
+        <TremorCard className="cc-report-card report-card rounded-xl border p-4">
           <div className="flex items-center justify-between gap-3">
-            <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Recomendaciones IA</p>
+            <Text>Recomendaciones IA</Text>
             <Sparkles className="text-emerald-300" size={18} />
           </div>
-          <p className="mt-3 text-2xl font-black text-white">Bajo demanda</p>
-          <p className="mt-1 text-xs font-semibold text-[var(--cc-muted)]">Usa resumen IA existente</p>
-        </article>
+          <Title className="mt-3 text-2xl">Bajo demanda</Title>
+          <div className="mt-2"><TremorBadge color="emerald">Resumen IA existente</TremorBadge></div>
+        </TremorCard>
       </section>
 
       <section className="grid gap-4 xl:grid-cols-[minmax(0,1.2fr)_minmax(360px,0.8fr)]">
@@ -345,15 +249,9 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
                     {chart.type} · {chart.scope} · {chart.metric}
                   </p>
                   <div className="mt-3 flex flex-wrap gap-2">
-                    <button className="rounded-md border border-[var(--border-main)] px-3 py-2 text-xs font-black text-[var(--text-main)]" onClick={() => setDraft(chart)} type="button">
-                      Editar
-                    </button>
-                    <button className="rounded-md border border-[var(--border-main)] px-3 py-2 text-xs font-black text-[var(--text-main)]" onClick={() => duplicateChart(chart.id)} type="button">
-                      Duplicar
-                    </button>
-                    <button className="rounded-md border border-red-400/30 px-3 py-2 text-xs font-black text-red-200" onClick={() => removeChart(chart.id)} type="button">
-                      Eliminar
-                    </button>
+                    <Button className="rounded-md font-black" onClick={() => setDraft(chart)} size="xs" type="button" variant="outline">Editar</Button>
+                    <Button className="rounded-md font-black" onClick={() => duplicateChart(chart.id)} size="xs" type="button" variant="outline">Duplicar</Button>
+                    <Button className="rounded-md font-black" onClick={() => removeChart(chart.id)} size="xs" type="button" variant="destructive">Eliminar</Button>
                   </div>
                 </article>
               )) : (
@@ -374,6 +272,8 @@ export function ReportsView({ rmRows, regionRows = [] }: Props) {
     </div>
   );
 }
+
+
 
 
 

@@ -5863,3 +5863,162 @@ table tbody tr:hover {
   color: #A8B3C7;
 }
 
+
+/* Reports premium polish (Fase 9B) */
+.cc-reports-shell {
+  color: #0f172a;
+}
+
+.dark .cc-reports-shell {
+  color: #eaf0f8;
+}
+
+.cc-reports-shell .report-card,
+.cc-reports-shell .cc-report-card {
+  background: #ffffff;
+  border-color: #e2e8f0;
+  color: #0f172a;
+  border-radius: 16px;
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.08);
+}
+
+.dark .cc-reports-shell .report-card,
+.dark .cc-reports-shell .cc-report-card {
+  background: linear-gradient(180deg, rgba(15, 23, 42, 0.98), rgba(11, 18, 32, 0.98));
+  border-color: rgba(148, 163, 184, 0.18);
+  color: #eaf0f8;
+  box-shadow: 0 18px 44px rgba(2, 6, 23, 0.24);
+}
+
+.cc-reports-shell h2,
+.cc-reports-shell h3,
+.cc-reports-shell h4,
+.cc-reports-shell label,
+.cc-reports-shell .text-white,
+.cc-reports-shell .text-slate-100,
+.cc-reports-shell .text-\[\#071b4d\],
+.cc-reports-shell .text-\[var\(--text-main\)\] {
+  color: #0f172a;
+}
+
+.dark .cc-reports-shell h2,
+.dark .cc-reports-shell h3,
+.dark .cc-reports-shell h4,
+.dark .cc-reports-shell label,
+.dark .cc-reports-shell .text-white,
+.dark .cc-reports-shell .text-slate-100,
+.dark .cc-reports-shell .text-\[\#071b4d\],
+.dark .cc-reports-shell .text-\[var\(--text-main\)\] {
+  color: #f8fafc;
+}
+
+.cc-reports-shell p,
+.cc-reports-shell [data-testid="tremor-text"],
+.cc-reports-shell .text-\[var\(--cc-muted\)\],
+.cc-reports-shell .text-slate-500,
+.cc-reports-shell .text-slate-600,
+.cc-reports-shell .text-\[\#7A90A8\],
+.cc-reports-shell .text-\[\#C8D7EA\] {
+  color: #64748b;
+}
+
+.dark .cc-reports-shell p,
+.dark .cc-reports-shell [data-testid="tremor-text"],
+.dark .cc-reports-shell .text-\[var\(--cc-muted\)\],
+.dark .cc-reports-shell .text-slate-500,
+.dark .cc-reports-shell .text-slate-600,
+.dark .cc-reports-shell .text-\[\#7A90A8\],
+.dark .cc-reports-shell .text-\[\#C8D7EA\] {
+  color: #a8b3c7;
+}
+
+.cc-reports-shell input,
+.cc-reports-shell textarea,
+.cc-reports-shell select,
+.cc-reports-shell [data-slot="select-trigger"] {
+  background: #ffffff;
+  border-color: #cbd5e1;
+  color: #0f172a;
+  box-shadow: none;
+}
+
+.dark .cc-reports-shell input,
+.dark .cc-reports-shell textarea,
+.dark .cc-reports-shell select,
+.dark .cc-reports-shell [data-slot="select-trigger"] {
+  background: rgba(15, 23, 42, 0.9);
+  border-color: rgba(148, 163, 184, 0.22);
+  color: #f8fafc;
+  box-shadow: none;
+}
+
+.cc-reports-shell input:focus-visible,
+.cc-reports-shell textarea:focus-visible,
+.cc-reports-shell select:focus-visible,
+.cc-reports-shell [data-slot="select-trigger"]:focus-visible {
+  border-color: #2563eb;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+}
+
+.dark .cc-reports-shell input:focus-visible,
+.dark .cc-reports-shell textarea:focus-visible,
+.dark .cc-reports-shell select:focus-visible,
+.dark .cc-reports-shell [data-slot="select-trigger"]:focus-visible {
+  border-color: rgba(37, 99, 235, 0.75);
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16);
+}
+
+.cc-reports-shell .bg-white,
+.cc-reports-shell .bg-slate-50,
+.cc-reports-shell .bg-slate-950\/60,
+.cc-reports-shell .bg-slate-950\/70 {
+  background-color: #f8fafc;
+}
+
+.dark .cc-reports-shell .bg-white,
+.dark .cc-reports-shell .bg-slate-50,
+.dark .cc-reports-shell .bg-slate-950\/60,
+.dark .cc-reports-shell .bg-slate-950\/70 {
+  background-color: rgba(15, 23, 42, 0.68);
+}
+
+.cc-reports-shell .border-slate-200,
+.cc-reports-shell .border-\[var\(--border-main\)\] {
+  border-color: #cbd5e1;
+}
+
+.dark .cc-reports-shell .border-slate-200,
+.dark .cc-reports-shell .border-\[var\(--border-main\)\] {
+  border-color: rgba(148, 163, 184, 0.18);
+}
+
+.cc-reports-shell .cc-report-chart {
+  min-height: 320px;
+  border-radius: 14px;
+  background: rgba(248, 250, 252, 0.72);
+  padding: 14px 10px 4px;
+}
+
+.dark .cc-reports-shell .cc-report-chart {
+  background: rgba(15, 23, 42, 0.52);
+}
+
+.cc-reports-shell .cc-report-empty {
+  background: #f8fafc;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+.dark .cc-reports-shell .cc-report-empty {
+  background: rgba(15, 23, 42, 0.62);
+  border-color: rgba(148, 163, 184, 0.22);
+  color: #a8b3c7;
+}
+
+.cc-reports-shell .recharts-wrapper text {
+  fill: #64748b;
+}
+
+.dark .cc-reports-shell .recharts-wrapper text {
+  fill: #94a3b8;
+}

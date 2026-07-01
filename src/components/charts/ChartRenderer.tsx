@@ -1,8 +1,7 @@
+import { AreaChart, BarChart, DonutChart, LineChart } from '@tremor/react';
 import type { ChartConfig, ChartDataPoint } from '../../features/reports/chart-types';
+import { formatChartValue } from '../../features/reports/chart-utils';
 import { BarChartWidget } from './widgets/BarChartWidget';
-import { DonutChartWidget } from './widgets/DonutChartWidget';
-import { LineChartWidget } from './widgets/LineChartWidget';
-import { PieChartWidget } from './widgets/PieChartWidget';
 import { TableChartWidget } from './widgets/TableChartWidget';
 
 type Props = {
@@ -10,38 +9,106 @@ type Props = {
   data: ChartDataPoint[];
 };
 
+const chartColors = ['blue', 'cyan', 'emerald', 'amber', 'rose', 'violet'];
+
 export function ChartRenderer({ config, data }: Props) {
-  if (data.length === 0) {
+  const safeData = Array.isArray(data) ? data : [];
+  const valueFormatter = (value: number) => formatChartValue(value, config.metric);
+
+  if (safeData.length === 0) {
     return (
-      <div className="flex min-h-[260px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-sm font-bold text-slate-500">
+      <div className="cc-report-empty flex min-h-[280px] items-center justify-center rounded-xl border border-dashed text-center text-sm font-bold">
         Sin datos para mostrar
       </div>
     );
   }
 
-  if (config.type === 'bar' || config.type === 'horizontalBar') {
-    return <BarChartWidget config={config} data={data} />;
+  if (config.type === 'bar') {
+    return (
+      <div className="cc-report-chart">
+        <BarChart
+          className="h-80"
+          data={safeData}
+          index="name"
+          categories={['value']}
+          colors={chartColors}
+          valueFormatter={valueFormatter}
+          showAnimation={false}
+          showLegend={false}
+          showGridLines
+          yAxisWidth={72}
+        />
+      </div>
+    );
   }
 
-  if (config.type === 'line' || config.type === 'area') {
-    return <LineChartWidget config={config} data={data} />;
+  if (config.type === 'horizontalBar') {
+    return <BarChartWidget config={config} data={safeData} />;
   }
 
-  if (config.type === 'pie') {
-    return <PieChartWidget config={config} data={data} />;
+  if (config.type === 'line') {
+    return (
+      <div className="cc-report-chart">
+        <LineChart
+          className="h-80"
+          data={safeData}
+          index="name"
+          categories={['value']}
+          colors={['blue']}
+          valueFormatter={valueFormatter}
+          showAnimation={false}
+          showLegend={false}
+          showGridLines
+          yAxisWidth={72}
+        />
+      </div>
+    );
   }
 
-  if (config.type === 'donut') {
-    return <DonutChartWidget config={config} data={data} />;
+  if (config.type === 'area') {
+    return (
+      <div className="cc-report-chart">
+        <AreaChart
+          className="h-80"
+          data={safeData}
+          index="name"
+          categories={['value']}
+          colors={['cyan']}
+          valueFormatter={valueFormatter}
+          showAnimation={false}
+          showLegend={false}
+          showGridLines
+          yAxisWidth={72}
+        />
+      </div>
+    );
+  }
+
+  if (config.type === 'pie' || config.type === 'donut') {
+    return (
+      <div className="cc-report-chart flex min-h-[320px] items-center justify-center">
+        <DonutChart
+          className="h-80"
+          data={safeData}
+          category="value"
+          index="name"
+          colors={chartColors}
+          variant={config.type === 'pie' ? 'pie' : 'donut'}
+          valueFormatter={valueFormatter}
+          showAnimation={false}
+          showTooltip
+        />
+      </div>
+    );
   }
 
   if (config.type === 'table') {
-    return <TableChartWidget config={config} data={data} />;
+    return <TableChartWidget config={config} data={safeData} />;
   }
 
   return (
-    <div className="flex min-h-[260px] items-center justify-center rounded-lg border border-dashed border-slate-300 bg-slate-50 text-center text-sm font-bold text-slate-500">
-      Tipo de gráfico pendiente de implementar: {config.type}
+    <div className="cc-report-empty flex min-h-[280px] items-center justify-center rounded-xl border border-dashed text-center text-sm font-bold">
+      Tipo de grafico pendiente de implementar: {config.type}
     </div>
   );
 }

@@ -1,4 +1,13 @@
 import type { ChartConfig, ChartType, DataScope, DimensionKey, MetricKey } from './chart-types';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
 
 type Props = {
   value: ChartConfig;
@@ -9,8 +18,8 @@ type Props = {
 const chartTypes: Array<{ label: string; value: ChartType }> = [
   { label: 'Barras verticales', value: 'bar' },
   { label: 'Barras horizontales', value: 'horizontalBar' },
-  { label: 'Línea', value: 'line' },
-  { label: 'Área', value: 'area' },
+  { label: 'Linea', value: 'line' },
+  { label: 'Area', value: 'area' },
   { label: 'Torta', value: 'pie' },
   { label: 'Donut', value: 'donut' },
   { label: 'Tabla', value: 'table' },
@@ -24,8 +33,8 @@ const scopes: Array<{ label: string; value: DataScope }> = [
 
 const metrics: Array<{ label: string; value: MetricKey }> = [
   { label: 'Reclamos / visitas', value: 'visitas' },
-  { label: 'Tickets únicos', value: 'ticketsUnicos' },
-  { label: 'Facturación', value: 'facturacion' },
+  { label: 'Tickets unicos', value: 'ticketsUnicos' },
+  { label: 'Facturacion', value: 'facturacion' },
   { label: 'Alta prioridad', value: 'alta' },
   { label: 'Media prioridad', value: 'media' },
   { label: 'Baja prioridad', value: 'baja' },
@@ -34,7 +43,7 @@ const metrics: Array<{ label: string; value: MetricKey }> = [
 
 const dimensions: Array<{ label: string; value: DimensionKey }> = [
   { label: 'Comuna', value: 'comuna' },
-  { label: 'Región', value: 'region' },
+  { label: 'Region', value: 'region' },
   { label: 'Mes', value: 'mes' },
   { label: 'Prioridad', value: 'prioridad' },
 ];
@@ -45,63 +54,88 @@ export function ChartBuilder({ value, onChange, onSave }: Props) {
   };
 
   return (
-    <section className="rounded-lg border border-slate-200 bg-white p-4 shadow-sm">
-      <p className="text-xs font-black uppercase tracking-wide text-slate-500">Constructor de gráfico</p>
-      <h2 className="mt-1 text-xl font-black text-[#071b4d]">Crear visualización reutilizable</h2>
+    <section className="cc-report-builder report-card rounded-xl border p-4">
+      <p className="text-xs font-black uppercase tracking-wide text-slate-500">Constructor de grafico</p>
+      <h2 className="mt-1 text-xl font-black text-[#071b4d]">Crear visualizacion reutilizable</h2>
 
       <div className="mt-4 grid gap-3 md:grid-cols-2 xl:grid-cols-4">
         <label className="grid gap-1">
           <span className="text-xs font-black uppercase text-slate-500">Nombre</span>
-          <input className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" value={value.title} onChange={(event) => update('title', event.target.value)} />
+          <Input className="h-11 font-bold" value={value.title} onChange={(event) => update('title', event.target.value)} />
         </label>
 
         <label className="grid gap-1">
           <span className="text-xs font-black uppercase text-slate-500">Tipo</span>
-          <select className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" value={value.type} onChange={(event) => update('type', event.target.value as ChartType)}>
-            {chartTypes.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
+          <Select value={value.type} onValueChange={(nextValue) => update('type', nextValue as ChartType)}>
+            <SelectTrigger className="h-11 w-full rounded-lg font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {chartTypes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="grid gap-1">
-          <span className="text-xs font-black uppercase text-slate-500">Ámbito</span>
-          <select className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" value={value.scope} onChange={(event) => update('scope', event.target.value as DataScope)}>
-            {scopes.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
+          <span className="text-xs font-black uppercase text-slate-500">Ambito</span>
+          <Select value={value.scope} onValueChange={(nextValue) => update('scope', nextValue as DataScope)}>
+            <SelectTrigger className="h-11 w-full rounded-lg font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {scopes.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="grid gap-1">
-          <span className="text-xs font-black uppercase text-slate-500">Métrica</span>
-          <select className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" value={value.metric} onChange={(event) => update('metric', event.target.value as MetricKey)}>
-            {metrics.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
+          <span className="text-xs font-black uppercase text-slate-500">Metrica</span>
+          <Select value={value.metric} onValueChange={(nextValue) => update('metric', nextValue as MetricKey)}>
+            <SelectTrigger className="h-11 w-full rounded-lg font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {metrics.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="grid gap-1">
-          <span className="text-xs font-black uppercase text-slate-500">Dimensión</span>
-          <select className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" value={value.dimension} onChange={(event) => update('dimension', event.target.value as DimensionKey)}>
-            {dimensions.map((item) => <option key={item.value} value={item.value}>{item.label}</option>)}
-          </select>
+          <span className="text-xs font-black uppercase text-slate-500">Dimension</span>
+          <Select value={value.dimension} onValueChange={(nextValue) => update('dimension', nextValue as DimensionKey)}>
+            <SelectTrigger className="h-11 w-full rounded-lg font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {dimensions.map((item) => <SelectItem key={item.value} value={item.value}>{item.label}</SelectItem>)}
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="grid gap-1">
-          <span className="text-xs font-black uppercase text-slate-500">Agregación</span>
-          <select className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" value={value.aggregation} onChange={(event) => update('aggregation', event.target.value as ChartConfig['aggregation'])}>
-            <option value="sum">Suma</option>
-            <option value="avg">Promedio</option>
-            <option value="max">Máximo</option>
-            <option value="min">Mínimo</option>
-            <option value="count">Conteo</option>
-          </select>
+          <span className="text-xs font-black uppercase text-slate-500">Agregacion</span>
+          <Select value={value.aggregation} onValueChange={(nextValue) => update('aggregation', nextValue as ChartConfig['aggregation'])}>
+            <SelectTrigger className="h-11 w-full rounded-lg font-bold">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="sum">Suma</SelectItem>
+              <SelectItem value="avg">Promedio</SelectItem>
+              <SelectItem value="max">Maximo</SelectItem>
+              <SelectItem value="min">Minimo</SelectItem>
+              <SelectItem value="count">Conteo</SelectItem>
+            </SelectContent>
+          </Select>
         </label>
 
         <label className="grid gap-1">
           <span className="text-xs font-black uppercase text-slate-500">Top N</span>
-          <input className="h-11 rounded-lg border border-slate-200 px-3 text-sm font-bold" type="number" min={1} value={value.topN ?? 10} onChange={(event) => update('topN', Number(event.target.value))} />
+          <Input className="h-11 font-bold" type="number" min={1} value={value.topN ?? 10} onChange={(event) => update('topN', Number(event.target.value))} />
         </label>
 
-        <button className="mt-auto h-11 rounded-lg bg-[#073B91] px-4 text-sm font-black text-white shadow-sm" onClick={onSave} type="button">
-          Guardar gráfico
-        </button>
+        <Button className="mt-auto h-11 rounded-lg font-black" onClick={onSave} type="button">
+          Guardar grafico
+        </Button>
       </div>
     </section>
   );
