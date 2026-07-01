@@ -4352,3 +4352,182 @@
     flex-direction: column !important;
   }
 }
+
+/* ETAPA 15: Ruta Visitador — layout premium balanceado */
+.cc-route-page {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 10px 34px 0 26px;
+}
+
+.cc-route-section {
+  margin-bottom: 14px;
+}
+
+.cc-route-section:last-child {
+  margin-bottom: 0;
+}
+
+.cc-route-kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .cc-route-kpi-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.cc-route-kpi-card {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 16px 20px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+  box-shadow: 0 18px 44px rgba(2,6,23,0.24);
+  min-height: 96px;
+}
+
+.cc-route-controls-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+}
+
+@media (min-width: 1024px) {
+  .cc-route-controls-grid {
+    grid-template-columns: 1.8fr 1fr 1.2fr;
+  }
+}
+
+.cc-route-control-card {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+}
+
+.cc-route-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 14px;
+}
+
+@media (min-width: 1024px) {
+  .cc-route-main-grid {
+    grid-template-columns: 5fr 7fr;
+  }
+}
+
+.cc-route-map-card {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+
+.cc-route-visits-card {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  min-height: 360px;
+}
+
+.cc-route-summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 14px;
+}
+
+@media (min-width: 768px) {
+  .cc-route-summary-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.cc-route-summary-card {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  min-height: 170px;
+}
+
+.cc-route-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+}
+
+.cc-route-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 16px;
+  border-bottom: 1px solid rgba(148,163,184,0.1);
+}
+
+.cc-route-card-body {
+  flex: 1;
+  overflow: auto;
+  min-height: 0;
+}
+
+.cc-route-card-footer {
+  padding: 8px 16px;
+  border-top: 1px solid rgba(148,163,184,0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+[data-theme="dark-premium"] .cc-route-kpi-card,
+[data-theme="dark-premium"] .cc-route-control-card,
+[data-theme="dark-premium"] .cc-route-map-card,
+[data-theme="dark-premium"] .cc-route-visits-card,
+[data-theme="dark-premium"] .cc-route-summary-card {
+  border-color: rgba(148, 163, 184, 0.14);
+  background: linear-gradient(180deg, rgba(15,23,42,.95), rgba(2,6,23,.95));
+}
+
+/* ETAPA 15B: Ruta utility classes */
+.cc-route-card-base {
+  border-radius: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  background: linear-gradient(180deg, rgba(15,23,42,.92), rgba(2,6,23,.92));
+}
+
+.cc-route-config-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 12px;
+  margin-top: 8px;
+}
+
+@media (min-width: 1024px) {
+  .cc-route-config-grid {
+    grid-template-columns: 280px 1fr 280px;
+  }
+}
+
+[data-theme="dark-premium"] .cc-route-card-base {
+  border-color: rgba(148, 163, 184, 0.14);
+  background: linear-gradient(180deg, rgba(15,23,42,.95), rgba(2,6,23,.95));
+}

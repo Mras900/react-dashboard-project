@@ -992,9 +992,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
   };
 
   return (
-    <div className="flex flex-col h-full" style={{padding: "10px 34px 0 26px"}}>
+    <div className="cc-route-page">
       {/* ===== HEADER: title + export + tabs ===== */}
-      <div style={{marginBottom: "11px"}}>
+      <div className="cc-route-section">
         <div className="flex items-center justify-between mb-2">
           <div>
             <h1 style={{fontSize: "22px", fontWeight: 900, color: "#e5edf8", margin: 0}}>Ruta diaria</h1>
@@ -1025,9 +1025,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
       {activeRouteTab === 'operation' ? (
         <>
           {/* ===== KPI ROW: 4 cards, height 96px, gap 16px ===== */}
-          <div style={{display: "grid", gridTemplateColumns: "repeat(4, 1fr)", gap: "16px", height: "96px", marginBottom: "11px"}}>
+          <div className="cc-route-kpi-grid">
 
-            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+            <div className="cc-route-kpi-card">
               <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(14,165,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
                 <CalendarDays size={20} color="#0ea5ff" />
               </div>
@@ -1038,7 +1038,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </div>
             </div>
 
-            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+            <div className="cc-route-kpi-card">
               <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(34,197,94,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
                 <Save size={20} color="#22c55e" />
               </div>
@@ -1049,7 +1049,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </div>
             </div>
 
-            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+            <div className="cc-route-kpi-card">
               <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(14,165,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
                 <Route size={20} color="#0ea5ff" />
               </div>
@@ -1060,7 +1060,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </div>
             </div>
 
-            <div style={{display: "flex", alignItems: "center", gap: "14px", padding: "16px 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", boxShadow: "0 18px 44px rgba(2,6,23,0.24)"}}>
+            <div className="cc-route-kpi-card">
               <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(239,68,68,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
                 <Search size={20} color="#ef4444" />
               </div>
@@ -1074,9 +1074,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
 
           {/* ===== CONTROLS ROW: height 74px, grid 436px 286px 1fr, gap 12px ===== */}
-          <div style={{display: "grid", gridTemplateColumns: "436px 286px 1fr", gap: "12px", height: "74px", marginBottom: "11px"}}>
+          <div className="cc-route-controls-grid">
             {/* Input + Agregar */}
-            <div style={{display: "flex", alignItems: "center", gap: "8px", padding: "0 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+            <div className="cc-route-control-card">
               <form onSubmit={(e) => { e.preventDefault(); void handleSearch(); }} style={{display: "flex", gap: "8px", flex: 1, alignItems: "center"}}>
                 <input
                   style={{flex: 1, height: "36px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 12px", fontSize: "12px", color: "#e5edf8", outline: "none"}}
@@ -1101,7 +1101,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             {/* Selects: Modo de carga, Territorio, Fecha */}
-            <div style={{display: "flex", alignItems: "center", gap: "8px", padding: "0 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+            <div className="cc-route-control-card">
               <select style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}}>
                 <option>Modo de carga</option>
                 <option>Individual</option>
@@ -1117,7 +1117,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
           {/* Bulk input (collapsible) */}
           {showBulkInput ? (
-            <div style={{marginBottom: "11px"}}>
+            <div className="cc-route-section">
               <form onSubmit={(e) => { e.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(""); void addTicketIds(ids); }} style={{display: "flex", gap: "8px", padding: "12px 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
                 <textarea value={bulkTicketIds} onChange={(e) => setBulkTicketIds(e.target.value)} placeholder="IDs separados por coma, punto y coma o salto de línea..." style={{flex: 1, height: "60px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "8px 12px", fontSize: "11px", color: "#e5edf8", outline: "none", resize: "none"}} />
                 <button type="submit" disabled={loading} style={{height: "60px", padding: "0 20px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1}}>Cargar</button>
@@ -1126,9 +1126,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           ) : null}
 
           {/* ===== MAIN ROUTE ROW: height 332px, grid 571px 1fr, gap 11px ===== */}
-          <div style={{display: "grid", gridTemplateColumns: "571px 1fr", gap: "11px", height: "332px", marginBottom: "11px"}}>
+          <div className="cc-route-main-grid">
             {/* LEFT: MAP */}
-            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", overflow: "hidden", display: "flex", flexDirection: "column"}}>
+            <div className="cc-route-map-card">
               <div style={{padding: "12px 16px", borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
                 <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "#e5edf8"}}>Mapa de ruta &mdash; Hoy</h3>
               </div>
@@ -1192,7 +1192,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             {/* RIGHT: VISITS TABLE */}
-            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", overflow: "hidden", display: "flex", flexDirection: "column"}}>
+            <div className="cc-route-visits-card">
               <div style={{padding: "12px 16px", borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
                 <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "#e5edf8"}}>Visitas planificadas</h3>
                 <p style={{margin: "2px 0 0 0", fontSize: "11px", fontWeight: 500, color: "#93a4b8"}}>Marca resultado de visita, observación y revisión territorial.</p>
@@ -1278,9 +1278,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
 
           {/* ===== BOTTOM CARDS ROW: height 171px, grid 315px 271px 340px 1fr, gap 12px ===== */}
-          <div style={{display: "grid", gridTemplateColumns: "315px 271px 340px 1fr", gap: "12px", height: "171px"}}>
+          <div className="cc-route-summary-grid">
             {/* Valorización del día */}
-            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+            <div className="cc-route-summary-card">
               <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Valorización del día</h3>
               <div style={{marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", flex: 1}}>
                 <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tarifa exitosa</span><span style={{fontWeight: 700, color: "#22c55e"}}>{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
@@ -1290,7 +1290,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             {/* Resultados del día */}
-            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+            <div className="cc-route-summary-card">
               <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Resultados del día</h3>
               <div style={{marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", flex: 1}}>
                 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
@@ -1316,7 +1316,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             {/* Clima en ruta */}
-            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+            <div className="cc-route-summary-card">
               <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Clima en ruta</h3>
               {weatherSummary && !weatherLoading ? (
                 <div style={{marginTop: "8px", flex: 1, display: "flex", flexDirection: "column"}}>
@@ -1338,7 +1338,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             {/* Resumen de reclamos */}
-            <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "14px 16px", display: "flex", flexDirection: "column"}}>
+            <div className="cc-route-summary-card">
               <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Resumen de reclamos</h3>
               <div style={{marginTop: "8px", flex: 1, display: "flex", flexDirection: "column"}}>
                 <p style={{margin: 0, fontSize: "24px", fontWeight: 900, color: "#e5edf8"}}>{routeClaimsToday.toLocaleString('es-CL')}</p>
@@ -1353,7 +1353,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
 
           {/* Actions + Config + Message (compact, below bottom cards) */}
-          <div style={{display: "flex", flexWrap: "wrap", gap: "8px", marginTop: "12px"}}>
+          <div className="cc-route-actions">
             <button onClick={() => void saveDailyVisits()} disabled={saving || stops.length === 0 || !visitador.trim()} type="button"
               style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#22c55e", color: "#fff", fontSize: "11px", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
               {saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />} Guardar visitas
@@ -1377,11 +1377,11 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           </div>
 
           {configPanelOpen ? (
-            <div style={{display: "grid", gridTemplateColumns: "280px 1fr 280px", gap: "12px", marginTop: "8px"}}>
-              <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "12px"}}>
+            <div className="cc-route-config-grid">
+              <div className="cc-route-card-base" style={{padding: "12px"}}>
                 <RouteMonthCalendar selectedDate={fechaVisita} onSelectDate={(d) => { setFechaVisita(d); }} visitsByDate={visitsByDate} />
               </div>
-              <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "12px"}}>
+              <div className="cc-route-card-base" style={{padding: "12px"}}>
                 <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px"}}>
                   <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Visitador <input value={visitador} onChange={(e) => setVisitador(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
                   <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Fecha carga <input type="date" value={fechaCarga} onChange={(e) => setFechaCarga(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
@@ -1397,7 +1397,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                   <span style={{display: "flex", alignItems: "center", padding: "0 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, background: selectingStartPoint ? "rgba(245,158,11,0.1)" : selectedStartPoint ? "rgba(34,197,94,0.1)" : "transparent", color: selectingStartPoint ? "#f59e0b" : selectedStartPoint ? "#22c55e" : "#64748b"}}>{selectingStartPoint ? "Selecciona punto en mapa" : selectedStartPoint ? "Inicio validado" : "Sin validar"}</span>
                 </div>
               </div>
-              <div style={{borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", padding: "12px"}}>
+              <div className="cc-route-card-base" style={{padding: "12px"}}>
                 <p style={{margin: 0, fontSize: "11px", fontWeight: 700, color: "#e5edf8"}}>Clima de ruta</p>
                 <select value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)} style={{marginTop: "6px", height: "28px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "10px", fontWeight: 600, color: "#e5edf8", outline: "none", width: "100%"}}>
                   {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
@@ -1410,7 +1410,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           ) : null}
 
           {message || redZonesError || optimizedRoute ? (
-            <div style={{marginTop: "8px", padding: "10px 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
+            <div className="cc-route-card-base" style={{marginTop: "8px", padding: "10px 16px"}}>
               {message ? <p style={{margin: 0, fontSize: "12px", fontWeight: 600, color: "#e5edf8"}}>{message}</p> : null}
               {optimizedRoute ? <p style={{margin: "4px 0 0 0", fontSize: "11px", fontWeight: 600, color: "#60a5fa"}}>Distancia {formatDistance(optimizedRoute.distance_m)} &middot; Conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} &middot; Atención {formatDuration(getRouteServiceDuration(optimizedRoute))} &middot; Total {formatDuration(optimizedRoute.duration_s)}</p> : null}
               {redZonesError ? <p style={{margin: "4px 0 0 0", fontSize: "11px", fontWeight: 600, color: "#f97316"}}>{redZonesError}</p> : null}
