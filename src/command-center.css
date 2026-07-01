@@ -5812,4 +5812,54 @@ table tbody tr:hover {
   border-color: rgba(34, 211, 238, 0.22);
   color: #22D3EE;
 }
+/* Phase 7: TanStack Table pilot, evidence table only. */
+.cc-tanstack-table th,
+.cc-tanstack-table td {
+  border-color: var(--border-main);
+}
+
+.cc-table-sort-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: inherit;
+  font: inherit;
+  text-transform: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+}
+
+.cc-table-sort-button:hover {
+  color: #2563EB;
+}
+
+.cc-table-sort-indicator {
+  color: var(--cc-muted);
+  font-size: 0.72rem;
+  line-height: 1;
+}
+
+.cc-table-pagination button:focus-visible,
+.cc-table-sort-button:focus-visible {
+  outline: 2px solid rgba(37, 99, 235, 0.35);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+[data-theme="dark-premium"] .cc-tanstack-table tbody,
+.dark .cc-tanstack-table tbody {
+  border-color: rgba(148, 163, 184, 0.14);
+}
+
+[data-theme="dark-premium"] .cc-table-sort-button:hover,
+.dark .cc-table-sort-button:hover {
+  color: #93C5FD;
+}
+
+[data-theme="dark-premium"] .cc-table-sort-indicator,
+.dark .cc-table-sort-indicator {
+  color: #A8B3C7;
+}
 

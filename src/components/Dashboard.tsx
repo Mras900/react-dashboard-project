@@ -31,6 +31,16 @@ import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { motion, useReducedMotion } from 'motion/react';
 import { Card as TremorCard, Metric, Text } from '@tremor/react';
+import {
+  type ColumnDef,
+  type SortingState,
+  flexRender,
+  getCoreRowModel,
+  getFilteredRowModel,
+  getPaginationRowModel,
+  getSortedRowModel,
+  useReactTable,
+} from '@tanstack/react-table';
 import { GeoJSON, LayersControl, MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import { monthlyFacturacion, sourceSummary, type ComunaMetric } from '../data/dashboardData';
 import { DataImportModal } from '../features/data-import/DataImportModal';
@@ -2161,6 +2171,7 @@ export default function Dashboard() {
   const [evidenceSearch, setEvidenceSearch] = useState('');
   const [evidenceRegion, setEvidenceRegion] = useState('all');
   const [tablePage, setTablePage] = useState(0);
+  const [evidenceSorting, setEvidenceSorting] = useState<SortingState>([]);
   const PAGE_SIZE = 10;
   const [showEvidenceTable, setShowEvidenceTable] = useState(true);
   const [showTerritorialExplanation, setShowTerritorialExplanation] = useState(false);
@@ -2847,19 +2858,88 @@ const dateFilterError = useMemo(() => {
     () => ['all', ...new Set([...regionByComuna.values()].filter(Boolean))],
     [regionByComuna],
   );
-  const tableRows = useMemo(() => {
-    const search = normalizeName(evidenceSearch);
-    return filteredEvidenceRows.filter((row) => {
+  const evidenceTableData = useMemo(
+    () => filteredEvidenceRows.filter((row) => {
       const region = regionByComuna.get(normalizeName(row.comuna)) ?? (viewMode === 'rm' ? 'Región Metropolitana' : 'Sin región');
-      const matchesSearch = !search || normalizeName(row.comuna).includes(search) || normalizeName(region).includes(search);
-      const matchesRegion = evidenceRegion === 'all' || region === evidenceRegion;
-      return matchesSearch && matchesRegion;
-    });
-  }, [evidenceRegion, evidenceSearch, filteredEvidenceRows, regionByComuna, viewMode]);
-  const visibleEvidenceRows = useMemo(
-    () => (showEvidenceTable ? tableRows.slice(tablePage * PAGE_SIZE, (tablePage + 1) * PAGE_SIZE) : []),
-    [showEvidenceTable, tablePage, tableRows],
+      return evidenceRegion === 'all' || region === evidenceRegion;
+    }),
+    [evidenceRegion, filteredEvidenceRows, regionByComuna, viewMode],
   );
+
+  const evidenceColumns = useMemo<ColumnDef<TableRow>[]>(() => [
+    {
+      accessorKey: 'comuna',
+      header: 'Comuna',
+      cell: ({ row }) => <span className="font-black text-[var(--text-main)]">{row.original.comuna}</span>,
+    },
+    {
+      accessorKey: 'visitas',
+      header: 'Reclamos',
+      cell: ({ row }) => <span className="font-bold">{formatInt(row.original.visitas)}</span>,
+    },
+    {
+      accessorKey: 'facturacion',
+      header: 'Facturación',
+      cell: ({ row }) => <span className="font-bold">{formatCurrency(row.original.facturacion)}</span>,
+    },
+    {
+      accessorKey: 'alta',
+      header: 'Alta prioridad',
+      cell: ({ row }) => <span className="rounded-full bg-red-100 px-2 py-1 font-black text-red-500">{formatInt(row.original.alta)}</span>,
+    },
+    {
+      id: 'ultimaVisita',
+      header: 'Última visita',
+      accessorFn: () => selectedMonthLabel,
+      cell: () => <span className="font-semibold text-[#466083]">{selectedMonthLabel}</span>,
+    },
+    {
+      id: 'evidencia',
+      header: 'Evidencia',
+      enableSorting: false,
+      cell: ({ row }) => (
+        <div className="flex items-center gap-2 text-blue-700">
+          <button aria-label={`Ver detalle de ${row.original.comuna}`} className="rounded-md p-1 hover:bg-blue-50" onClick={() => setTerritorialComunaDetail(row.original.comuna)} type="button"><Eye size={15} /></button>
+          <FileBarChart size={15} />
+          <ClipboardCheck size={15} />
+          <Grid2X2 size={15} />
+        </div>
+      ),
+    },
+  ], [selectedMonthLabel]);
+
+  const evidenceTable = useReactTable({
+    data: evidenceTableData,
+    columns: evidenceColumns,
+    state: {
+      sorting: evidenceSorting,
+      globalFilter: evidenceSearch,
+      pagination: { pageIndex: tablePage, pageSize: PAGE_SIZE },
+    },
+    onSortingChange: setEvidenceSorting,
+    onGlobalFilterChange: setEvidenceSearch,
+    onPaginationChange: (updater) => {
+      const current = { pageIndex: tablePage, pageSize: PAGE_SIZE };
+      const next = typeof updater === 'function' ? updater(current) : updater;
+      setTablePage(next.pageIndex);
+    },
+    globalFilterFn: (row, _columnId, filterValue) => {
+      const search = normalizeName(String(filterValue ?? ''));
+      if (!search) return true;
+      const region = regionByComuna.get(normalizeName(row.original.comuna)) ?? (viewMode === 'rm' ? 'Región Metropolitana' : 'Sin región');
+      return normalizeName(row.original.comuna).includes(search) || normalizeName(region).includes(search);
+    },
+    getCoreRowModel: getCoreRowModel(),
+    getFilteredRowModel: getFilteredRowModel(),
+    getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
+  });
+
+  const tableRows = evidenceTable.getFilteredRowModel().rows.map((row) => row.original);
+
+  useEffect(() => {
+    setTablePage(0);
+  }, [evidenceRegion, evidenceSearch, evidenceSorting]);
 
   const topClaims = useMemo(
     () =>
@@ -3349,29 +3429,40 @@ const dateFilterError = useMemo(() => {
                 </div>
               </div>
               <div className="overflow-x-auto">
-                <table className="w-full min-w-[760px] text-left text-xs">
+                <table className="cc-tanstack-table w-full min-w-[760px] text-left text-xs">
                   <thead className="bg-[var(--bg-card)] text-[11px] uppercase text-[#466083]">
-                    <tr>
-                      {['Comuna', 'Reclamos', 'Facturación', 'Alta prioridad', 'Última visita', 'Evidencia'].map((head) => (
-                        <th key={head} className="px-4 py-2 font-black">{head}</th>
-                      ))}
-                    </tr>
+                    {evidenceTable.getHeaderGroups().map((headerGroup) => (
+                      <tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header) => {
+                          const sorted = header.column.getIsSorted();
+                          return (
+                            <th key={header.id} className="px-4 py-2 font-black">
+                              {header.column.getCanSort() ? (
+                                <button className="cc-table-sort-button" onClick={header.column.getToggleSortingHandler()} type="button">
+                                  {flexRender(header.column.columnDef.header, header.getContext())}
+                                  <span className="cc-table-sort-indicator">{sorted === 'asc' ? '↑' : sorted === 'desc' ? '↓' : '↕'}</span>
+                                </button>
+                              ) : flexRender(header.column.columnDef.header, header.getContext())}
+                            </th>
+                          );
+                        })}
+                      </tr>
+                    ))}
                   </thead>
                   <tbody className="divide-y divide-slate-100">
-                    {tableRows.length > 0 ? (
-                      visibleEvidenceRows.map((row) => (
-                        <tr key={row.comuna} className="hover:bg-blue-50/40">
-                          <td className="px-4 py-2 font-black text-[var(--text-main)]">{row.comuna}</td>
-                          <td className="px-4 py-2 font-bold">{formatInt(row.visitas)}</td>
-                          <td className="px-4 py-2 font-bold">{formatCurrency(row.facturacion)}</td>
-                          <td className="px-4 py-2"><span className="rounded-full bg-red-100 px-2 py-1 font-black text-red-500">{formatInt(row.alta)}</span></td>
-                          <td className="px-4 py-2 font-semibold text-[#466083]">{selectedMonthLabel}</td>
-                          <td className="px-4 py-2"><div className="flex items-center gap-2 text-blue-700"><button aria-label={`Ver detalle de ${row.comuna}`} className="rounded-md p-1 hover:bg-blue-50" onClick={() => setTerritorialComunaDetail(row.comuna)} type="button"><Eye size={15} /></button><FileBarChart size={15} /><ClipboardCheck size={15} /><Grid2X2 size={15} /></div></td>
+                    {evidenceTable.getRowModel().rows.length > 0 ? (
+                      evidenceTable.getRowModel().rows.map((row) => (
+                        <tr key={row.id} className="hover:bg-blue-50/40">
+                          {row.getVisibleCells().map((cell) => (
+                            <td key={cell.id} className="px-4 py-2">
+                              {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                            </td>
+                          ))}
                         </tr>
                       ))
                     ) : (
                       <tr>
-                        <td className="px-4 py-8 text-center text-sm font-bold text-[var(--cc-muted)]" colSpan={6}>
+                        <td className="px-4 py-8 text-center text-sm font-bold text-[var(--cc-muted)]" colSpan={evidenceColumns.length}>
                           {isEmptyCurrentView ? emptyViewMessage : 'Sin datos para los filtros seleccionados.'}
                         </td>
                       </tr>
@@ -3379,22 +3470,22 @@ const dateFilterError = useMemo(() => {
                   </tbody>
                 </table>
               </div>
-              <div className="flex items-center justify-between border-t border-[var(--border-main)] px-4 py-3">
+              <div className="cc-table-pagination flex items-center justify-between border-t border-[var(--border-main)] px-4 py-3">
                 <button
                   className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-sm transition hover:bg-[var(--bg-main)] disabled:opacity-50"
-                  disabled={tablePage === 0}
-                  onClick={() => setTablePage((p) => p - 1)}
+                  disabled={!evidenceTable.getCanPreviousPage()}
+                  onClick={() => evidenceTable.previousPage()}
                   type="button"
                 >
                   Anterior
                 </button>
                 <span className="text-xs font-bold text-[#6b7d98]">
-                  Página {Math.min(tablePage + 1, Math.max(1, Math.ceil(tableRows.length / PAGE_SIZE)))} de {Math.max(1, Math.ceil(tableRows.length / PAGE_SIZE))}
+                  Página {Math.min(evidenceTable.getState().pagination.pageIndex + 1, Math.max(1, evidenceTable.getPageCount()))} de {Math.max(1, evidenceTable.getPageCount())}
                 </span>
                 <button
                   className="rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 py-2 text-xs font-black text-[var(--text-main)] shadow-sm transition hover:bg-[var(--bg-main)] disabled:opacity-50"
-                  disabled={(tablePage + 1) * PAGE_SIZE >= tableRows.length}
-                  onClick={() => setTablePage((p) => p + 1)}
+                  disabled={!evidenceTable.getCanNextPage()}
+                  onClick={() => evidenceTable.nextPage()}
                   type="button"
                 >
                   Siguiente
