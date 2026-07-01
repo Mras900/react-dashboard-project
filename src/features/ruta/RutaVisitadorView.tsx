@@ -1419,13 +1419,14 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         </>
       ) : (
         /* Territory tab */
-            <div className="cc-route-map-card">
-              <div style={{padding: "12px 16px", borderBottom: "1px solid var(--cc-route-border-subtle)"}}>
+        <div className="cc-route-territorial-view">
+          <div className="cc-route-map-card cc-route-territorial-map-card">
+              <div className="cc-route-territorial-toolbar" style={{padding: "12px 16px", borderBottom: "1px solid var(--cc-route-border-subtle)"}}>
                 <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "var(--cc-route-text)"}}>Mapa territorial</h3>
               </div>
-              <div style={{flex: 1, position: "relative", minHeight: 0}}>
-                <div style={{position: "absolute", inset: 0, margin: "8px", borderRadius: "6px", overflow: "hidden"}}>
-                  <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false} style={{height: "245px", width: "100%"}}>
+              <div className="cc-route-territorial-map-shell">
+                <div className="cc-route-territorial-map">
+                  <MapContainer center={[-33.45, -70.66]} className="cc-route-territorial-leaflet h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false} style={{height: "100%", width: "100%"}}>
                     <ZoomControl position="topleft" />
                     <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
                     <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZoneCenter} />
@@ -1481,11 +1482,15 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "var(--cc-route-soft)", display: "inline-block"}} /> Pendiente</span>
               </div>
             </div>
+        </div>
 
       )}
     </div>
   );
 }
+
+
+
 
 
 
