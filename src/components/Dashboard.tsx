@@ -555,14 +555,14 @@ function FilterControl({
   onChange: (value: string) => void;
 }) {
   return (
-    <label className="cc-filter cc-input-pro relative flex h-11 min-w-[170px] items-center justify-between px-3 text-left">
+    <label className="cc-filter cc-filter-trigger cc-input-pro relative flex h-11 min-w-[170px] items-center justify-between px-3 text-left">
       <span className="flex items-center gap-3">
-        <span className="flex h-8 w-8 items-center justify-center rounded-md text-[#23446f]">{icon}</span>
+        <span className="cc-filter-icon flex h-8 w-8 items-center justify-center rounded-md text-[#23446f]">{icon}</span>
         <span className="min-w-0">
-          <span className="cc-label-pro block">{label}</span>
+          <span className="cc-label-pro cc-filter-label block">{label}</span>
           <select
             aria-label={label}
-            className="block max-w-[150px] appearance-none truncate bg-transparent pr-6 text-sm font-black text-[var(--text-main)] outline-none"
+            className="cc-filter-native cc-filter-value block max-w-[150px] appearance-none truncate bg-transparent pr-6 text-sm font-black text-[var(--text-main)] outline-none"
             onChange={(event) => onChange(event.target.value)}
             value={value}
           >
@@ -572,7 +572,7 @@ function FilterControl({
           </select>
         </span>
       </span>
-      <ChevronDown className="pointer-events-none absolute right-3 text-[#466083]" size={16} />
+      <ChevronDown className="cc-filter-icon pointer-events-none absolute right-3 text-[#466083]" size={16} />
     </label>
   );
 }
@@ -3964,4 +3964,5 @@ function TrendingUpIcon() {
     </svg>
   );
 }
+
 

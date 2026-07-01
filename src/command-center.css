@@ -4914,3 +4914,134 @@
     flex: 1 1 100%;
   }
 }
+
+/* Phase 1: shadcn-compatible explicit filter controls. */
+.cc-filter,
+.cc-filter-trigger,
+.cc-filter-card,
+.cc-filter-control,
+.cc-dashboard-filter,
+.cc-dashboard-filter-panel .cc-filter,
+.cc-toolbar .cc-filter,
+.cc-command .cc-filter,
+.cc-dashboard .cc-filter {
+  background: #FFFFFF !important;
+  border: 1px solid #CBD5E1 !important;
+  color: #0F172A !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+.cc-filter-label {
+  color: #64748B !important;
+}
+
+.cc-filter-value,
+.cc-filter-native {
+  background: transparent !important;
+  border: 0 !important;
+  color: #0F172A !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: 0 !important;
+  text-shadow: none !important;
+}
+
+.cc-filter-icon {
+  color: #2563EB !important;
+  opacity: 0.85;
+}
+
+.cc-filter:hover,
+.cc-filter-trigger:hover,
+.cc-filter-card:hover,
+.cc-filter-control:hover,
+.cc-dashboard-filter:hover,
+.cc-dashboard-filter-panel .cc-filter:hover,
+.cc-toolbar .cc-filter:hover,
+.cc-command .cc-filter:hover,
+.cc-dashboard .cc-filter:hover {
+  background: #FFFFFF !important;
+  border-color: #93C5FD !important;
+  box-shadow: none !important;
+}
+
+.cc-filter:focus-within,
+.cc-filter-trigger:focus-within,
+.cc-filter-card:focus-within,
+.cc-filter-control:focus-within,
+.cc-dashboard-filter:focus-within,
+.cc-dashboard-filter-panel .cc-filter:focus-within,
+.cc-toolbar .cc-filter:focus-within,
+.cc-command .cc-filter:focus-within,
+.cc-dashboard .cc-filter:focus-within {
+  border-color: #2563EB !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12) !important;
+  outline: none !important;
+}
+
+[data-theme="dark-premium"] .cc-filter,
+[data-theme="dark-premium"] .cc-filter-trigger,
+[data-theme="dark-premium"] .cc-filter-card,
+[data-theme="dark-premium"] .cc-filter-control,
+[data-theme="dark-premium"] .cc-dashboard-filter,
+[data-theme="dark-premium"] .cc-dashboard-filter-panel .cc-filter,
+[data-theme="dark-premium"] .cc-toolbar .cc-filter,
+[data-theme="dark-premium"] .cc-command .cc-filter,
+[data-theme="dark-premium"] .cc-dashboard .cc-filter {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border: 1px solid rgba(148, 163, 184, 0.22) !important;
+  color: #EAF0F8 !important;
+  box-shadow: none !important;
+  filter: none !important;
+  text-shadow: none !important;
+}
+
+[data-theme="dark-premium"] .cc-filter-label {
+  color: #A8B3C7 !important;
+}
+
+[data-theme="dark-premium"] .cc-filter-value,
+[data-theme="dark-premium"] .cc-filter-native {
+  background: transparent !important;
+  border: 0 !important;
+  color: #F8FAFC !important;
+  box-shadow: none !important;
+  filter: none !important;
+  outline: 0 !important;
+  text-shadow: none !important;
+}
+
+[data-theme="dark-premium"] .cc-filter-icon {
+  color: #60A5FA !important;
+  opacity: 0.85;
+}
+
+[data-theme="dark-premium"] .cc-filter:hover,
+[data-theme="dark-premium"] .cc-filter-trigger:hover,
+[data-theme="dark-premium"] .cc-filter-card:hover,
+[data-theme="dark-premium"] .cc-filter-control:hover,
+[data-theme="dark-premium"] .cc-dashboard-filter:hover,
+[data-theme="dark-premium"] .cc-dashboard-filter-panel .cc-filter:hover,
+[data-theme="dark-premium"] .cc-toolbar .cc-filter:hover,
+[data-theme="dark-premium"] .cc-command .cc-filter:hover,
+[data-theme="dark-premium"] .cc-dashboard .cc-filter:hover {
+  background: rgba(15, 23, 42, 0.88) !important;
+  border-color: rgba(96, 165, 250, 0.42) !important;
+  box-shadow: none !important;
+}
+
+[data-theme="dark-premium"] .cc-filter:focus-within,
+[data-theme="dark-premium"] .cc-filter-trigger:focus-within,
+[data-theme="dark-premium"] .cc-filter-card:focus-within,
+[data-theme="dark-premium"] .cc-filter-control:focus-within,
+[data-theme="dark-premium"] .cc-dashboard-filter:focus-within,
+[data-theme="dark-premium"] .cc-dashboard-filter-panel .cc-filter:focus-within,
+[data-theme="dark-premium"] .cc-toolbar .cc-filter:focus-within,
+[data-theme="dark-premium"] .cc-command .cc-filter:focus-within,
+[data-theme="dark-premium"] .cc-dashboard .cc-filter:focus-within {
+  border-color: rgba(37, 99, 235, 0.75) !important;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.16) !important;
+  outline: none !important;
+}
