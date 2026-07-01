@@ -5722,4 +5722,94 @@ table tbody tr:hover {
     min-height: 420px;
   }
 }
+/* Phase 6: Tremor pilot, aligned with dashboard tokens. */
+.cc-tremor-kpi-card {
+  min-height: 100%;
+  border-radius: 14px !important;
+  border: 1px solid var(--border-main) !important;
+  background: var(--bg-card) !important;
+  color: var(--text-main) !important;
+  box-shadow: 0 12px 30px rgba(15, 23, 42, 0.08) !important;
+  padding: 16px !important;
+}
+
+.cc-tremor-kpi-card .cc-tremor-label {
+  color: var(--cc-muted) !important;
+  font-size: 0.72rem !important;
+  font-weight: 800 !important;
+  letter-spacing: 0.02em !important;
+  text-transform: uppercase;
+}
+
+.cc-tremor-kpi-card .cc-tremor-metric {
+  color: var(--text-main) !important;
+  font-size: clamp(1.45rem, 2vw, 2rem) !important;
+  font-weight: 900 !important;
+  line-height: 1.05 !important;
+}
+
+.cc-tremor-kpi-card .cc-tremor-detail {
+  color: var(--cc-muted) !important;
+  font-size: 0.78rem !important;
+  font-weight: 700 !important;
+}
+
+.cc-tremor-kpi-card .cc-tremor-icon {
+  background: rgba(37, 99, 235, 0.10);
+  border-color: rgba(37, 99, 235, 0.18);
+  color: #2563EB;
+}
+
+.cc-tremor-kpi-card.cc-tremor-tone-red .cc-tremor-icon {
+  background: rgba(239, 68, 68, 0.10);
+  border-color: rgba(239, 68, 68, 0.20);
+  color: #EF4444;
+}
+
+.cc-tremor-kpi-card.cc-tremor-tone-cyan .cc-tremor-icon {
+  background: rgba(6, 182, 212, 0.10);
+  border-color: rgba(6, 182, 212, 0.20);
+  color: #0891B2;
+}
+
+[data-theme="dark-premium"] .cc-tremor-kpi-card,
+.dark .cc-tremor-kpi-card {
+  background: rgba(15, 23, 42, 0.72) !important;
+  border-color: rgba(148, 163, 184, 0.16) !important;
+  color: #EAF0F8 !important;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.18) !important;
+}
+
+[data-theme="dark-premium"] .cc-tremor-kpi-card .cc-tremor-metric,
+.dark .cc-tremor-kpi-card .cc-tremor-metric {
+  color: #F8FAFC !important;
+}
+
+[data-theme="dark-premium"] .cc-tremor-kpi-card .cc-tremor-label,
+[data-theme="dark-premium"] .cc-tremor-kpi-card .cc-tremor-detail,
+.dark .cc-tremor-kpi-card .cc-tremor-label,
+.dark .cc-tremor-kpi-card .cc-tremor-detail {
+  color: #A8B3C7 !important;
+}
+
+[data-theme="dark-premium"] .cc-tremor-kpi-card .cc-tremor-icon,
+.dark .cc-tremor-kpi-card .cc-tremor-icon {
+  background: rgba(96, 165, 250, 0.12);
+  border-color: rgba(96, 165, 250, 0.22);
+  color: #60A5FA;
+}
+
+[data-theme="dark-premium"] .cc-tremor-kpi-card.cc-tremor-tone-red .cc-tremor-icon,
+.dark .cc-tremor-kpi-card.cc-tremor-tone-red .cc-tremor-icon {
+  background: rgba(248, 113, 113, 0.12);
+  border-color: rgba(248, 113, 113, 0.22);
+  color: #F87171;
+}
+
+[data-theme="dark-premium"] .cc-tremor-kpi-card.cc-tremor-tone-cyan .cc-tremor-icon,
+.dark .cc-tremor-kpi-card.cc-tremor-tone-cyan .cc-tremor-icon {
+  background: rgba(34, 211, 238, 0.12);
+  border-color: rgba(34, 211, 238, 0.22);
+  color: #22D3EE;
+}
 

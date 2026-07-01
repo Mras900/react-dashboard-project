@@ -30,6 +30,7 @@ import type { Feature, FeatureCollection, GeoJsonObject } from 'geojson';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import { motion, useReducedMotion } from 'motion/react';
+import { Card as TremorCard, Metric, Text } from '@tremor/react';
 import { GeoJSON, LayersControl, MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import { monthlyFacturacion, sourceSummary, type ComunaMetric } from '../data/dashboardData';
 import { DataImportModal } from '../features/data-import/DataImportModal';
@@ -629,17 +630,20 @@ function PrimaryMetric({
 }) {
   const reduceMotion = useReducedMotion();
   const fadeMotion = getFadeUpMotion(reduceMotion);
+  const toneClass = tone === 'red' ? 'cc-tremor-tone-red' : tone === 'cyan' ? 'cc-tremor-tone-cyan' : 'cc-tremor-tone-blue';
 
   return (
     <motion.div className="flex h-full flex-col gap-2" {...fadeMotion} {...(!reduceMotion ? softHover : {})}>
-      <TailAdminKpiCard
-        className="flex-1"
-        detail={delta}
-        icon={icon}
-        title={title}
-        tone={tone}
-        value={value}
-      />
+      <TremorCard className={`cc-tremor-card cc-tremor-kpi-card cc-kpi-card-pro flex-1 ${toneClass}`}>
+        <div className="cc-tremor-kpi-head flex items-start justify-between gap-3">
+          <Text className="cc-tremor-text cc-tremor-label">{title}</Text>
+          <span className="cc-tremor-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border">
+            {icon}
+          </span>
+        </div>
+        <Metric className="cc-tremor-metric mt-3">{value}</Metric>
+        <Text className="cc-tremor-text cc-tremor-detail mt-2">{delta}</Text>
+      </TremorCard>
       {actionLabel ? (
         <Button
           className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-[var(--bg-card)]"
