@@ -5653,3 +5653,9 @@ table tbody tr:hover {
   background: rgba(37, 99, 235, 0.16);
   color: #F8FAFC;
 }
+
+/* Route map visibility guard: mounted tabs need real Leaflet height. */
+.cc-route-map-card .leaflet-container {
+  min-height: 320px;
+  height: 100% !important;
+}

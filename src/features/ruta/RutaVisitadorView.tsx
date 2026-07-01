@@ -1419,13 +1419,74 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
         </>
       ) : (
         /* Territory tab */
-        <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
-          <p style={{color: "var(--cc-route-muted)", fontSize: "13px"}}>Mapa territorial - contenido</p>
-        </div>
+            <div className="cc-route-map-card">
+              <div style={{padding: "12px 16px", borderBottom: "1px solid var(--cc-route-border-subtle)"}}>
+                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "var(--cc-route-text)"}}>Mapa territorial</h3>
+              </div>
+              <div style={{flex: 1, position: "relative", minHeight: 0}}>
+                <div style={{position: "absolute", inset: 0, margin: "8px", borderRadius: "6px", overflow: "hidden"}}>
+                  <MapContainer center={[-33.45, -70.66]} className="h-full w-full" preferCanvas scrollWheelZoom zoom={11} zoomControl={false} style={{height: "245px", width: "100%"}}>
+                    <ZoomControl position="topleft" />
+                    <StartPointPicker enabled={selectingStartPoint} onPick={pickStartPoint} />
+                    <RedZoneMapPicker enabled={redZonePicking} onPick={pickRedZoneCenter} />
+                    <RouteMapBounds points={boundsPoints} />
+                    <SelectedRedZoneFocus zone={redZoneDraft} />
+                    <BaseMapLayers>
+                      <ActiveRedZonesLayers onSelect={selectRedZone} redZoneMode="manage" selectedZoneId={selectedRedZoneId} zones={activeRedZones} />
+                      {redZones ? (
+                        <LayersControl.Overlay name="Zonas rojas históricas">
+                          <GeoJSON data={redZones} style={RED_ZONE_STYLE} onEachFeature={onEachHistoricalZone} />
+                        </LayersControl.Overlay>
+                      ) : null}
+                      {optimizedLine.length > 1 || (optimizedLine.length === 0 && stopPoints.length > 1) ? (
+                        <LayersControl.Overlay checked name="Ruta optimizada">
+                          <LayerGroup>
+                            <Polyline positions={optimizedLine.length > 1 ? optimizedLine : stopPoints} pathOptions={{ color: '#0f5fcf', weight: optimizedLine.length > 1 ? 5 : 4, opacity: optimizedLine.length > 1 ? 0.82 : 0.72 }} />
+                          </LayerGroup>
+                        </LayersControl.Overlay>
+                      ) : null}
+                      {stops.length > 0 ? (
+                        <LayersControl.Overlay checked name="Paradas / tickets">
+                          <LayerGroup>
+                            {stops.map((stop, index) =>
+                              Number.isFinite(stop.lat) && Number.isFinite(stop.lng) ? (
+                                <CircleMarker key={stop.id} center={[stop.lat!, stop.lng!]} radius={9}
+                                  pathOptions={{ color: '#ffffff', fillColor: stop.isRedZone ? '#ef4444' : stop.status === 'exitosa' ? '#10b981' : stop.status === 'no_exitosa' ? '#ef4444' : '#f59e0b', fillOpacity: 0.85, weight: 2 }}>
+                                  <Popup><strong>{index + 1}. {stop.clientName}</strong><br />Ref: {stop.referencia}<br />Estado: {STATUS_LABELS[stop.status]}</Popup>
+                                </CircleMarker>
+                              ) : null
+                            )}
+                          </LayerGroup>
+                        </LayersControl.Overlay>
+                      ) : null}
+                    </BaseMapLayers>
+                    {selectedStartPoint ? (
+                      <CircleMarker center={[selectedStartPoint.lat, selectedStartPoint.lon]} radius={11}
+                        pathOptions={{ color: '#ffffff', fillColor: '#10b981', fillOpacity: 0.95, weight: 3 }}>
+                        <Tooltip direction="top" offset={[0, -8]} opacity={0.95}>Inicio de ruta</Tooltip>
+                        <Popup><strong>Punto de inicio</strong><br />{selectedStartPoint.label}</Popup>
+                      </CircleMarker>
+                    ) : null}
+                  </MapContainer>
+                </div>
+              </div>
+              {/* Map legend */}
+              <div style={{padding: "8px 16px", borderTop: "1px solid var(--cc-route-border-subtle)", display: "flex", gap: "16px", fontSize: "10px", fontWeight: 600, color: "var(--cc-route-muted)"}}>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Inicio</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block"}} /> Paradas</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> Zonas rojas</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 16, height: 2, background: "#0f5fcf", display: "inline-block"}} /> Ruta optimizada</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Exitosa</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> No exitosa</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "var(--cc-route-soft)", display: "inline-block"}} /> Pendiente</span>
+              </div>
+            </div>
+
       )}
     </div>
   );
 }
+
 
 
 
