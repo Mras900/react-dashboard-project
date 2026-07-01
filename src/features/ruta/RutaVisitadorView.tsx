@@ -997,26 +997,26 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
       <div className="cc-route-section">
         <div className="flex items-center justify-between mb-2">
           <div>
-            <h1 style={{fontSize: "22px", fontWeight: 900, color: "#e5edf8", margin: 0}}>Ruta diaria</h1>
-            <p style={{fontSize: "13px", fontWeight: 500, color: "#93a4b8", margin: "2px 0 0 0"}}>Planificación operativa, visitas y seguimiento en terreno</p>
+            <h1 style={{fontSize: "22px", fontWeight: 900, color: "var(--cc-route-text)", margin: 0}}>Ruta diaria</h1>
+            <p style={{fontSize: "13px", fontWeight: 500, color: "var(--cc-route-muted)", margin: "2px 0 0 0"}}>Planificación operativa, visitas y seguimiento en terreno</p>
           </div>
           <button
             onClick={exportCsv}
             disabled={stops.length === 0}
-            style={{height: "38px", padding: "0 20px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", color: "#e5edf8", fontSize: "13px", fontWeight: 800, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "8px"}}
+            style={{height: "38px", padding: "0 20px", borderRadius: "8px", border: "1px solid var(--cc-route-border)", background: "var(--cc-route-panel-bg)", color: "var(--cc-route-text)", fontSize: "13px", fontWeight: 800, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "8px"}}
             type="button"
           >
             <Download size={16} />
             Exportar ruta
           </button>
         </div>
-        <div className="flex items-center gap-4 border-b" style={{borderBottom: "1px solid rgba(148,163,184,0.1)", paddingBottom: 0}}>
+        <div className="flex items-center gap-4 border-b" style={{borderBottom: "1px solid var(--cc-route-border-subtle)", paddingBottom: 0}}>
           <button onClick={() => setActiveRouteTab('operation')} type="button"
-            style={{padding: "10px 4px 10px 4px", fontSize: "13px", fontWeight: 700, color: activeRouteTab === 'operation' ? "#0ea5ff" : "#93a4b8", border: "none", background: "none", cursor: "pointer", borderBottom: activeRouteTab === 'operation' ? "2px solid #0ea5ff" : "2px solid transparent", marginBottom: "-1px"}}>
+            style={{padding: "10px 4px 10px 4px", fontSize: "13px", fontWeight: 700, color: activeRouteTab === 'operation' ? "var(--cc-route-accent)" : "var(--cc-route-muted)", border: "none", background: "none", cursor: "pointer", borderBottom: activeRouteTab === 'operation' ? "2px solid var(--cc-route-accent)" : "2px solid transparent", marginBottom: "-1px"}}>
             Operación diaria
           </button>
           <button onClick={() => setActiveRouteTab('territory')} type="button"
-            style={{padding: "10px 4px 10px 4px", fontSize: "13px", fontWeight: 700, color: activeRouteTab === 'territory' ? "#0ea5ff" : "#93a4b8", border: "none", background: "none", cursor: "pointer", borderBottom: activeRouteTab === 'territory' ? "2px solid #0ea5ff" : "2px solid transparent", marginBottom: "-1px"}}>
+            style={{padding: "10px 4px 10px 4px", fontSize: "13px", fontWeight: 700, color: activeRouteTab === 'territory' ? "var(--cc-route-accent)" : "var(--cc-route-muted)", border: "none", background: "none", cursor: "pointer", borderBottom: activeRouteTab === 'territory' ? "2px solid var(--cc-route-accent)" : "2px solid transparent", marginBottom: "-1px"}}>
             Mapa territorial
           </button>
         </div>
@@ -1029,12 +1029,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
             <div className="cc-route-kpi-card">
               <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(14,165,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
-                <CalendarDays size={20} color="#0ea5ff" />
+                <CalendarDays size={20} color="var(--cc-route-accent)" />
               </div>
               <div className="min-w-0">
-                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Visitas planificadas</p>
-                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#0ea5ff", lineHeight: 1.1}}>{summary.ticketsToday.toLocaleString("es-CL")}</p>
-                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>Total del día</p>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Visitas planificadas</p>
+                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "var(--cc-route-accent)", lineHeight: 1.1}}>{summary.ticketsToday.toLocaleString("es-CL")}</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "var(--cc-route-muted)"}}>Total del día</p>
               </div>
             </div>
 
@@ -1043,20 +1043,20 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 <Save size={20} color="#22c55e" />
               </div>
               <div className="min-w-0">
-                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Visitas completadas</p>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Visitas completadas</p>
                 <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#22c55e", lineHeight: 1.1}}>{summary.successful.toLocaleString("es-CL")}</p>
-                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>Gestionadas</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "var(--cc-route-muted)"}}>Gestionadas</p>
               </div>
             </div>
 
             <div className="cc-route-kpi-card">
               <div style={{width: "44px", height: "44px", borderRadius: "50%", background: "rgba(14,165,255,0.12)", display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0}}>
-                <Route size={20} color="#0ea5ff" />
+                <Route size={20} color="var(--cc-route-accent)" />
               </div>
               <div className="min-w-0">
-                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>% Cumplimiento</p>
-                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#0ea5ff", lineHeight: 1.1}}>{routeCompletionPct.toLocaleString("es-CL")}%</p>
-                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>Efectividad</p>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>% Cumplimiento</p>
+                <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "var(--cc-route-accent)", lineHeight: 1.1}}>{routeCompletionPct.toLocaleString("es-CL")}%</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "var(--cc-route-muted)"}}>Efectividad</p>
               </div>
             </div>
 
@@ -1065,9 +1065,9 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 <Search size={20} color="#ef4444" />
               </div>
               <div className="min-w-0">
-                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Reclamos del día</p>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 600, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Reclamos del día</p>
                 <p style={{margin: "2px 0 0 0", fontSize: "22px", fontWeight: 900, color: "#ef4444", lineHeight: 1.1}}>{routeClaimsToday.toLocaleString("es-CL")}</p>
-                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>En ruta</p>
+                <p style={{margin: "1px 0 0 0", fontSize: "10px", fontWeight: 500, color: "var(--cc-route-muted)"}}>En ruta</p>
               </div>
             </div>
 
@@ -1079,13 +1079,13 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             <div className="cc-route-control-card">
               <form onSubmit={(e) => { e.preventDefault(); void handleSearch(); }} style={{display: "flex", gap: "8px", flex: 1, alignItems: "center"}}>
                 <input
-                  style={{flex: 1, height: "36px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 12px", fontSize: "12px", color: "#e5edf8", outline: "none"}}
+                  style={{flex: 1, height: "36px", borderRadius: "6px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 12px", fontSize: "12px", color: "var(--cc-route-text)", outline: "none"}}
                   aria-label={searchMode === "ticket" ? "ID ticket" : "RUT"}
                   placeholder={searchMode === "ticket" ? "Ingresar ticket de visita" : "Ej: 12.345.678-9"}
                   onChange={(e) => setSearchValue(e.target.value)}
                   value={searchValue}
                 />
-                <button type="submit" disabled={loading} style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+                <button type="submit" disabled={loading} style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "var(--cc-primary-hover)", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
                   {loading ? <Loader2 className="animate-spin" size={14} /> : <Search size={14} />}
                   Agregar
                 </button>
@@ -1093,34 +1093,34 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
             </div>
 
             {/* Por ticket / Por RUT / Carga masiva */}
-            <div style={{display: "flex", alignItems: "center", gap: "4px", padding: "0 12px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
-              <button onClick={() => setSearchMode("ticket")} type="button" style={{height: "30px", padding: "0 12px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 700, cursor: "pointer", background: searchMode === "ticket" ? "#2563eb" : "transparent", color: searchMode === "ticket" ? "#fff" : "#93a4b8", transition: "all 0.15s"}}>Por Ticket</button>
-              <button onClick={() => setSearchMode("rut")} type="button" style={{height: "30px", padding: "0 12px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 700, cursor: "pointer", background: searchMode === "rut" ? "#2563eb" : "transparent", color: searchMode === "rut" ? "#fff" : "#93a4b8", transition: "all 0.15s"}}>Por RUT</button>
-              <div style={{width: "1px", height: "20px", background: "rgba(148,163,184,0.2)", margin: "0 4px"}} />
-              <button onClick={() => setShowBulkInput(prev => !prev)} type="button" style={{height: "30px", padding: "0 10px", borderRadius: "6px", border: "none", fontSize: "11px", fontWeight: 700, cursor: "pointer", background: "transparent", color: "#93a4b8", transition: "all 0.15s"}}>Carga masiva</button>
+            <div className="cc-route-mode-tabs">
+              <button className="cc-route-mode-tab" data-active={searchMode === "ticket"} onClick={() => setSearchMode("ticket")} type="button">Por Ticket</button>
+              <button className="cc-route-mode-tab" data-active={searchMode === "rut"} onClick={() => setSearchMode("rut")} type="button">Por RUT</button>
+              <div className="cc-route-mode-divider" />
+              <button className="cc-route-mode-tab" data-active={showBulkInput} onClick={() => setShowBulkInput(prev => !prev)} type="button">Carga masiva</button>
             </div>
 
             {/* Selects: Modo de carga, Territorio, Fecha */}
             <div className="cc-route-control-card">
-              <select style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}}>
+              <select style={{height: "32px", borderRadius: "6px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "var(--cc-route-text)", outline: "none", flex: 1}}>
                 <option>Modo de carga</option>
                 <option>Individual</option>
                 <option>Masivo</option>
               </select>
-              <select style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}}>
+              <select style={{height: "32px", borderRadius: "6px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "var(--cc-route-text)", outline: "none", flex: 1}}>
                 <option>RM</option>
                 <option>Regiones</option>
               </select>
-              <input type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} style={{height: "32px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "#e5edf8", outline: "none", flex: 1}} />
+              <input type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} style={{height: "32px", borderRadius: "6px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 10px", fontSize: "11px", fontWeight: 600, color: "var(--cc-route-text)", outline: "none", flex: 1}} />
             </div>
           </div>
 
           {/* Bulk input (collapsible) */}
           {showBulkInput ? (
             <div className="cc-route-section">
-              <form onSubmit={(e) => { e.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(""); void addTicketIds(ids); }} style={{display: "flex", gap: "8px", padding: "12px 16px", borderRadius: "8px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))"}}>
-                <textarea value={bulkTicketIds} onChange={(e) => setBulkTicketIds(e.target.value)} placeholder="IDs separados por coma, punto y coma o salto de línea..." style={{flex: 1, height: "60px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "8px 12px", fontSize: "11px", color: "#e5edf8", outline: "none", resize: "none"}} />
-                <button type="submit" disabled={loading} style={{height: "60px", padding: "0 20px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1}}>Cargar</button>
+              <form onSubmit={(e) => { e.preventDefault(); const ids = parseTicketIds(bulkTicketIds); setBulkTicketIds(""); void addTicketIds(ids); }} style={{display: "flex", gap: "8px", padding: "12px 16px", borderRadius: "8px", border: "1px solid var(--cc-route-border)", background: "var(--cc-route-panel-bg)"}}>
+                <textarea value={bulkTicketIds} onChange={(e) => setBulkTicketIds(e.target.value)} placeholder="IDs separados por coma, punto y coma o salto de línea..." style={{flex: 1, height: "60px", borderRadius: "6px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "8px 12px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none", resize: "none"}} />
+                <button type="submit" disabled={loading} style={{height: "60px", padding: "0 20px", borderRadius: "6px", border: "none", background: "var(--cc-primary-hover)", color: "#fff", fontSize: "12px", fontWeight: 700, cursor: loading ? "not-allowed" : "pointer", opacity: loading ? 0.5 : 1}}>Cargar</button>
               </form>
             </div>
           ) : null}
@@ -1129,8 +1129,8 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           <div className="cc-route-main-grid">
             {/* LEFT: MAP */}
             <div className="cc-route-map-card">
-              <div style={{padding: "12px 16px", borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
-                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "#e5edf8"}}>Mapa de ruta &mdash; Hoy</h3>
+              <div style={{padding: "12px 16px", borderBottom: "1px solid var(--cc-route-border-subtle)"}}>
+                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "var(--cc-route-text)"}}>Mapa de ruta &mdash; Hoy</h3>
               </div>
               <div style={{flex: 1, position: "relative", minHeight: 0}}>
                 <div style={{position: "absolute", inset: 0, margin: "8px", borderRadius: "6px", overflow: "hidden"}}>
@@ -1180,43 +1180,43 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                 </div>
               </div>
               {/* Map legend */}
-              <div style={{padding: "8px 16px", borderTop: "1px solid rgba(148,163,184,0.1)", display: "flex", gap: "16px", fontSize: "10px", fontWeight: 600, color: "#93a4b8"}}>
+              <div style={{padding: "8px 16px", borderTop: "1px solid var(--cc-route-border-subtle)", display: "flex", gap: "16px", fontSize: "10px", fontWeight: 600, color: "var(--cc-route-muted)"}}>
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Inicio</span>
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block"}} /> Paradas</span>
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> Zonas rojas</span>
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 16, height: 2, background: "#0f5fcf", display: "inline-block"}} /> Ruta optimizada</span>
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Exitosa</span>
                 <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> No exitosa</span>
-                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#64748b", display: "inline-block"}} /> Pendiente</span>
+                <span style={{display: "flex", alignItems: "center", gap: "4px"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "var(--cc-route-soft)", display: "inline-block"}} /> Pendiente</span>
               </div>
             </div>
 
             {/* RIGHT: VISITS TABLE */}
             <div className="cc-route-visits-card">
-              <div style={{padding: "12px 16px", borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
-                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "#e5edf8"}}>Visitas planificadas</h3>
-                <p style={{margin: "2px 0 0 0", fontSize: "11px", fontWeight: 500, color: "#93a4b8"}}>Marca resultado de visita, observación y revisión territorial.</p>
+              <div style={{padding: "12px 16px", borderBottom: "1px solid var(--cc-route-border-subtle)"}}>
+                <h3 style={{margin: 0, fontSize: "14px", fontWeight: 800, color: "var(--cc-route-text)"}}>Visitas planificadas</h3>
+                <p style={{margin: "2px 0 0 0", fontSize: "11px", fontWeight: 500, color: "var(--cc-route-muted)"}}>Marca resultado de visita, observación y revisión territorial.</p>
               </div>
               <div style={{flex: 1, overflow: "auto", minHeight: 0}}>
                 {stops.length === 0 ? (
                   <div style={{display: "flex", alignItems: "center", justifyContent: "center", height: "100%", padding: "40px 20px"}}>
                     <div style={{textAlign: "center"}}>
-                      <p style={{margin: 0, fontSize: "14px", fontWeight: 700, color: "#e5edf8"}}>Sin tickets cargados</p>
-                      <p style={{margin: "4px 0 0 0", fontSize: "12px", fontWeight: 500, color: "#93a4b8"}}>Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
+                      <p style={{margin: 0, fontSize: "14px", fontWeight: 700, color: "var(--cc-route-text)"}}>Sin tickets cargados</p>
+                      <p style={{margin: "4px 0 0 0", fontSize: "12px", fontWeight: 500, color: "var(--cc-route-muted)"}}>Busca por ticket, RUT o usa carga masiva para iniciar la ruta.</p>
                     </div>
                   </div>
                 ) : (
                   <table style={{width: "100%", borderCollapse: "collapse", fontSize: "11px"}}>
                     <thead>
-                      <tr style={{borderBottom: "1px solid rgba(148,163,184,0.1)"}}>
-                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>N°</th>
-                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Ticket</th>
-                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Cliente / Dirección</th>
-                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Reclamos</th>
-                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Estado</th>
-                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Zona roja</th>
-                        <th style={{padding: "8px 12px", textAlign: "right", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Valor</th>
-                        <th style={{padding: "8px 12px", textAlign: "center", fontSize: "10px", fontWeight: 700, color: "#93a4b8", textTransform: "uppercase", letterSpacing: "0.05em"}}>Acción</th>
+                      <tr style={{borderBottom: "1px solid var(--cc-route-border-subtle)"}}>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>N°</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Ticket</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Cliente / Dirección</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Reclamos</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Estado</th>
+                        <th style={{padding: "8px 12px", textAlign: "left", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Zona roja</th>
+                        <th style={{padding: "8px 12px", textAlign: "right", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Valor</th>
+                        <th style={{padding: "8px 12px", textAlign: "center", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)", textTransform: "uppercase", letterSpacing: "0.05em"}}>Acción</th>
                       </tr>
                     </thead>
                     <tbody>
@@ -1224,13 +1224,13 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                         <tr key={stop.id} style={{borderBottom: "1px solid rgba(148,163,184,0.06)", transition: "background 0.15s"}}
                             onMouseEnter={e => e.currentTarget.style.background = "rgba(148,163,184,0.04)"}
                             onMouseLeave={e => e.currentTarget.style.background = "transparent"}>
-                          <td style={{padding: "8px 12px", fontWeight: 700, color: "#e5edf8"}}>{index + 1}</td>
-                          <td style={{padding: "8px 12px", fontFamily: "monospace", fontSize: "10px", color: "#93a4b8"}}>{stop.referencia}</td>
+                          <td style={{padding: "8px 12px", fontWeight: 700, color: "var(--cc-route-text)"}}>{index + 1}</td>
+                          <td style={{padding: "8px 12px", fontFamily: "monospace", fontSize: "10px", color: "var(--cc-route-muted)"}}>{stop.referencia}</td>
                           <td style={{padding: "8px 12px", maxWidth: "180px"}}>
-                            <p style={{margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600, color: "#e5edf8", maxWidth: "180px"}} title={stop.clientName}>{stop.clientName}</p>
-                            {stop.address ? <p style={{margin: "1px 0 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "10px", color: "#93a4b8", maxWidth: "180px"}} title={stop.address}>{stop.address}</p> : null}
+                            <p style={{margin: 0, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontWeight: 600, color: "var(--cc-route-text)", maxWidth: "180px"}} title={stop.clientName}>{stop.clientName}</p>
+                            {stop.address ? <p style={{margin: "1px 0 0 0", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", fontSize: "10px", color: "var(--cc-route-muted)", maxWidth: "180px"}} title={stop.address}>{stop.address}</p> : null}
                           </td>
-                          <td style={{padding: "8px 12px", color: "#93a4b8"}}>{stop.claimsCount.toLocaleString('es-CL')}</td>
+                          <td style={{padding: "8px 12px", color: "var(--cc-route-muted)"}}>{stop.claimsCount.toLocaleString('es-CL')}</td>
                           <td style={{padding: "8px 12px"}}>
                             <span style={{display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: 700,
                               background: stop.status === 'exitosa' ? 'rgba(34,197,94,0.12)' : stop.status === 'no_exitosa' ? 'rgba(239,68,68,0.12)' : 'rgba(245,158,11,0.12)',
@@ -1245,13 +1245,13 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
                           <td style={{padding: "8px 12px"}}>
                             {stop.isRedZone
                               ? <span style={{display: "inline-flex", alignItems: "center", gap: "4px", padding: "2px 8px", borderRadius: "12px", fontSize: "10px", fontWeight: 700, background: "rgba(239,68,68,0.12)", color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)"}}><span style={{width: 5, height: 5, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> Zona roja</span>
-                              : <span style={{color: "#64748b"}}>&mdash;</span>
+                              : <span style={{color: "var(--cc-route-soft)"}}>&mdash;</span>
                             }
                           </td>
-                          <td style={{padding: "8px 12px", fontWeight: 700, color: "#e5edf8", textAlign: "right", whiteSpace: "nowrap"}}>{calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</td>
+                          <td style={{padding: "8px 12px", fontWeight: 700, color: "var(--cc-route-text)", textAlign: "right", whiteSpace: "nowrap"}}>{calculateStopValue(stop.status, stops.length).toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</td>
                           <td style={{padding: "8px 12px", textAlign: "center"}}>
                             <div style={{display: "flex", alignItems: "center", gap: "4px", justifyContent: "center"}}>
-                              <select value={stop.status} onChange={(e) => updateStopStatus(stop.id, e.target.value as RutaVisitStatus)} style={{height: "26px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 4px", fontSize: "10px", fontWeight: 600, color: "#e5edf8", outline: "none"}} aria-label="Estado">
+                              <select value={stop.status} onChange={(e) => updateStopStatus(stop.id, e.target.value as RutaVisitStatus)} style={{height: "26px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 4px", fontSize: "10px", fontWeight: 600, color: "var(--cc-route-text)", outline: "none"}} aria-label="Estado">
                                 <option value="pendiente">Pend.</option>
                                 <option value="exitosa">Ok</option>
                                 <option value="no_exitosa">No</option>
@@ -1267,10 +1267,10 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </div>
               {/* Paginator placeholder */}
               {stops.length > 0 ? (
-                <div style={{padding: "8px 16px", borderTop: "1px solid rgba(148,163,184,0.1)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "#93a4b8"}}>
+                <div style={{padding: "8px 16px", borderTop: "1px solid var(--cc-route-border-subtle)", display: "flex", justifyContent: "space-between", alignItems: "center", fontSize: "11px", color: "var(--cc-route-muted)"}}>
                   <span>{stops.length} registro(s)</span>
                   <div style={{display: "flex", gap: "4px"}}>
-                    <button style={{width: "28px", height: "28px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "transparent", color: "#93a4b8", cursor: "pointer", fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center"}} type="button">1</button>
+                    <button style={{width: "28px", height: "28px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "transparent", color: "var(--cc-route-muted)", cursor: "pointer", fontSize: "11px", fontWeight: 700, display: "flex", alignItems: "center", justifyContent: "center"}} type="button">1</button>
                   </div>
                 </div>
               ) : null}
@@ -1281,32 +1281,32 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           <div className="cc-route-summary-grid">
             {/* Valorización del día */}
             <div className="cc-route-summary-card">
-              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Valorización del día</h3>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "var(--cc-route-text)"}}>Valorización del día</h3>
               <div style={{marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", flex: 1}}>
-                <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tarifa exitosa</span><span style={{fontWeight: 700, color: "#22c55e"}}>{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
-                <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tarifa no exitosa</span><span style={{fontWeight: 700, color: "#ef4444"}}>{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
-                <div style={{borderTop: "1px solid rgba(148,163,184,0.14)", marginTop: "auto", paddingTop: "6px", display: "flex", justifyContent: "space-between"}}><span style={{fontWeight: 700, color: "#e5edf8"}}>Total</span><span style={{fontWeight: 900, color: "#e5edf8"}}>{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+                <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "var(--cc-route-muted)"}}>Tarifa exitosa</span><span style={{fontWeight: 700, color: "#22c55e"}}>{fares.successful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+                <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "var(--cc-route-muted)"}}>Tarifa no exitosa</span><span style={{fontWeight: 700, color: "#ef4444"}}>{fares.unsuccessful.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
+                <div style={{borderTop: "1px solid var(--cc-route-border)", marginTop: "auto", paddingTop: "6px", display: "flex", justifyContent: "space-between"}}><span style={{fontWeight: 700, color: "var(--cc-route-text)"}}>Total</span><span style={{fontWeight: 900, color: "var(--cc-route-text)"}}>{summary.totalValued.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 })}</span></div>
               </div>
             </div>
 
             {/* Resultados del día */}
             <div className="cc-route-summary-card">
-              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Resultados del día</h3>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "var(--cc-route-text)"}}>Resultados del día</h3>
               <div style={{marginTop: "8px", display: "flex", flexDirection: "column", gap: "4px", fontSize: "12px", flex: 1}}>
                 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "#93a4b8"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Exitosas</span>
+                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "var(--cc-route-muted)"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#22c55e", display: "inline-block"}} /> Exitosas</span>
                   <span style={{fontWeight: 700, color: "#22c55e"}}>{summary.successful.toLocaleString('es-CL')}</span>
                 </div>
                 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "#93a4b8"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> No exitosas</span>
+                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "var(--cc-route-muted)"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#ef4444", display: "inline-block"}} /> No exitosas</span>
                   <span style={{fontWeight: 700, color: "#ef4444"}}>{summary.unsuccessful.toLocaleString('es-CL')}</span>
                 </div>
                 <div style={{display: "flex", justifyContent: "space-between", alignItems: "center"}}>
-                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "#93a4b8"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block"}} /> Pendientes</span>
-                  <span style={{fontWeight: 700, color: "#e5edf8"}}>{summary.pending.toLocaleString('es-CL')}</span>
+                  <span style={{display: "flex", alignItems: "center", gap: "6px", color: "var(--cc-route-muted)"}}><span style={{width: 8, height: 8, borderRadius: "50%", background: "#f59e0b", display: "inline-block"}} /> Pendientes</span>
+                  <span style={{fontWeight: 700, color: "var(--cc-route-text)"}}>{summary.pending.toLocaleString('es-CL')}</span>
                 </div>
                 {summary.ticketsToday > 0 ? (
-                  <div style={{marginTop: "auto", display: "flex", height: "6px", borderRadius: "3px", overflow: "hidden", background: "rgba(148,163,184,0.14)"}}>
+                  <div style={{marginTop: "auto", display: "flex", height: "6px", borderRadius: "3px", overflow: "hidden", background: "var(--cc-route-border)"}}>
                     <div style={{height: "100%", background: "#22c55e", transition: "width 0.3s", width: (summary.successful / summary.ticketsToday) * 100 + "%"}} />
                     <div style={{height: "100%", background: "#ef4444", transition: "width 0.3s", width: (summary.unsuccessful / summary.ticketsToday) * 100 + "%"}} />
                     <div style={{height: "100%", background: "#f59e0b", transition: "width 0.3s", width: (summary.pending / summary.ticketsToday) * 100 + "%"}} />
@@ -1317,36 +1317,36 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
 
             {/* Clima en ruta */}
             <div className="cc-route-summary-card">
-              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Clima en ruta</h3>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "var(--cc-route-text)"}}>Clima en ruta</h3>
               {weatherSummary && !weatherLoading ? (
                 <div style={{marginTop: "8px", flex: 1, display: "flex", flexDirection: "column"}}>
                   <div style={{display: "flex", alignItems: "center", gap: "10px"}}>
                     <span style={{fontSize: "28px"}}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).icon}</span>
                     <div>
-                      <p style={{margin: 0, fontSize: "18px", fontWeight: 900, color: "#e5edf8"}}>{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</p>
-                      <p style={{margin: 0, fontSize: "10px", fontWeight: 500, color: "#93a4b8"}}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</p>
+                      <p style={{margin: 0, fontSize: "18px", fontWeight: 900, color: "var(--cc-route-text)"}}>{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</p>
+                      <p style={{margin: 0, fontSize: "10px", fontWeight: 500, color: "var(--cc-route-muted)"}}>{getWeatherPresentation(weatherSummary.weatherCode, weatherSummary.current?.isDay).label}</p>
                     </div>
                   </div>
-                  <div style={{marginTop: "auto", display: "flex", gap: "12px", fontSize: "10px", color: "#93a4b8"}}>
+                  <div style={{marginTop: "auto", display: "flex", gap: "12px", fontSize: "10px", color: "var(--cc-route-muted)"}}>
                     {weatherSummary.current?.windSpeed10m != null ? <span>Viento {weatherSummary.current.windSpeed10m} km/h</span> : weatherSummary.windSpeedMax != null ? <span>Viento máx {weatherSummary.windSpeedMax} km/h</span> : null}
                     {weatherSummary.precipitationProbabilityMax != null ? <span>Lluvia {weatherSummary.precipitationProbabilityMax}%</span> : null}
                   </div>
                 </div>
               ) : (
-                <p style={{marginTop: "12px", fontSize: "12px", fontWeight: 500, color: "#93a4b8"}}>{weatherLoading ? "Consultando..." : "Sin datos climáticos"}</p>
+                <p style={{marginTop: "12px", fontSize: "12px", fontWeight: 500, color: "var(--cc-route-muted)"}}>{weatherLoading ? "Consultando..." : "Sin datos climáticos"}</p>
               )}
             </div>
 
             {/* Resumen de reclamos */}
             <div className="cc-route-summary-card">
-              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "#e5edf8"}}>Resumen de reclamos</h3>
+              <h3 style={{margin: 0, fontSize: "13px", fontWeight: 800, color: "var(--cc-route-text)"}}>Resumen de reclamos</h3>
               <div style={{marginTop: "8px", flex: 1, display: "flex", flexDirection: "column"}}>
-                <p style={{margin: 0, fontSize: "24px", fontWeight: 900, color: "#e5edf8"}}>{routeClaimsToday.toLocaleString('es-CL')}</p>
-                <p style={{margin: 0, fontSize: "11px", fontWeight: 500, color: "#93a4b8"}}>Reclamos en ruta hoy</p>
+                <p style={{margin: 0, fontSize: "24px", fontWeight: 900, color: "var(--cc-route-text)"}}>{routeClaimsToday.toLocaleString('es-CL')}</p>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 500, color: "var(--cc-route-muted)"}}>Reclamos en ruta hoy</p>
                 <div style={{marginTop: "auto", display: "flex", flexDirection: "column", gap: "2px", fontSize: "11px"}}>
-                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Tickets cargados</span><span style={{fontWeight: 700, color: "#e5edf8"}}>{stops.length}</span></div>
-                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Con coordenadas</span><span style={{fontWeight: 700, color: "#e5edf8"}}>{stopPoints.length}</span></div>
-                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "#93a4b8"}}>Zonas rojas activas</span><span style={{fontWeight: 700, color: "#ef4444"}}>{activeRedZones.length}</span></div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "var(--cc-route-muted)"}}>Tickets cargados</span><span style={{fontWeight: 700, color: "var(--cc-route-text)"}}>{stops.length}</span></div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "var(--cc-route-muted)"}}>Con coordenadas</span><span style={{fontWeight: 700, color: "var(--cc-route-text)"}}>{stopPoints.length}</span></div>
+                  <div style={{display: "flex", justifyContent: "space-between"}}><span style={{color: "var(--cc-route-muted)"}}>Zonas rojas activas</span><span style={{fontWeight: 700, color: "#ef4444"}}>{activeRedZones.length}</span></div>
                 </div>
               </div>
             </div>
@@ -1359,7 +1359,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               {saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />} Guardar visitas
             </button>
             <button onClick={optimizeRoute} disabled={stops.length === 0 || optimizing || !startPoint.trim()} type="button"
-              style={{cursor: optimizing ? "not-allowed" : "pointer", opacity: optimizing ? 0.5 : 1, background: "#2563eb", color: "#fff", border: "none"}}>
+              style={{cursor: optimizing ? "not-allowed" : "pointer", opacity: optimizing ? 0.5 : 1, background: "var(--cc-primary-hover)", color: "#fff", border: "none"}}>
               {optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />} Optimizar ruta
             </button>
             <button onClick={exportCsv} disabled={stops.length === 0} type="button"
@@ -1371,7 +1371,7 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               <Trash2 size={13} /> Limpiar tickets
             </button>
             <button onClick={() => setConfigPanelOpen(prev => !prev)} type="button"
-              style={{cursor: "pointer", color: "#93a4b8"}}>
+              style={{cursor: "pointer", color: "var(--cc-route-muted)"}}>
               <Settings size={13} /> Configuración <ChevronDown size={10} style={{transform: configPanelOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s"}} />
             </button>
           </div>
@@ -1383,35 +1383,35 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
               </div>
               <div className="cc-route-card-base" style={{padding: "12px"}}>
                 <div style={{display: "grid", gridTemplateColumns: "1fr 1fr 1fr", gap: "8px"}}>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Visitador <input value={visitador} onChange={(e) => setVisitador(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Fecha carga <input type="date" value={fechaCarga} onChange={(e) => setFechaCarga(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Fecha visita <input type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Punto inicio <input value={startPoint} onChange={(e) => { setStartPoint(e.target.value); setSelectedStartPoint(null); setSelectingStartPoint(false); setOptimizedRoute(null); }} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Min/visita <input type="number" min={10} value={serviceMinutesPerStop} onChange={(e) => setServiceMinutesPerStop(Math.max(Number(e.target.value) || 10, 10))} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Km/L <input type="number" min={1} step="0.1" value={fuelEfficiency} onChange={(e) => setFuelEfficiency(Math.max(Number(e.target.value) || 1, 1))} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
-                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "#93a4b8"}}>Precio comb. <input type="number" min={0} step={10} value={fuelPrice} onChange={(e) => setFuelPrice(Math.max(Number(e.target.value) || 0, 0))} style={{height: "30px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "11px", color: "#e5edf8", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Visitador <input value={visitador} onChange={(e) => setVisitador(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Fecha carga <input type="date" value={fechaCarga} onChange={(e) => setFechaCarga(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Fecha visita <input type="date" value={fechaVisita} onChange={(e) => setFechaVisita(e.target.value)} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Punto inicio <input value={startPoint} onChange={(e) => { setStartPoint(e.target.value); setSelectedStartPoint(null); setSelectingStartPoint(false); setOptimizedRoute(null); }} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Min/visita <input type="number" min={10} value={serviceMinutesPerStop} onChange={(e) => setServiceMinutesPerStop(Math.max(Number(e.target.value) || 10, 10))} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Km/L <input type="number" min={1} step="0.1" value={fuelEfficiency} onChange={(e) => setFuelEfficiency(Math.max(Number(e.target.value) || 1, 1))} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
+                  <label style={{display: "grid", gap: "2px", fontSize: "10px", fontWeight: 700, color: "var(--cc-route-muted)"}}>Precio comb. <input type="number" min={0} step={10} value={fuelPrice} onChange={(e) => setFuelPrice(Math.max(Number(e.target.value) || 0, 0))} style={{height: "30px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "11px", color: "var(--cc-route-text)", outline: "none"}} /></label>
                 </div>
                 <div style={{marginTop: "8px", display: "flex", gap: "6px"}}>
                   <button onClick={() => { setSelectingStartPoint(true); setMessage("Haz click en el mapa para definir el punto de partida"); }} type="button" style={{height: "28px", padding: "0 10px", borderRadius: "4px", border: "1px solid rgba(59,130,246,0.3)", background: "rgba(59,130,246,0.1)", color: "#60a5fa", fontSize: "10px", fontWeight: 700, cursor: "pointer"}}>Seleccionar en mapa</button>
-                  <button onClick={clearStartPoint} disabled={!selectedStartPoint && !startPoint} type="button" style={{height: "28px", padding: "0 10px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.14)", background: "transparent", color: "#93a4b8", fontSize: "10px", fontWeight: 700, cursor: "pointer"}}>Limpiar</button>
-                  <span style={{display: "flex", alignItems: "center", padding: "0 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, background: selectingStartPoint ? "rgba(245,158,11,0.1)" : selectedStartPoint ? "rgba(34,197,94,0.1)" : "transparent", color: selectingStartPoint ? "#f59e0b" : selectedStartPoint ? "#22c55e" : "#64748b"}}>{selectingStartPoint ? "Selecciona punto en mapa" : selectedStartPoint ? "Inicio validado" : "Sin validar"}</span>
+                  <button onClick={clearStartPoint} disabled={!selectedStartPoint && !startPoint} type="button" style={{height: "28px", padding: "0 10px", borderRadius: "4px", border: "1px solid var(--cc-route-border)", background: "transparent", color: "var(--cc-route-muted)", fontSize: "10px", fontWeight: 700, cursor: "pointer"}}>Limpiar</button>
+                  <span style={{display: "flex", alignItems: "center", padding: "0 8px", borderRadius: "4px", fontSize: "10px", fontWeight: 700, background: selectingStartPoint ? "rgba(245,158,11,0.1)" : selectedStartPoint ? "rgba(34,197,94,0.1)" : "transparent", color: selectingStartPoint ? "#f59e0b" : selectedStartPoint ? "#22c55e" : "var(--cc-route-soft)"}}>{selectingStartPoint ? "Selecciona punto en mapa" : selectedStartPoint ? "Inicio validado" : "Sin validar"}</span>
                 </div>
               </div>
               <div className="cc-route-card-base" style={{padding: "12px"}}>
-                <p style={{margin: 0, fontSize: "11px", fontWeight: 700, color: "#e5edf8"}}>Clima de ruta</p>
-                <select value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)} style={{marginTop: "6px", height: "28px", borderRadius: "4px", border: "1px solid rgba(148,163,184,0.2)", background: "rgba(15,23,42,0.6)", padding: "0 8px", fontSize: "10px", fontWeight: 600, color: "#e5edf8", outline: "none", width: "100%"}}>
+                <p style={{margin: 0, fontSize: "11px", fontWeight: 700, color: "var(--cc-route-text)"}}>Clima de ruta</p>
+                <select value={weatherComuna} onChange={(e) => setWeatherComuna(e.target.value)} style={{marginTop: "6px", height: "28px", borderRadius: "4px", border: "1px solid var(--cc-route-input-border)", background: "var(--cc-route-input-bg)", padding: "0 8px", fontSize: "10px", fontWeight: 600, color: "var(--cc-route-text)", outline: "none", width: "100%"}}>
                   {KNOWN_COMUNAS.map((k) => <option key={k.name} value={k.name}>{k.name}</option>)}
                 </select>
-                {weatherLoading ? <p style={{margin: "6px 0 0 0", fontSize: "10px", color: "#93a4b8"}}><span style={{color: "#06b6d4"}}>⟳</span> Consultando...</p> : null}
+                {weatherLoading ? <p style={{margin: "6px 0 0 0", fontSize: "10px", color: "var(--cc-route-muted)"}}><span style={{color: "#06b6d4"}}>⟳</span> Consultando...</p> : null}
                 {weatherError ? <p style={{margin: "6px 0 0 0", fontSize: "10px", color: "#f97316"}}>⚠ {weatherError}</p> : null}
-                {weatherSummary && !weatherLoading ? <div style={{marginTop: "6px", fontSize: "11px", color: "#e5edf8"}}>{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</div> : null}
+                {weatherSummary && !weatherLoading ? <div style={{marginTop: "6px", fontSize: "11px", color: "var(--cc-route-text)"}}>{weatherSummary.current?.temperature2m ?? weatherSummary.temperatureMax ?? "--"}°C</div> : null}
               </div>
             </div>
           ) : null}
 
           {message || redZonesError || optimizedRoute ? (
             <div className="cc-route-card-base" style={{marginTop: "8px", padding: "10px 16px"}}>
-              {message ? <p style={{margin: 0, fontSize: "12px", fontWeight: 600, color: "#e5edf8"}}>{message}</p> : null}
+              {message ? <p style={{margin: 0, fontSize: "12px", fontWeight: 600, color: "var(--cc-route-text)"}}>{message}</p> : null}
               {optimizedRoute ? <p style={{margin: "4px 0 0 0", fontSize: "11px", fontWeight: 600, color: "#60a5fa"}}>Distancia {formatDistance(optimizedRoute.distance_m)} &middot; Conducción {formatDuration(getRouteTravelDuration(optimizedRoute))} &middot; Atención {formatDuration(getRouteServiceDuration(optimizedRoute))} &middot; Total {formatDuration(optimizedRoute.duration_s)}</p> : null}
               {redZonesError ? <p style={{margin: "4px 0 0 0", fontSize: "11px", fontWeight: 600, color: "#f97316"}}>{redZonesError}</p> : null}
             </div>
@@ -1420,9 +1420,12 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
       ) : (
         /* Territory tab */
         <div style={{height: "100%", display: "flex", flexDirection: "column"}}>
-          <p style={{color: "#93a4b8", fontSize: "13px"}}>Mapa territorial - contenido</p>
+          <p style={{color: "var(--cc-route-muted)", fontSize: "13px"}}>Mapa territorial - contenido</p>
         </div>
       )}
     </div>
   );
 }
+
+
+
