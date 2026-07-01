@@ -1,5 +1,9 @@
 import { Check, Pencil, RotateCcw, Trash2, X } from 'lucide-react';
 import { useEffect, useMemo, useState } from 'react';
+import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import type { ImportedDashboardRow, ImportValidationStatus } from './importTypes';
 import type { EditableImportedChanges, EditableImportedField } from './validateImportedRows';
 
@@ -53,6 +57,12 @@ function getStatusLabel(status?: ImportValidationStatus) {
   return 'Válida';
 }
 
+function getStatusBadgeClass(status?: ImportValidationStatus) {
+  if (status === 'error') return 'border-red-200 bg-red-50 text-red-600 dark:border-red-400/30 dark:bg-red-500/10 dark:text-red-200';
+  if (status === 'warning') return 'border-amber-200 bg-amber-50 text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100';
+  return 'border-emerald-200 bg-emerald-50 text-emerald-700 dark:border-emerald-400/30 dark:bg-emerald-500/10 dark:text-emerald-100';
+}
+
 export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, onUpdateRow }: ImportPreviewTableProps) {
   const [editingRowId, setEditingRowId] = useState<string | null>(null);
   const [draft, setDraft] = useState<EditableImportedChanges>({});
@@ -97,15 +107,16 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
       <div className="cc-import-toolbar flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap gap-2">
           {filterOptions.map((option) => (
-            <button
+            <Button
               key={option.value}
               aria-pressed={filter === option.value}
-              className="cc-import-filter cc-focus-ring px-3 py-2 text-xs font-black transition"
+              className="cc-import-filter h-auto px-3 py-2 text-xs font-black transition"
               onClick={() => onFilterChange(option.value)}
               type="button"
+              variant={filter === option.value ? 'default' : 'outline'}
             >
               {option.label} ({counts[option.value]})
-            </button>
+            </Button>
           ))}
         </div>
         <p className="cc-import-visible-count text-xs font-bold">{visibleRows.length} filas visibles</p>
@@ -117,28 +128,28 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
         </p>
       ) : null}
 
-      <div className="cc-import-table overflow-x-auto rounded-lg">
-        <table className="w-full min-w-[1320px] text-left text-xs">
-          <thead className="cc-import-table-head sticky top-0 z-10 text-[11px] uppercase">
-            <tr>
+      <div className="cc-import-table rounded-lg">
+        <Table className="min-w-[1320px] text-left text-xs">
+          <TableHeader className="cc-import-table-head sticky top-0 z-10 text-[11px] uppercase">
+            <TableRow>
               {editableFields.map((field) => (
-                <th key={field.key} className="px-3 py-2 font-black">{field.label}</th>
+                <TableHead key={field.key} className="px-3 py-2 font-black">{field.label}</TableHead>
               ))}
-              <th className="px-3 py-2 font-black">Scope</th>
-              <th className="px-3 py-2 font-black">Estado</th>
-              <th className="px-3 py-2 font-black">Mensaje</th>
-              <th className="px-3 py-2 font-black">Acciones</th>
-            </tr>
-          </thead>
-          <tbody className="cc-import-table-body">
+              <TableHead className="px-3 py-2 font-black">Scope</TableHead>
+              <TableHead className="px-3 py-2 font-black">Estado</TableHead>
+              <TableHead className="px-3 py-2 font-black">Mensaje</TableHead>
+              <TableHead className="px-3 py-2 font-black">Acciones</TableHead>
+            </TableRow>
+          </TableHeader>
+          <TableBody className="cc-import-table-body">
             {visibleRows.length > 0 ? (
               visibleRows.map((row) => {
                 const isEditing = editingRowId === row.importRowId;
 
                 return (
-                  <tr key={row.importRowId} className={`cc-import-row ${getRowClass(row.validationStatus)}`} onDoubleClick={() => startEdit(row)}>
+                  <TableRow key={row.importRowId} className={`cc-import-row ${getRowClass(row.validationStatus)}`} onDoubleClick={() => startEdit(row)}>
                     {editableFields.map((field) => (
-                      <td key={field.key} className="px-3 py-2 align-top">
+                      <TableCell key={field.key} className="px-3 py-2 align-top">
                         {isEditing ? (
                           field.options ? (
                             <select
@@ -151,7 +162,7 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
                               ))}
                             </select>
                           ) : (
-                            <input
+                            <Input
                               className={`cc-input cc-import-input h-9 w-full min-w-[120px] rounded-md border px-2 text-xs font-bold ${
                                 row.validationStatus === 'error' && !getEditableValue(row, field.key) ? 'border-red-500/60' : ''
                               }`}
@@ -165,49 +176,51 @@ export function ImportPreviewTable({ rows, filter, onDeleteRow, onFilterChange, 
                             {getEditableValue(row, field.key) || '-'}
                           </span>
                         )}
-                      </td>
+                      </TableCell>
                     ))}
-                    <td className="px-3 py-2 align-top font-black">{row.scope}</td>
-                    <td className="cc-import-status px-3 py-2 align-top font-black" data-status={row.validationStatus ?? 'valid'}>{getStatusLabel(row.validationStatus)}</td>
-                    <td className="max-w-[260px] px-3 py-2 align-top font-semibold cc-text-secondary">{row.validationMessage || '-'}</td>
-                    <td className="px-3 py-2 align-top">
+                    <TableCell className="px-3 py-2 align-top font-black"><Badge variant="outline">{row.scope}</Badge></TableCell>
+                    <TableCell className="cc-import-status px-3 py-2 align-top font-black" data-status={row.validationStatus ?? 'valid'}>
+                      <Badge variant="outline" className={getStatusBadgeClass(row.validationStatus)}>{getStatusLabel(row.validationStatus)}</Badge>
+                    </TableCell>
+                    <TableCell className="max-w-[260px] px-3 py-2 align-top font-semibold cc-text-secondary">{row.validationMessage || '-'}</TableCell>
+                    <TableCell className="px-3 py-2 align-top">
                       {isEditing ? (
                         <div className="flex gap-1">
-                          <button className="cc-button-primary cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={saveEdit} type="button" aria-label="Guardar cambios">
+                          <Button className="cc-button-primary flex h-8 w-8 items-center justify-center rounded-md p-0" onClick={saveEdit} type="button" aria-label="Guardar cambios">
                             <Check size={15} />
-                          </button>
-                          <button className="cc-button-secondary cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={cancelEdit} type="button" aria-label="Cancelar edición">
+                          </Button>
+                          <Button className="cc-button-secondary flex h-8 w-8 items-center justify-center rounded-md p-0" onClick={cancelEdit} type="button" aria-label="Cancelar edición" variant="outline">
                             <X size={15} />
-                          </button>
+                          </Button>
                         </div>
                       ) : (
                         <div className="flex gap-1">
-                          <button className="cc-button-secondary cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={() => startEdit(row)} type="button" aria-label="Editar fila">
+                          <Button className="cc-button-secondary flex h-8 w-8 items-center justify-center rounded-md p-0" onClick={() => startEdit(row)} type="button" aria-label="Editar fila" variant="outline">
                             <Pencil size={15} />
-                          </button>
-                          <button className="cc-danger-button cc-focus-ring flex h-8 w-8 items-center justify-center rounded-md" onClick={() => onDeleteRow(row.importRowId)} type="button" aria-label="Eliminar fila">
+                          </Button>
+                          <Button className="cc-danger-button flex h-8 w-8 items-center justify-center rounded-md p-0" onClick={() => onDeleteRow(row.importRowId)} type="button" aria-label="Eliminar fila" variant="destructive">
                             <Trash2 size={15} />
-                          </button>
+                          </Button>
                         </div>
                       )}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 );
               })
             ) : (
-              <tr>
-                <td className="cc-import-empty px-3 py-8 text-center font-bold" colSpan={17}>Sin filas para el filtro seleccionado.</td>
-              </tr>
+              <TableRow>
+                <TableCell className="cc-import-empty px-3 py-8 text-center font-bold" colSpan={17}>Sin filas para el filtro seleccionado.</TableCell>
+              </TableRow>
             )}
-          </tbody>
-        </table>
+          </TableBody>
+        </Table>
       </div>
 
       {editingRowId ? (
-        <button className="cc-import-cancel-edit cc-focus-ring inline-flex w-fit items-center gap-2 text-xs font-black" onClick={cancelEdit} type="button">
+        <Button className="cc-import-cancel-edit inline-flex w-fit items-center gap-2 text-xs font-black" onClick={cancelEdit} type="button" variant="ghost">
           <RotateCcw size={14} />
           Cancelar edición actual
-        </button>
+        </Button>
       ) : null}
     </div>
   );

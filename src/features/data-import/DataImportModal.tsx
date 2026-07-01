@@ -1,5 +1,9 @@
-import { Download, X } from 'lucide-react';
+import { Download } from 'lucide-react';
 import { useMemo, useState } from 'react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Skeleton } from '@/components/ui/skeleton';
 import { FileUploadDropzone } from './FileUploadDropzone';
 import { clearImportedRows, saveImportedRows } from './importStorage';
 import type { ImportedDashboardRow, ImportMode, ImportPreviewResult, ImportResult, RawImportedRow } from './importTypes';
@@ -175,17 +179,12 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
   };
 
   return (
-    <div className="cc-modal-backdrop fixed inset-0 z-[10000] flex items-center justify-center bg-black/50 p-4" role="dialog" aria-modal="true" aria-labelledby="import-title">
-      <div className="cc-modal cc-import-modal cc-polish-shadow flex max-h-[92vh] w-full max-w-6xl flex-col overflow-hidden rounded-xl">
-        <div className="cc-import-header flex items-center justify-between px-5 py-4">
-          <div>
-            <h2 id="import-title" className="cc-import-title text-lg font-black">Importar datos</h2>
-            <p className="cc-import-subtitle mt-1 text-xs font-semibold">Carga separada para RM, Regiones o archivo mixto.</p>
-          </div>
-          <button className="cc-import-close cc-focus-ring flex h-10 w-10 items-center justify-center rounded-lg transition" onClick={onClose} type="button" aria-label="Cerrar importación">
-            <X size={18} />
-          </button>
-        </div>
+    <Dialog open onOpenChange={(open) => { if (!open) onClose(); }}>
+      <DialogContent className="cc-import-dialog cc-import-modal cc-polish-shadow flex max-h-[92vh] flex-col w-full max-w-6xl grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0" showCloseButton>
+        <DialogHeader className="cc-import-header px-5 py-4 pr-16">
+          <DialogTitle className="cc-import-title text-lg font-black">Importar datos</DialogTitle>
+          <DialogDescription className="cc-import-subtitle mt-1 text-xs font-semibold">Carga separada para RM, Regiones o archivo mixto.</DialogDescription>
+        </DialogHeader>
 
         <div className="cc-import-body grid gap-4 overflow-y-auto p-5">
           <div className="grid gap-4 md:grid-cols-[280px_minmax(0,1fr)]">
@@ -194,10 +193,10 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
                 <span className="cc-import-label text-xs font-black uppercase">Tipo de carga</span>
                 <div className="cc-import-modes grid overflow-hidden rounded-lg">
                   {modeOptions.map((option) => (
-                    <button
+                    <Button
                       key={option.value}
                       aria-pressed={mode === option.value}
-                      className="cc-import-mode cc-focus-ring px-3 py-3 text-left text-xs font-black transition"
+                      className="cc-import-mode h-auto justify-start rounded-none px-3 py-3 text-left text-xs font-black transition"
                       data-active={mode === option.value ? 'true' : 'false'}
                       onClick={() => {
                         setMode(option.value);
@@ -208,17 +207,23 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
                         setSuccessMessage('');
                       }}
                       type="button"
+                      variant={mode === option.value ? 'default' : 'ghost'}
                     >
                       {option.label}
-                    </button>
+                    </Button>
                   ))}
                 </div>
               </div>
               <FileUploadDropzone fileName={preview?.fileName} onFileSelect={handleFile} />
-              {isReading ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">Leyendo archivo...</p> : null}
-              {isPersisting ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">Guardando en backend...</p> : null}
-              {successMessage ? <p className="cc-import-notice cc-import-notice-info text-xs font-bold">{successMessage}</p> : null}
-              {errorMessage ? <p className="cc-import-notice cc-import-notice-error">{errorMessage}</p> : null}
+              {isReading ? (
+                <div className="grid gap-2 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-3">
+                  <Skeleton className="h-3 w-2/3" />
+                  <Skeleton className="h-3 w-1/2" />
+                </div>
+              ) : null}
+              {isPersisting ? <Alert className="cc-import-alert"><AlertDescription>Guardando en backend...</AlertDescription></Alert> : null}
+              {successMessage ? <Alert className="cc-import-alert"><AlertDescription>{successMessage}</AlertDescription></Alert> : null}
+              {errorMessage ? <Alert className="cc-import-alert" variant="destructive"><AlertDescription>{errorMessage}</AlertDescription></Alert> : null}
             </div>
 
             <div className="grid gap-3">
@@ -234,31 +239,32 @@ export function DataImportModal({ onClose, onImported }: DataImportModalProps) {
           </div>
         </div>
 
-        <div className="cc-import-footer flex flex-wrap items-center justify-between gap-2 px-5 py-4">
+        <DialogFooter className="cc-import-footer flex flex-col gap-3 px-5 py-4 lg:flex-row lg:items-center lg:justify-between">
           <div className="flex flex-wrap gap-2">
-            <button className="cc-danger-button cc-focus-ring" onClick={() => clearScope('rm')} type="button">Limpiar datos RM</button>
-            <button className="cc-danger-button cc-focus-ring" onClick={() => clearScope('regiones')} type="button">Limpiar datos Regiones</button>
-            <button className="cc-danger-button cc-danger-button-strong cc-focus-ring" onClick={() => clearScope()} type="button">Limpiar todo</button>
+            <Button className="cc-danger-button" onClick={() => clearScope('rm')} type="button" variant="destructive">Limpiar datos RM</Button>
+            <Button className="cc-danger-button" onClick={() => clearScope('regiones')} type="button" variant="destructive">Limpiar datos Regiones</Button>
+            <Button className="cc-danger-button cc-danger-button-strong" onClick={() => clearScope()} type="button" variant="destructive">Limpiar todo</Button>
           </div>
           <div className="flex flex-wrap gap-2">
             {preview ? (
-              <button className="cc-button-secondary cc-focus-ring" onClick={restoreOriginalRows} type="button">
+              <Button className="cc-button-secondary" onClick={restoreOriginalRows} type="button" variant="outline">
                 Restaurar datos originales
-              </button>
+              </Button>
             ) : null}
             {errorRows.length > 0 ? (
-              <button className="cc-warning-button cc-focus-ring flex items-center gap-2" onClick={() => downloadErrors(errorRows)} type="button">
+              <Button className="cc-warning-button flex items-center gap-2" onClick={() => downloadErrors(errorRows)} type="button" variant="outline">
                 <Download size={15} />
                 Descargar errores CSV
-              </button>
+              </Button>
             ) : null}
-            <button className="cc-button-secondary cc-focus-ring" disabled={isPersisting} onClick={onClose} type="button">Cancelar</button>
-            <button className="cc-button-primary cc-focus-ring disabled:cursor-not-allowed disabled:opacity-50" disabled={!canConfirm} onClick={confirmImport} type="button">
+            <Button className="cc-button-secondary" disabled={isPersisting} onClick={onClose} type="button" variant="outline">Cancelar</Button>
+            <Button className="cc-button-primary disabled:cursor-not-allowed disabled:opacity-50" disabled={!canConfirm} onClick={confirmImport} type="button">
               {isPersisting ? 'Guardando...' : errorRows.length > 0 ? `Confirmar ${rowsToSave.length} filas válidas` : 'Confirmar carga'}
-            </button>
+            </Button>
           </div>
-        </div>
-      </div>
-    </div>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }
+
