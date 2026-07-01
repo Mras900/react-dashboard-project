@@ -29,6 +29,7 @@ import {
 import type { Feature, FeatureCollection, GeoJsonObject } from 'geojson';
 import L from 'leaflet';
 import 'leaflet/dist/leaflet.css';
+import { motion, useReducedMotion } from 'motion/react';
 import { GeoJSON, LayersControl, MapContainer, TileLayer, useMap, ZoomControl } from 'react-leaflet';
 import { monthlyFacturacion, sourceSummary, type ComunaMetric } from '../data/dashboardData';
 import { DataImportModal } from '../features/data-import/DataImportModal';
@@ -99,6 +100,22 @@ type TableRow = ComunaMetric & {
   normalizedBilling: number;
 };
 
+const fadeUp = {
+  initial: { opacity: 0, y: 8 },
+  animate: { opacity: 1, y: 0 },
+  transition: { duration: 0.22, ease: 'easeOut' as const },
+};
+
+const softHover = {
+  whileHover: { y: -2 },
+  transition: { duration: 0.18, ease: 'easeOut' as const },
+};
+
+function getFadeUpMotion(reduceMotion: boolean | null) {
+  return reduceMotion
+    ? { initial: false, animate: { opacity: 1, y: 0 }, transition: { duration: 0 } }
+    : fadeUp;
+}
 type MapLayerKey = 'borde' | 'limiteUrbano' | 'comunasKml' | 'cuadrantesSantiago';
 type MapLayers = Record<MapLayerKey, GeoJsonObject | null>;
 type RegionalMapMetric = {
@@ -610,8 +627,11 @@ function PrimaryMetric({
   actionLabel?: string;
   onAction?: () => void;
 }) {
+  const reduceMotion = useReducedMotion();
+  const fadeMotion = getFadeUpMotion(reduceMotion);
+
   return (
-    <div className="flex h-full flex-col gap-2">
+    <motion.div className="flex h-full flex-col gap-2" {...fadeMotion} {...(!reduceMotion ? softHover : {})}>
       <TailAdminKpiCard
         className="flex-1"
         detail={delta}
@@ -630,7 +650,7 @@ function PrimaryMetric({
           {actionLabel}
         </Button>
       ) : null}
-    </div>
+    </motion.div>
   );
 }
 
@@ -658,6 +678,8 @@ function InsightCard({
   progressPct?: number;
   progressTone?: 'blue' | 'red' | 'green';
 }) {
+  const reduceMotion = useReducedMotion();
+  const fadeMotion = getFadeUpMotion(reduceMotion);
   const tailAdminTone = iconClass.includes('emerald')
     ? 'green'
     : iconClass.includes('blue')
@@ -667,7 +689,7 @@ function InsightCard({
         : 'slate';
 
   return (
-    <div className="flex h-full flex-col gap-2">
+    <motion.div className="flex h-full flex-col gap-2" {...fadeMotion} {...(!reduceMotion ? softHover : {})}>
       <TailAdminKpiCard
         className="flex-1"
         detail={detail}
@@ -687,7 +709,7 @@ function InsightCard({
           {actionLabel}
         </Button>
       ) : null}
-    </div>
+    </motion.div>
   );
 }
 
@@ -710,8 +732,11 @@ function StatStripItem({
   progressPct?: number;
   progressTone?: 'blue' | 'red' | 'green';
 }) {
+  const reduceMotion = useReducedMotion();
+  const fadeMotion = getFadeUpMotion(reduceMotion);
+
   return (
-    <div className="cc-stat-strip flex h-full min-w-0 items-start gap-3 px-4 py-3">
+    <motion.div className="cc-stat-strip flex h-full min-w-0 items-start gap-3 px-4 py-3" {...fadeMotion}>
       <div className="cc-kpi-icon-pro flex h-9 w-9 shrink-0 items-center justify-center rounded-full">{icon}</div>
       <div className="min-w-0 flex-1">
         <p className="cc-kpi-label-pro">{label}</p>
@@ -729,7 +754,7 @@ function StatStripItem({
           </Button>
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 }
 
@@ -1261,6 +1286,8 @@ function BillingView({
   const [billingPriority, setBillingPriority] = useState('all');
   const [billingOnlyErrors, setBillingOnlyErrors] = useState(false);
   const [selectedBillingRow, setSelectedBillingRow] = useState<BillingReviewRow | null>(null);
+  const reduceMotion = useReducedMotion();
+  const fadeMotion = getFadeUpMotion(reduceMotion);
 
   const billingRows = useMemo<BillingReviewRow[]>(() => {
     if (claims.length > 0) {
@@ -1457,15 +1484,17 @@ function BillingView({
           ['Posibles inconsistencias', formatInt(qualitySummary.warnings + qualitySummary.critical), AlertTriangle],
           ['Tickets únicos', formatInt(uniqueTickets), Users],
         ].map(([label, value, Icon]) => (
-          <Card key={String(label)} className="billing-card rounded-xl border p-4">
-            <CardContent className="p-0">
-              <div className="flex items-center justify-between gap-3">
-                <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">{String(label)}</p>
-                {React.createElement(Icon as typeof Calculator, { className: 'text-cyan-300', size: 18 })}
-              </div>
-              <p className="mt-3 text-2xl font-black text-white">{String(value)}</p>
-            </CardContent>
-          </Card>
+          <motion.div key={String(label)} {...fadeMotion} {...(!reduceMotion ? softHover : {})}>
+            <Card className="billing-card rounded-xl border p-4">
+              <CardContent className="p-0">
+                <div className="flex items-center justify-between gap-3">
+                  <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">{String(label)}</p>
+                  {React.createElement(Icon as typeof Calculator, { className: 'text-cyan-300', size: 18 })}
+                </div>
+                <p className="mt-3 text-2xl font-black text-white">{String(value)}</p>
+              </CardContent>
+            </Card>
+          </motion.div>
         ))}
       </section>
 
@@ -1874,6 +1903,8 @@ function DailyOperationSummary({
   onGoToRouteView?: () => void;
 }) {
   void routePeriod; void setRoutePeriod; void routeDateBase; void setRouteDateBase;
+  const reduceMotion = useReducedMotion();
+  const fadeMotion = getFadeUpMotion(reduceMotion);
   const hasData = routeMetrics.ticketsRuta > 0;
   const pct = routeMetrics.ticketsRuta > 0 ? Math.round((routeMetrics.exitosas / routeMetrics.ticketsRuta) * 100) : 0;
   const formatRouteMoney = (value: number) => value.toLocaleString('es-CL', { style: 'currency', currency: 'CLP', maximumFractionDigits: 0 });
@@ -1909,18 +1940,20 @@ function DailyOperationSummary({
             </>
           );
           return item.action ? (
-            <button
-              className="cc-daily-kpi-card cc-kpi-card cc-card min-h-[82px] rounded-xl border p-4 text-left transition hover:-translate-y-0.5 hover:border-blue-400/60"
+            <motion.button
+              className="cc-daily-kpi-card cc-kpi-card cc-card min-h-[82px] rounded-xl border p-4 text-left transition hover:border-blue-400/60"
               key={item.label}
               onClick={item.action}
               type="button"
+              {...fadeMotion}
+              {...(!reduceMotion ? softHover : {})}
             >
               {content}
-            </button>
+            </motion.button>
           ) : (
-            <div className="cc-daily-kpi-card cc-kpi-card cc-card min-h-[82px] rounded-xl border p-4" key={item.label}>
+            <motion.div className="cc-daily-kpi-card cc-kpi-card cc-card min-h-[82px] rounded-xl border p-4" key={item.label} {...fadeMotion} {...(!reduceMotion ? softHover : {})}>
               {content}
-            </div>
+            </motion.div>
           );
         })}
       </div>
@@ -2102,6 +2135,8 @@ function ExecutiveDashboardLayout({
 }
 export default function Dashboard() {
   const { hasPermission, isAdmin } = useAuth();
+  const reduceMotion = useReducedMotion();
+  const fadeMotion = getFadeUpMotion(reduceMotion);
   const designConfig = useDesignConfig();
   const [dashboardTheme, setDashboardTheme] = useState<DashboardTheme>(loadStoredTheme);
   const [showImportModal, setShowImportModal] = useState(false);
@@ -3244,7 +3279,8 @@ const dateFilterError = useMemo(() => {
       title: 'Tabla comunas',
       visible: true,
       content: (
-        <Panel className="h-full overflow-hidden">
+        <motion.div className="h-full" {...fadeMotion}>
+          <Panel className="h-full overflow-hidden">
           <div className={`flex flex-col gap-3 px-4 py-3 sm:flex-row sm:items-center sm:justify-between ${showEvidenceTable ? 'border-b border-[var(--border-main)]' : ''}`}>
             <div className="min-w-0">
               <div className="flex flex-wrap items-center gap-2">
@@ -3362,7 +3398,8 @@ const dateFilterError = useMemo(() => {
               </div>
             </>
           ) : null}
-        </Panel>
+          </Panel>
+        </motion.div>
       ),
     },
     ...customKpiWidgets,

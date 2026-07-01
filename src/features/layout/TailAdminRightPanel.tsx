@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { motion, useReducedMotion } from 'motion/react';
 import { BarChart3 } from 'lucide-react';
 
 type TailAdminRightPanelProps = {
@@ -18,8 +19,13 @@ export function TailAdminRightPanel({
   compact = false,
   className = '',
 }: TailAdminRightPanelProps) {
+  const reduceMotion = useReducedMotion();
+  const panelMotion = reduceMotion
+    ? { initial: false, animate: { opacity: 1, x: 0 }, transition: { duration: 0 } }
+    : { initial: { opacity: 0, x: 8 }, animate: { opacity: 1, x: 0 }, transition: { duration: 0.22, ease: 'easeOut' as const } };
+
   return (
-    <aside className={`cc-right-panel rounded-lg border ${className}`}>
+    <motion.aside className={`cc-right-panel rounded-lg border ${className}`} {...panelMotion}>
       <div className={`${compact ? 'px-3 py-3' : 'px-4 py-3'} cc-right-panel-header border-b`}>
         <div className="flex items-center gap-3">
           <span className="cc-right-panel-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border">
@@ -41,7 +47,6 @@ export function TailAdminRightPanel({
           {footer}
         </div>
       ) : null}
-    </aside>
+    </motion.aside>
   );
 }
-
