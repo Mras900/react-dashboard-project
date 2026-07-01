@@ -9,21 +9,31 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@fontsource-variable/inter": "^5.2.8",
+    "@fontsource/inter": "^5.2.8",
     "@google/design.md": "^0.2.0",
+    "class-variance-authority": "^0.7.1",
+    "clsx": "^2.1.1",
     "leaflet": "latest",
     "lucide-react": "latest",
+    "motion": "^12.42.2",
     "papaparse": "^5.5.3",
+    "radix-ui": "^1.6.1",
     "react": "latest",
     "react-dom": "latest",
     "react-grid-layout": "^2.2.3",
     "react-is": "^19.2.7",
     "react-leaflet": "latest",
     "recharts": "^3.8.1",
+    "shadcn": "^4.12.0",
+    "tailwind-merge": "^3.6.0",
+    "tw-animate-css": "^1.4.0",
     "xlsx": "^0.18.5"
   },
   "devDependencies": {
     "@tailwindcss/vite": "latest",
     "@types/leaflet": "latest",
+    "@types/node": "^26.1.0",
     "@types/papaparse": "^5.5.2",
     "@types/react": "latest",
     "@types/react-dom": "latest",
@@ -31,6 +41,7 @@
     "@vitejs/plugin-react": "latest",
     "tailwindcss": "latest",
     "typescript": "latest",
-    "vite": "latest"
+    "vite": "latest",
+    "vite-tsconfig-paths": "^6.1.1"
   }
 }

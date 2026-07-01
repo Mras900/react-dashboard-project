@@ -1355,23 +1355,23 @@ export function RutaVisitadorView({ redZonesGeoJson, importedReclamos = [] }: Ru
           {/* Actions + Config + Message (compact, below bottom cards) */}
           <div className="cc-route-actions">
             <button onClick={() => void saveDailyVisits()} disabled={saving || stops.length === 0 || !visitador.trim()} type="button"
-              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#22c55e", color: "#fff", fontSize: "11px", fontWeight: 700, cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              className="cc-route-btn-save" style={{cursor: saving ? "not-allowed" : "pointer", opacity: saving ? 0.5 : 1}}>
               {saving ? <Loader2 className="animate-spin" size={13} /> : <Save size={13} />} Guardar visitas
             </button>
             <button onClick={optimizeRoute} disabled={stops.length === 0 || optimizing || !startPoint.trim()} type="button"
-              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "none", background: "#2563eb", color: "#fff", fontSize: "11px", fontWeight: 700, cursor: optimizing ? "not-allowed" : "pointer", opacity: optimizing ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              style={{cursor: optimizing ? "not-allowed" : "pointer", opacity: optimizing ? 0.5 : 1, background: "#2563eb", color: "#fff", border: "none"}}>
               {optimizing ? <Loader2 className="animate-spin" size={13} /> : <Route size={13} />} Optimizar ruta
             </button>
             <button onClick={exportCsv} disabled={stops.length === 0} type="button"
-              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", color: "#e5edf8", fontSize: "11px", fontWeight: 700, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              style={{cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1}}>
               <Download size={13} /> Exportar CSV
             </button>
             <button onClick={clearStops} disabled={stops.length === 0} type="button"
-              style={{height: "34px", padding: "0 16px", borderRadius: "6px", border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.1)", color: "#ef4444", fontSize: "11px", fontWeight: 700, cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, display: "flex", alignItems: "center", gap: "6px"}}>
+              style={{cursor: stops.length === 0 ? "not-allowed" : "pointer", opacity: stops.length === 0 ? 0.5 : 1, color: "#ef4444", border: "1px solid rgba(239,68,68,0.2)", background: "rgba(239,68,68,0.1)"}}>
               <Trash2 size={13} /> Limpiar tickets
             </button>
             <button onClick={() => setConfigPanelOpen(prev => !prev)} type="button"
-              style={{height: "34px", padding: "0 14px", borderRadius: "6px", border: "1px solid rgba(148,163,184,0.14)", background: "linear-gradient(180deg, rgba(15,23,42,0.98), rgba(13,19,36,0.98))", color: "#93a4b8", fontSize: "11px", fontWeight: 700, cursor: "pointer", display: "flex", alignItems: "center", gap: "6px"}}>
+              style={{cursor: "pointer", color: "#93a4b8"}}>
               <Settings size={13} /> Configuración <ChevronDown size={10} style={{transform: configPanelOpen ? "rotate(180deg)" : "none", transition: "transform 0.2s"}} />
             </button>
           </div>
