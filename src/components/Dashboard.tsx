@@ -74,6 +74,10 @@ import { ComponentEditPanel } from '../features/design-center/ComponentEditPanel
 import type { KpiDataSources } from '../features/design-center/kpiCalculations';
 import type { DesignComponentConfig, DesignComponentId, DesignConfig, DesignKpiConfig, DesignKpiId, DesignSectionConfig, DesignSectionId, DesignWidgetId, DesignWidgetSize } from '../features/design-center/designTypes';
 import { isRmComuna } from '../services/rmComunas';
+import { Badge } from './ui/badge';
+import { Button } from './ui/button';
+import { Card, CardContent } from './ui/card';
+import { Input } from './ui/input';
 
 type ActiveTab = 'dashboard' | 'ruta' | 'reports' | 'billing' | 'settings' | 'arqueo' | 'alerts' | 'map' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
@@ -617,13 +621,14 @@ function PrimaryMetric({
         value={value}
       />
       {actionLabel ? (
-        <button
+        <Button
           className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-[var(--bg-card)]"
           onClick={onAction}
           type="button"
+          variant="outline"
         >
           {actionLabel}
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -673,13 +678,14 @@ function InsightCard({
         value={title}
       />
       {actionLabel ? (
-        <button
+        <Button
           className="inline-flex h-8 w-fit items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[var(--text-main)] shadow-sm transition hover:border-[#1B4FD8]/60 hover:bg-[var(--bg-card)]"
           onClick={onAction}
           type="button"
+          variant="outline"
         >
           {actionLabel}
-        </button>
+        </Button>
       ) : null}
     </div>
   );
@@ -713,13 +719,14 @@ function StatStripItem({
         <p className="cc-kpi-meta-pro mt-1 leading-relaxed">{detail}</p>
         <ProgressLine pct={progressPct} tone={progressTone} />
         {actionLabel ? (
-          <button
+          <Button
             className="mt-3 inline-flex h-8 items-center justify-center rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-[11px] font-black text-[#073B91] shadow-sm transition hover:bg-blue-50"
             onClick={onAction}
             type="button"
+            variant="outline"
           >
             {actionLabel}
-          </button>
+          </Button>
         ) : null}
       </div>
     </div>
@@ -1435,9 +1442,9 @@ function BillingView({
             <p className="mt-2 max-w-3xl text-sm font-semibold text-[var(--cc-muted)]">Revisión, validación y corrección de datos cargados</p>
           </div>
           <div className="flex flex-wrap gap-2">
-            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-sm font-black text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Download size={16} /> Exportar revisión</button>
-            <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 text-sm font-black text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100" onClick={() => setBillingOnlyErrors(true)} type="button"><AlertTriangle size={16} /> Ver inconsistencias</button>
-            <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Pen size={16} /> Actualizar datos</button>
+            <Button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-4 text-sm font-black text-[var(--text-main)] disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button" variant="outline"><Download size={16} /> Exportar revisión</Button>
+            <Button className="inline-flex h-10 items-center gap-2 rounded-lg border border-amber-200 bg-amber-50 px-4 text-sm font-black text-amber-700 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-100" onClick={() => setBillingOnlyErrors(true)} type="button" variant="outline"><AlertTriangle size={16} /> Ver inconsistencias</Button>
+            <Button className="inline-flex h-10 items-center gap-2 rounded-lg bg-blue-600 px-4 text-sm font-black text-white disabled:cursor-not-allowed disabled:opacity-55" disabled title="Corrección persistente pendiente de endpoint seguro" type="button"><Pen size={16} /> Actualizar datos</Button>
           </div>
         </div>
       </section>
@@ -1450,13 +1457,15 @@ function BillingView({
           ['Posibles inconsistencias', formatInt(qualitySummary.warnings + qualitySummary.critical), AlertTriangle],
           ['Tickets únicos', formatInt(uniqueTickets), Users],
         ].map(([label, value, Icon]) => (
-          <article key={String(label)} className="billing-card rounded-xl border p-4">
-            <div className="flex items-center justify-between gap-3">
-              <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">{String(label)}</p>
-              {React.createElement(Icon as typeof Calculator, { className: 'text-cyan-300', size: 18 })}
-            </div>
-            <p className="mt-3 text-2xl font-black text-white">{String(value)}</p>
-          </article>
+          <Card key={String(label)} className="billing-card rounded-xl border p-4">
+            <CardContent className="p-0">
+              <div className="flex items-center justify-between gap-3">
+                <p className="text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">{String(label)}</p>
+                {React.createElement(Icon as typeof Calculator, { className: 'text-cyan-300', size: 18 })}
+              </div>
+              <p className="mt-3 text-2xl font-black text-white">{String(value)}</p>
+            </CardContent>
+          </Card>
         ))}
       </section>
 
@@ -1464,7 +1473,7 @@ function BillingView({
         <div className="grid gap-3 xl:grid-cols-[minmax(260px,1.4fr)_repeat(6,minmax(140px,1fr))]">
           <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">
             Buscar
-            <input className="h-10 rounded-lg border px-3 text-sm font-semibold" onChange={(event) => setBillingSearch(event.target.value)} placeholder="Ticket, cliente, comuna, región o monto" value={billingSearch} />
+            <Input className="h-10 rounded-lg border px-3 text-sm font-semibold" onChange={(event) => setBillingSearch(event.target.value)} placeholder="Ticket, cliente, comuna, región o monto" value={billingSearch} />
           </label>
           <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Periodo<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingPeriod(event.target.value)} value={billingPeriod}>{filterOptions.periods.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todos' : option}</option>)}</select></label>
           <label className="grid gap-1 text-xs font-black uppercase tracking-wide text-[var(--cc-muted)]">Región<select className="h-10 rounded-lg border px-3 text-sm font-bold" onChange={(event) => setBillingRegion(event.target.value)} value={billingRegion}>{filterOptions.regions.map((option) => <option key={option} value={option}>{option === 'all' ? 'Todas' : option}</option>)}</select></label>
@@ -1506,15 +1515,15 @@ function BillingView({
                       <td className="max-w-[220px] truncate px-4 py-3 font-semibold text-[var(--cc-muted)]">{row.observacion || 'Sin observación'}</td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-1.5">
-                          {row.issues.length > 0 ? row.issues.map((issue) => <span key={issue.label} className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass(issue.tone)}`}>{issue.label}</span>) : <span className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass('ok')}`}>OK</span>}
+                          {row.issues.length > 0 ? row.issues.map((issue) => <Badge key={issue.label} variant="outline" className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass(issue.tone)}`}>{issue.label}</Badge>) : <Badge variant="outline" className={`rounded-full border px-2 py-1 text-[10px] font-black ${issueBadgeClass('ok')}`}>OK</Badge>}
                         </div>
                       </td>
                       <td className="px-4 py-3">
                         <div className="flex flex-wrap gap-2">
-                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--text-main)]" onClick={() => setSelectedBillingRow(row)} type="button">Revisar</button>
-                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver dashboard</button>
-                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Ver mapa</button>
-                          <button className="rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button">Pendiente</button>
+                          <Button className="h-auto rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--text-main)]" onClick={() => setSelectedBillingRow(row)} type="button" variant="outline">Revisar</Button>
+                          <Button className="h-auto rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button" variant="outline">Ver dashboard</Button>
+                          <Button className="h-auto rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button" variant="outline">Ver mapa</Button>
+                          <Button className="h-auto rounded-md border border-[var(--border-main)] px-2 py-1 text-[11px] font-black text-[var(--cc-muted)]" disabled title="Corrección persistente pendiente de endpoint seguro" type="button" variant="outline">Pendiente</Button>
                         </div>
                       </td>
                     </tr>
@@ -1886,9 +1895,9 @@ function DailyOperationSummary({
           <h2 className="cc-section-title text-lg font-black">Operaci&oacute;n diaria</h2>
           <p className="cc-muted mt-1 text-xs font-semibold">Resumen de visitas cargadas para el d&iacute;a seleccionado</p>
         </div>
-        <button className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800" onClick={onGoToRouteView} type="button">
+        <Button className="inline-flex h-9 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-black text-white hover:bg-blue-800" onClick={onGoToRouteView} type="button">
           Ir a Ruta diaria
-        </button>
+        </Button>
       </div>
 
       <div className="cc-stat-grid grid grid-cols-2 gap-3 md:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-4">
@@ -3273,7 +3282,7 @@ const dateFilterError = useMemo(() => {
                 <div className="flex flex-1 flex-col gap-2 sm:flex-row">
                   <label className="relative min-w-0 flex-1 sm:max-w-sm">
                     <Search className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-[var(--cc-muted)]" size={16} />
-                    <input
+                    <Input
                       aria-label="Buscar en evidencia"
                       className="h-10 w-full rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] pl-9 pr-3 text-sm text-[var(--text-main)] outline-none focus:border-blue-500 focus:ring-2 focus:ring-blue-100"
                       onChange={(event) => setEvidenceSearch(event.target.value)}
@@ -3291,12 +3300,12 @@ const dateFilterError = useMemo(() => {
                   </select>
                 </div>
                 <div className="flex gap-2">
-                  <button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={exportEvidenceCsv} type="button">
+                  <Button className="inline-flex h-10 items-center gap-2 rounded-lg border border-[var(--border-main)] bg-[var(--bg-card)] px-3 text-xs font-bold text-[var(--text-main)] hover:bg-[var(--bg-main)]" onClick={exportEvidenceCsv} type="button" variant="outline">
                     <Download size={15} /> CSV
-                  </button>
-                  <button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-bold text-white hover:bg-blue-800" onClick={() => void exportEvidenceExcel()} type="button">
+                  </Button>
+                  <Button className="inline-flex h-10 items-center gap-2 rounded-lg bg-[#073B91] px-3 text-xs font-bold text-white hover:bg-blue-800" onClick={() => void exportEvidenceExcel()} type="button">
                     <FileBarChart size={15} /> Excel
-                  </button>
+                  </Button>
                 </div>
               </div>
               <div className="overflow-x-auto">
@@ -3752,26 +3761,28 @@ const dateFilterError = useMemo(() => {
                 <section className="cc-primary-tabs mb-2" role="tablist" aria-label="Vista principal">
                   <div className="flex gap-1 rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-1 shadow-sm dark:border-[#22304D] dark:bg-[#0B1020]">
                     {hasPermission('rm') ? (
-                      <button
+                      <Button
                         aria-selected={viewMode === 'rm'}
-                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[var(--cc-muted)] hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
+                        className={`h-auto flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'rm' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[var(--cc-muted)] hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
                         onClick={() => setViewMode('rm')}
                         role="tab"
                         type="button"
+                        variant={viewMode === 'rm' ? 'default' : 'ghost'}
                       >
                         Región Metropolitana
-                      </button>
+                      </Button>
                     ) : null}
                     {hasPermission('regiones') ? (
-                      <button
+                      <Button
                         aria-selected={viewMode === 'regiones'}
-                        className={`flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[var(--cc-muted)] hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
+                        className={`h-auto flex-1 rounded-lg px-4 py-2 text-center text-sm font-black transition-all ${viewMode === 'regiones' ? 'bg-[#2563EB] text-white shadow-sm shadow-blue-950/40' : 'text-[var(--cc-muted)] hover:bg-slate-100 hover:text-slate-900 dark:text-[#94A3B8] dark:hover:bg-white/5 dark:hover:text-white'}`}
                         onClick={() => setViewMode('regiones')}
                         role="tab"
                         type="button"
+                        variant={viewMode === 'regiones' ? 'default' : 'ghost'}
                       >
                         Regiones
-                      </button>
+                      </Button>
                     ) : null}
                   </div>
                 </section>
@@ -3964,6 +3975,4 @@ function TrendingUpIcon() {
     </svg>
   );
 }
-
-
 
