@@ -17,14 +17,8 @@ export async function loadRegionalGeoLayer(signal?: AbortSignal): Promise<Featur
 
   for (let i = 0; i < urls.length; i++) {
     const url = urls[i];
-    if (import.meta.env.DEV) console.log('[Chile Comunas GeoJSON] selected URL:', url);
 
     const response = await fetch(url, { signal });
-
-    if (import.meta.env.DEV) {
-      console.log('[Chile Comunas GeoJSON] status:', response.status);
-      console.log('[Chile Comunas GeoJSON] content-type:', response.headers.get('content-type'));
-    }
 
     if (!response.ok) {
       if (import.meta.env.DEV) console.warn('[Chile Comunas GeoJSON] fetch failed, trying fallback...');
@@ -43,13 +37,9 @@ export async function loadRegionalGeoLayer(signal?: AbortSignal): Promise<Featur
       continue;
     }
 
-    if (import.meta.env.DEV) {
-      console.log('[Chile Comunas GeoJSON] features:', data.features.length);
-      console.log('[Chile Comunas GeoJSON] first properties:', data.features[0]?.properties);
-    }
-
     return data;
   }
 
   throw new Error('No se pudo cargar la capa comunal de Chile');
 }
+

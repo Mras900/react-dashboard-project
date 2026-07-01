@@ -91,6 +91,13 @@ const ReportsView = lazy(() => import('../features/reports/ReportsView').then((m
 const RutaVisitadorView = lazy(() => import('../features/ruta/RutaVisitadorView').then((module) => ({ default: module.RutaVisitadorView })));
 const MapView = lazy(() => import('../features/mapa/MapView').then((module) => ({ default: module.MapView })));
 const UserManagementView = lazy(() => import('../features/users/UserManagementView').then((module) => ({ default: module.UserManagementView })));
+function LazyFallback({ label = 'Cargando vista...' }: { label?: string }) {
+  return (
+    <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-center text-sm font-bold text-[var(--cc-muted)]">
+      {label}
+    </div>
+  );
+}
 
 type ActiveTab = 'dashboard' | 'ruta' | 'reports' | 'billing' | 'settings' | 'arqueo' | 'alerts' | 'map' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
@@ -1800,7 +1807,7 @@ function SettingsView({
       <div className="settings-control-premium grid gap-4">
         {settingsPremiumStyles}
         {renderSectionHeader('Usuarios y permisos', 'Administración de accesos del sistema')}
-        <Suspense fallback={null}><UserManagementView /></Suspense>
+        <Suspense fallback={<LazyFallback label="Cargando usuarios..." />}><UserManagementView /></Suspense>
       </div>
     );
   }
@@ -2455,12 +2462,6 @@ const dateFilterError = useMemo(() => {
     fetchDashboardDatabase(databaseRequestFilters, controller.signal)
       .then((response) => {
         if (controller.signal.aborted) return;
-        if (import.meta.env.DEV) {
-          console.log('[dashboard] resumen recibido:', response.resumen);
-          console.log('[dashboard] comunas recibidas:', response.comunas?.length ?? 0);
-          console.log('[dashboard] reclamos recibidos:', response.reclamos?.length ?? 0);
-          console.log('[dashboard] disponible:', response.available);
-        }
         setDatabaseDashboardData(response.available ? response : null);
         setDatabaseDashboardError(response.errors.join(' · '));
       })
@@ -2564,19 +2565,13 @@ const dateFilterError = useMemo(() => {
   }, [databaseDashboardData, databaseRows]);
   const rmData = useMemo(
     () => {
-      const source = databaseDashboardData ? 'backend' : 'localStorage';
-      const data = databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(localRowsByStatus.rm);
-      if (import.meta.env.DEV) console.log('[dashboard] fuente activa RM:', source, 'filas:', data.length);
-      return data;
+      return databaseDashboardData ? databaseMetrics.rm : aggregateImportedRows(localRowsByStatus.rm);
     },
     [databaseDashboardData, databaseMetrics.rm, localRowsByStatus.rm],
   );
   const regionesData = useMemo(
     () => {
-      const source = databaseDashboardData ? 'backend' : 'localStorage';
-      const data = databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(localRowsByStatus.regiones);
-      if (import.meta.env.DEV) console.log('[dashboard] fuente activa Regiones:', source, 'filas:', data.length);
-      return data;
+      return databaseDashboardData ? databaseMetrics.regiones : aggregateImportedRows(localRowsByStatus.regiones);
     },
     [databaseDashboardData, databaseMetrics.regiones, localRowsByStatus.regiones],
   );
@@ -4043,7 +4038,7 @@ const dateFilterError = useMemo(() => {
             </ProtectedView>
           ) : activeTab === 'map' ? (
             <ProtectedView viewKey="dashboard">
-              <Suspense fallback={null}>
+              <Suspense fallback={<LazyFallback label="Cargando mapa..." />}>
                 <MapView
                   activeRedZones={activeRedZones}
                   comunaMetrics={filteredMapData}
@@ -4054,7 +4049,7 @@ const dateFilterError = useMemo(() => {
               </Suspense>
             </ProtectedView>
           ) : activeTab === 'ruta' ? (
-            <ProtectedView viewKey="ruta"><Suspense fallback={null}><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></Suspense></ProtectedView>
+            <ProtectedView viewKey="ruta"><Suspense fallback={<LazyFallback label="Cargando ruta visitador..." />}><RutaVisitadorView redZonesGeoJson="/data/map-layers/zonas_rojas.geojson" importedReclamos={eligibleRouteReclamos} /></Suspense></ProtectedView>
           ) : activeTab === 'billing' ? (
             <ProtectedView viewKey="dashboard"><BillingView tableRows={tableRows} claims={databaseDashboardData?.reclamos ?? []} totals={totals} regionByComuna={regionByComuna} /></ProtectedView>
           ) : activeTab === 'settings' ? (
@@ -4075,9 +4070,9 @@ const dateFilterError = useMemo(() => {
               />
             </ProtectedView>
           ) : activeTab === 'reports' ? (
-            <ProtectedView viewKey="reportes"><Suspense fallback={null}><ReportsView rmRows={tableRows} /></Suspense></ProtectedView>
+            <ProtectedView viewKey="reportes"><Suspense fallback={<LazyFallback label="Cargando reportes..." />}><ReportsView rmRows={tableRows} /></Suspense></ProtectedView>
           ) : activeTab === 'users' ? (
-            <ProtectedView viewKey="usuarios"><Suspense fallback={null}><UserManagementView /></Suspense></ProtectedView>
+            <ProtectedView viewKey="usuarios"><Suspense fallback={<LazyFallback label="Cargando usuarios..." />}><UserManagementView /></Suspense></ProtectedView>
           ) : (
             <Panel className="flex min-h-[620px] flex-col items-center justify-center p-10 text-center">
               <AlertTriangle className="mb-4 text-blue-600" size={44} />
@@ -4089,7 +4084,7 @@ const dateFilterError = useMemo(() => {
           </div> {/* close scroll-wrapper */}
         </div>
 
-        {showImportModal && hasPermission('importaciones') ? <Suspense fallback={null}><DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /></Suspense> : null}
+        {showImportModal && hasPermission('importaciones') ? <Suspense fallback={<LazyFallback label="Cargando importacion..." />}><DataImportModal onClose={() => setShowImportModal(false)} onImported={refreshImportedRows} /></Suspense> : null}
         {editMode && selectedComponentId ? (
           <ComponentEditPanel
             component={activeDesignConfig?.components.find((c) => c.id === selectedComponentId) ?? activeDesignConfig?.components[0]!}
@@ -4110,4 +4105,7 @@ function TrendingUpIcon() {
     </svg>
   );
 }
+
+
+
 
