@@ -3623,14 +3623,14 @@ const dateFilterError = useMemo(() => {
         }
       `}</style>
 
-      <aside className={`cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex ${sidebarWidthClass} flex-col border-r border-[rgba(148,163,184,0.14)] bg-[#07111f] py-4 text-slate-100 shadow-2xl shadow-black/25 transition-[width] duration-300 ease-out`}>
+      <aside className={`cc-sidebar no-print fixed inset-y-0 left-0 z-30 flex ${sidebarWidthClass} flex-col border-r border-[rgba(148,163,184,0.14)] bg-[var(--bg-sidebar)] py-4 text-[var(--cc-text)] shadow-sm transition-[width] duration-300 ease-out`}>
         <div className={`mb-6 flex items-center gap-3 px-4 ${isSidebarCollapsed ? 'justify-center' : ''}`}>
           <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#2563EB] text-white shadow-lg shadow-blue-950/35">
             <Navigation size={22} />
           </div>
           {!isSidebarCollapsed ? (
             <div className="min-w-0">
-              <p className="text-sm font-black text-[#e5edf8]">Visor</p>
+              <p className="text-sm font-black text-[var(--cc-text)]">Visor</p>
               <p className="truncate text-[10px] font-semibold text-[#93a4b8]">Facturacion y Reclamos</p>
             </div>
           ) : null}
@@ -3648,8 +3648,8 @@ const dateFilterError = useMemo(() => {
                 data-active={activeTab === item.id ? "true" : "false"}
                 className={`relative flex h-10 items-center rounded-lg text-sm font-bold transition ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${
                   activeTab === item.id
-                    ? 'bg-blue-600/20 text-[#e5edf8] ring-1 ring-blue-400/35 shadow-lg shadow-blue-950/20'
-                    : 'text-[#93a4b8] hover:bg-white/[0.06] hover:text-[#e5edf8]'
+                    ? 'bg-blue-600/20 text-[var(--cc-text)] ring-1 ring-blue-400/35 shadow-lg shadow-blue-950/20'
+                    : 'text-[#93a4b8] hover:bg-white/[0.06] hover:text-[var(--cc-text)]'
                 }`}
                 onClick={() => setActiveTab(item.id)}
                 type="button"
@@ -3675,8 +3675,8 @@ const dateFilterError = useMemo(() => {
                 data-active={activeTab === item.id ? "true" : "false"}
                 className={`flex h-10 items-center rounded-lg text-sm font-bold transition ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${
                   activeTab === item.id
-                    ? 'bg-blue-600/20 text-[#e5edf8] ring-1 ring-blue-400/35'
-                    : 'text-[#93a4b8] hover:bg-white/[0.06] hover:text-[#e5edf8]'
+                    ? 'bg-blue-600/20 text-[var(--cc-text)] ring-1 ring-blue-400/35'
+                    : 'text-[#93a4b8] hover:bg-white/[0.06] hover:text-[var(--cc-text)]'
                 }`}
                 onClick={() => setActiveTab(item.id)}
                 type="button"
@@ -3688,7 +3688,7 @@ const dateFilterError = useMemo(() => {
           })}
           <button
             aria-label={isSidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
-            className={`mt-2 flex h-10 items-center rounded-lg border border-white/10 bg-white/[0.04] text-sm font-black text-[#93a4b8] transition hover:border-blue-400/35 hover:bg-blue-500/10 hover:text-[#e5edf8] ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'}`}
+            className={`mt-2 flex h-10 items-center rounded-lg border border-white/10 bg-white/[0.04] text-sm font-black text-[#93a4b8] transition hover:border-blue-400/35 hover:bg-blue-500/10 hover:text-[var(--cc-text)] ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'}`}
             onClick={() => setIsSidebarCollapsed((current) => !current)}
             title={isSidebarCollapsed ? 'Expandir sidebar' : 'Colapsar sidebar'}
             type="button"
@@ -3700,8 +3700,8 @@ const dateFilterError = useMemo(() => {
             <button
               className={`mt-1 flex h-10 items-center rounded-lg border border-white/10 text-sm font-bold transition ${isSidebarCollapsed ? 'justify-center px-2' : 'gap-3 px-3'} ${
                 activeTab === 'settings'
-                  ? 'bg-blue-600/20 text-[#e5edf8] ring-1 ring-blue-400/35'
-                  : 'bg-white/[0.04] text-[#93a4b8] hover:bg-white/[0.06] hover:text-[#e5edf8]'
+                  ? 'bg-blue-600/20 text-[var(--cc-text)] ring-1 ring-blue-400/35'
+                  : 'bg-white/[0.04] text-[#93a4b8] hover:bg-white/[0.06] hover:text-[var(--cc-text)]'
               }`}
               onClick={() => setActiveTab('settings')}
               type="button"
@@ -3964,5 +3964,6 @@ function TrendingUpIcon() {
     </svg>
   );
 }
+
 
 

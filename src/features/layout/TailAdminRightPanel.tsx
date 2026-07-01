@@ -19,28 +19,29 @@ export function TailAdminRightPanel({
   className = '',
 }: TailAdminRightPanelProps) {
   return (
-    <aside className={`rounded-lg border border-white/[0.08] bg-[#111827] shadow-lg shadow-black/20 ${className}`}>
-      <div className={`${compact ? 'px-3 py-3' : 'px-4 py-3'} border-b border-white/[0.08]`}>
+    <aside className={`cc-right-panel rounded-lg border ${className}`}>
+      <div className={`${compact ? 'px-3 py-3' : 'px-4 py-3'} cc-right-panel-header border-b`}>
         <div className="flex items-center gap-3">
-          <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border border-[#1B4FD8]/30 bg-[#1B4FD8]/15 text-[#AFC6FF]">
+          <span className="cc-right-panel-icon flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border">
             <BarChart3 size={19} />
           </span>
           <div className="min-w-0">
-            <h2 className="truncate text-sm font-black text-[#EAF0F8] sm:text-base">{title}</h2>
-            {subtitle ? <p className="mt-0.5 truncate text-xs font-semibold text-[#7A90A8]">{subtitle}</p> : null}
+            <h2 className="cc-right-panel-title truncate text-sm font-black sm:text-base">{title}</h2>
+            {subtitle ? <p className="cc-right-panel-subtitle mt-0.5 truncate text-xs font-semibold">{subtitle}</p> : null}
           </div>
         </div>
       </div>
 
-      <div className={`${compact ? 'gap-3 p-3' : 'gap-4 p-4'} flex flex-col`}>
+      <div className={`${compact ? 'gap-3 p-3' : 'gap-4 p-4'} cc-right-panel-body flex flex-col`}>
         {children}
       </div>
 
       {footer ? (
-        <div className={`${compact ? 'px-3 py-3' : 'px-4 py-3'} border-t border-white/[0.08] text-xs font-semibold text-[#7A90A8]`}>
+        <div className={`${compact ? 'px-3 py-3' : 'px-4 py-3'} cc-right-panel-footer border-t text-xs font-semibold`}>
           {footer}
         </div>
       ) : null}
     </aside>
   );
 }
+

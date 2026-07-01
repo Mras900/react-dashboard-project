@@ -64,7 +64,7 @@ export function TailAdminDashboardShell({
   const mutedText = isDark ? 'text-[#7A90A8]' : 'text-slate-500';
 
   return (
-    <div className={`min-h-screen ${shellColors}`}>
+    <div className={`cc-tailadmin-shell min-h-screen ${shellColors}`} data-shell-theme={theme}>
       {isSidebarOpen ? (
         <button
           aria-label="Cerrar menu"
@@ -220,3 +220,4 @@ export function TailAdminDashboardShell({
     </div>
   );
 }
+
