@@ -1,12 +1,13 @@
 import csv
 import hashlib
 import io
-import re
+import logging
 from datetime import date, datetime
 from typing import Any
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, Query, UploadFile
 from sqlalchemy import func, text
+from sqlalchemy.exc import SQLAlchemyError
 from sqlalchemy.orm import Session
 
 from database import get_db
@@ -20,6 +21,7 @@ from schemas.historical_visit_schema import (
 )
 
 router = APIRouter(prefix="/api/historical-visits", tags=["historical"])
+logger = logging.getLogger(__name__)
 
 # --- Utilidades ---
 
@@ -115,6 +117,9 @@ def _hash_rut(rut: str) -> str | None:
 
 # --- IMPORT ENDPOINT ---
 
+BATCH_SIZE = 200
+
+
 @router.post("/import", response_model=HistoricalImportResponse)
 def import_historical_visits(
     file: UploadFile = File(...),
@@ -126,7 +131,6 @@ def import_historical_visits(
         raise HTTPException(status_code=400, detail="Solo se aceptan archivos CSV.")
 
     content = file.file.read()
-    # Detectar encoding (UTF-8-SIG primero)
     try:
         decoded = content.decode("utf-8-sig")
     except UnicodeDecodeError:
@@ -136,11 +140,9 @@ def import_historical_visits(
             decoded = content.decode("latin-1", errors="replace")
 
     reader = csv.DictReader(io.StringIO(decoded), delimiter=";")
-
     if not reader.fieldnames:
         raise HTTPException(status_code=400, detail="CSV sin columnas o separador incorrecto.")
 
-    # Mapear columnas detectadas
     headers_raw = [h.strip() for h in reader.fieldnames if h]
     col_map: dict[str, str | None] = {}
     for h in headers_raw:
@@ -153,8 +155,9 @@ def import_historical_visits(
         col_map[h] = target
 
     result = HistoricalImportResponse()
+    row_buffer: list[HistoricalVisit] = []
 
-    for row in reader:
+    for row_num, row in enumerate(reader, start=2):
         ticket_val = (row.get("Ticket") or row.get("TICKET") or "").strip()
         if not ticket_val:
             result.errors += 1
@@ -186,7 +189,6 @@ def import_historical_visits(
             if target == "_detalle_compra":
                 continue
 
-            # Parseo por tipo
             if target == "contador":
                 mapped[target] = _clean_numeric(val)
             elif target in ("fecha_visita", "fecha_envio_laboratorio", "fecha_respuesta"):
@@ -199,7 +201,6 @@ def import_historical_visits(
             else:
                 mapped[target] = val if val else None
 
-        # Inferir source_year si no viene en CSV
         row_year = mapped.get("source_year")
         if not row_year and mapped.get("fecha_visita"):
             try:
@@ -213,99 +214,118 @@ def import_historical_visits(
         elif row_year:
             use_year = row_year
         else:
-            # Saltar filas sin año detectable
             result.errors += 1
             continue
 
         mapped["source_year"] = use_year
-
         if dataset_name:
             mapped["dataset_name"] = dataset_name
 
-        # Duplicado por ticket + source_year
-        existing = db.query(HistoricalVisit).filter(
-            HistoricalVisit.ticket == ticket_val,
-            HistoricalVisit.source_year == use_year,
-        ).first()
+        # Duplicado
+        try:
+            existing = db.query(HistoricalVisit).filter(
+                HistoricalVisit.ticket == ticket_val,
+                HistoricalVisit.source_year == use_year,
+            ).first()
+        except SQLAlchemyError as exc:
+            logger.error("Error consultando duplicado fila %d ticket=%s: %s", row_num, ticket_val, exc)
+            result.errors += 1
+            continue
+
         if existing:
             result.skipped_duplicates += 1
             continue
 
-        # Hashing RUT
         if _rut_raw:
             mapped["rut_hash"] = _hash_rut(_rut_raw)
         mapped["has_email"] = _has_email
         mapped["has_address"] = _has_address
 
-        # Raw row sanitizada (sin RUT, correo ni direccion)
         raw_row_safe: dict[str, str] = {}
         for header, value in row.items():
             h = header.strip()
             h_lower = _normalize_header(h)
-            # Omitir columnas sensibles
-            if h_lower in ("rut", "correo electronico", "correo electrónico", "direccion (cliente)", "dirección (cliente)", "email", "e-mail"):
+            if h_lower in ("rut", "correo electronico", "correo electrónico",
+                           "direccion (cliente)", "dirección (cliente)", "email", "e-mail"):
                 continue
             val = (value or "").strip()
             if val:
                 raw_row_safe[h] = val
         mapped["raw_row"] = raw_row_safe if raw_row_safe else None
 
-        # Crear registro
-        record = HistoricalVisit(**mapped)
-        db.add(record)
+        try:
+            record = HistoricalVisit(**mapped)
+            db.add(record)
+            row_buffer.append(record)
+            result.imported += 1
+            result.rows_by_year[str(use_year)] = result.rows_by_year.get(str(use_year), 0) + 1
 
-        # Track stats
-        year_key = str(use_year)
-        result.rows_by_year[year_key] = result.rows_by_year.get(year_key, 0) + 1
-        comuna = mapped.get("comuna")
-        estado = mapped.get("estado")
-        prioridad = mapped.get("prioridad")
+            # Flush each BATCH_SIZE rows
+            if len(row_buffer) >= BATCH_SIZE:
+                db.flush()
+                row_buffer.clear()
+        except SQLAlchemyError as exc:
+            logger.error("Error insertando fila %d ticket=%s: %s", row_num, ticket_val, exc)
+            db.rollback()
+            result.errors += 1
+            # Remove errored records from buffer
+            row_buffer.clear()
 
-        if comuna:
-            # Acumular en dict temporal para top 10
-            pass  # se calcula desde DB
+    # Commit remaining batch
+    if row_buffer:
+        try:
+            db.flush()
+        except SQLAlchemyError as exc:
+            logger.error("Error en flush final: %s", exc)
+            db.rollback()
+            result.errors += 1
 
-        result.imported += 1
+    try:
+        db.commit()
+    except SQLAlchemyError as exc:
+        logger.error("Error en commit final: %s", exc)
+        db.rollback()
+        raise HTTPException(
+            status_code=500,
+            detail=f"Error de base de datos durante importacion. {result.imported} filas procesadas antes del error. Revisar logs del servidor.",
+        )
 
-    db.commit()
+    # Stats desde DB
+    try:
+        result.source_years_detected = sorted(
+            r[0] for r in db.query(HistoricalVisit.source_year).distinct().all() if r[0]
+        )
+        year_rows = db.query(
+            HistoricalVisit.source_year, func.count(HistoricalVisit.id)
+        ).group_by(HistoricalVisit.source_year).all()
+        result.rows_by_year = {str(y): int(c) for y, c in year_rows if y}
 
-    # Recalcular stats desde DB
-    result.source_years_detected = sorted(
-        r[0] for r in db.query(HistoricalVisit.source_year).distinct().all() if r[0]
-    )
+        comuna_rows = db.query(
+            HistoricalVisit.comuna, func.count(HistoricalVisit.id).label("cnt")
+        ).filter(
+            HistoricalVisit.comuna.isnot(None),
+            HistoricalVisit.comuna != "",
+        ).group_by(HistoricalVisit.comuna).order_by(text("cnt DESC")).limit(10).all()
+        result.rows_by_comuna = [{"comuna": c, "total": int(t)} for c, t in comuna_rows if c]
 
-    # rows_by_year
-    year_rows = db.query(
-        HistoricalVisit.source_year, func.count(HistoricalVisit.id)
-    ).group_by(HistoricalVisit.source_year).all()
-    result.rows_by_year = {str(y): int(c) for y, c in year_rows if y}
+        estado_rows = db.query(
+            HistoricalVisit.estado, func.count(HistoricalVisit.id)
+        ).filter(
+            HistoricalVisit.estado.isnot(None),
+            HistoricalVisit.estado != "",
+        ).group_by(HistoricalVisit.estado).all()
+        result.rows_by_estado = {str(e): int(c) for e, c in estado_rows if e}
 
-    # rows_by_comuna top 10
-    comuna_rows = db.query(
-        HistoricalVisit.comuna, func.count(HistoricalVisit.id).label("cnt")
-    ).filter(
-        HistoricalVisit.comuna.isnot(None),
-        HistoricalVisit.comuna != "",
-    ).group_by(HistoricalVisit.comuna).order_by(text("cnt DESC")).limit(10).all()
-    result.rows_by_comuna = [{"comuna": c, "total": int(t)} for c, t in comuna_rows if c]
-
-    # rows_by_estado
-    estado_rows = db.query(
-        HistoricalVisit.estado, func.count(HistoricalVisit.id)
-    ).filter(
-        HistoricalVisit.estado.isnot(None),
-        HistoricalVisit.estado != "",
-    ).group_by(HistoricalVisit.estado).all()
-    result.rows_by_estado = {str(e): int(c) for e, c in estado_rows if e}
-
-    # rows_by_prioridad
-    prioridad_rows = db.query(
-        HistoricalVisit.prioridad, func.count(HistoricalVisit.id)
-    ).filter(
-        HistoricalVisit.prioridad.isnot(None),
-        HistoricalVisit.prioridad != "",
-    ).group_by(HistoricalVisit.prioridad).all()
-    result.rows_by_prioridad = {str(p): int(c) for p, c in prioridad_rows if p}
+        prioridad_rows = db.query(
+            HistoricalVisit.prioridad, func.count(HistoricalVisit.id)
+        ).filter(
+            HistoricalVisit.prioridad.isnot(None),
+            HistoricalVisit.prioridad != "",
+        ).group_by(HistoricalVisit.prioridad).all()
+        result.rows_by_prioridad = {str(p): int(c) for p, c in prioridad_rows if p}
+    except SQLAlchemyError as exc:
+        logger.error("Error calculando stats post-import: %s", exc)
+        # Non-fatal: return partial result
 
     total_msg = f"Importados {result.imported}"
     if result.skipped_duplicates:
