@@ -31,9 +31,23 @@ from sqlalchemy import create_engine, text
 from sqlalchemy.orm import Session, sessionmaker
 
 
-# --- Columnas esperadas y mapeo ---
+# --- PII columns never stored ---
+_PII_TOKENS = {"rut", "correo electronico", "correo electrónico",
+               "direccion (cliente)", "dirección (cliente)", "direccion",
+               "dirección", "email", "e-mail",
+               "cliente"}
+
+
+def _is_pii(h: str) -> bool:
+    n = normalize_header(h)
+    for t in _PII_TOKENS:
+        if n == t or n.startswith(t) or t.startswith(n):
+            return True
+    return bool("cliente" in n and "producto" not in n)
+
+
+# --- Columnas esperadas y mapeo (sin PII) ---
 COLUMN_MAP = {
-    "cliente": "cliente",
     "ticket": "ticket",
     "kut estado 2": "kut_estado_2",
     "rut": "_rut_raw",
@@ -72,21 +86,36 @@ def normalize_header(h: str) -> str:
 
 
 def parse_chilean_date(val: str) -> str | None:
+    """Convierte fecha a ISO yyyy-mm-dd. Soporta dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy, yyyy-mm-dd."""
     if not val or not val.strip():
         return None
     v = val.strip()
-    for sep in ["-", "/"]:
+    if v in ("#", "-", "."):
+        return None
+    for sep in ["/", "-", "."]:
+        if sep not in v:
+            continue
         parts = v.split(sep)
-        if len(parts) == 3:
-            try:
-                d, m, y = int(parts[0]), int(parts[1]), int(parts[2])
-                if 1 <= d <= 31 and 1 <= m <= 12:
-                    if y < 100:
-                        y += 2000
-                    return f"{y:04d}-{m:02d}-{d:02d}"
-            except ValueError:
-                continue
-    return v
+        if len(parts) != 3:
+            continue
+        try:
+            p0, p1, p2 = int(parts[0]), int(parts[1]), int(parts[2])
+        except ValueError:
+            continue
+        if p0 > 31:
+            y, m, d = p0, p1, p2
+        elif p2 > 31:
+            d, m, y = p0, p1, p2
+        else:
+            d, m, y = p0, p1, p2  # dd-mm-yyyy (Chile)
+        if y < 100:
+            y += 2000
+        if 1 <= m <= 12 and 1 <= d <= 31:
+            return f"{y:04d}-{m:02d}-{d:02d}"
+    import re as _re
+    if _re.match(r"^\d{4}-\d{2}-\d{2}$", v):
+        return v
+    return None
 
 
 def clean_numeric(val: str) -> float | None:
@@ -114,12 +143,44 @@ def hash_rut(rut: str) -> str | None:
     return hashlib.sha256(cleaned.encode("utf-8")).hexdigest()
 
 
+_ALTER_SQL = [
+    "ALTER TABLE historical_visits ALTER COLUMN tiene_envase TYPE TEXT",
+    "ALTER TABLE historical_visits ALTER COLUMN tiene_muestra TYPE TEXT",
+    "ALTER TABLE historical_visits ALTER COLUMN imposibilidad_contacto TYPE TEXT",
+    "ALTER TABLE historical_visits ALTER COLUMN requiere_respuesta TYPE TEXT",
+    "ALTER TABLE historical_visits ALTER COLUMN prioridad TYPE TEXT",
+    "ALTER TABLE historical_visits ALTER COLUMN estado TYPE TEXT",
+    "ALTER TABLE historical_visits ALTER COLUMN kut_estado_2 TYPE TEXT",
+]
+
+
+def ensure_historical_columns(engine):
+    """Amplia columnas existentes de VARCHAR(10) a TEXT."""
+    try:
+        existing = {c["name"] for c in __import__("sqlalchemy").inspect(engine).get_columns("historical_visits")}
+    except Exception:
+        return  # table does not exist yet
+    for sql in _ALTER_SQL:
+        col_name = sql.split()[-1].lower()
+        if col_name not in existing:
+            continue
+        try:
+            with engine.connect() as conn:
+                conn.execute(text(f"SET statement_timeout = '5s'"))
+                conn.execute(text(sql))
+                conn.commit()
+        except Exception:
+            pass
+    print("[OK] Columnas migradas a TEXT.")
+
+
 def ensure_table(engine):
     """Crea la tabla si no existe."""
     from models.historical_visit import HistoricalVisit
     from database import Base
     Base.metadata.create_all(bind=engine)
     print("[OK] Tabla historical_visits asegurada.")
+    ensure_historical_columns(engine)
 
 
 def import_file(
@@ -229,17 +290,14 @@ def import_file(
             mapped["has_email"] = _has_email
             mapped["has_address"] = _has_address
 
-            # Raw row sanitizada
+            # Raw row sanitizada (sin PII)
             raw_row_safe = {}
             for header, value in row.items():
-                h = header.strip()
-                h_lower = normalize_header(h)
-                if h_lower in ("rut", "correo electronico", "correo electrónico",
-                               "direccion (cliente)", "dirección (cliente)", "email", "e-mail"):
+                if _is_pii(header.strip()):
                     continue
                 val = (value or "").strip()
                 if val:
-                    raw_row_safe[h] = val
+                    raw_row_safe[header.strip()] = val
             mapped["raw_row"] = raw_row_safe if raw_row_safe else None
 
             record = HistoricalVisit(**mapped)

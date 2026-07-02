@@ -28,12 +28,13 @@ class HistoricalVisit(Base):
 
     # Datos del reclamo/visita
     ticket: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
+    # cliente no se usa nunca (PII). Columna mantenida nullable para compatibilidad.
     cliente: Mapped[str | None] = mapped_column(Text, nullable=True)
     region: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
     comuna: Mapped[str | None] = mapped_column(String(255), nullable=True, index=True)
-    prioridad: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
-    estado: Mapped[str | None] = mapped_column(String(100), nullable=True, index=True)
-    kut_estado_2: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    prioridad: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    estado: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
+    kut_estado_2: Mapped[str | None] = mapped_column(Text, nullable=True)
     subclasificacion_ac: Mapped[str | None] = mapped_column(Text, nullable=True)
     categoria_objeto: Mapped[str | None] = mapped_column(Text, nullable=True)
     atribucion_responsable: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -42,16 +43,16 @@ class HistoricalVisit(Base):
     producto_reclamado: Mapped[str | None] = mapped_column(Text, nullable=True, index=True)
     mapa: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Fechas
+    # Fechas (guardadas como ISO string yyyy-mm-dd)
     fecha_visita: Mapped[str | None] = mapped_column(String(50), nullable=True, index=True)
     fecha_envio_laboratorio: Mapped[str | None] = mapped_column(String(50), nullable=True)
     fecha_respuesta: Mapped[str | None] = mapped_column(String(50), nullable=True)
-    requiere_respuesta: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    requiere_respuesta: Mapped[str | None] = mapped_column(Text, nullable=True)
 
-    # Flags binarios
-    tiene_envase: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    tiene_muestra: Mapped[str | None] = mapped_column(String(10), nullable=True)
-    imposibilidad_contacto: Mapped[str | None] = mapped_column(String(10), nullable=True)
+    # Flags binarios (texto libre del CSV)
+    tiene_envase: Mapped[str | None] = mapped_column(Text, nullable=True)
+    tiene_muestra: Mapped[str | None] = mapped_column(Text, nullable=True)
+    imposibilidad_contacto: Mapped[str | None] = mapped_column(Text, nullable=True)
 
     # Numericos
     contador: Mapped[float | None] = mapped_column(Float, nullable=True)
