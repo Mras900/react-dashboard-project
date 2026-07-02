@@ -143,6 +143,28 @@ def _clean_date(value: Any) -> date | datetime | str | None:
     return str(value).strip() or None
 
 
+def _safe_date_coalesce() -> str:
+    """Genera expresion SQL COALESCE tipo date segura para filtros de fecha.
+
+    Maneja formatos: yyyy-mm-dd, dd/mm/yyyy, dd-mm-yyyy, dd.mm.yyyy.
+    Evita DatatypeMismatch al mezclar VARCHAR y TIMESTAMP en COALESCE.
+    """
+    def _to_date_sql(column: str) -> str:
+        return (
+            f"CASE"
+            f"  WHEN {column} IS NULL OR TRIM({column}) = '' THEN NULL"
+            f"  WHEN TRIM({column}) ~ '^[0-9]{{4}}-[0-9]{{2}}-[0-9]{{2}}$' THEN TRIM({column})::date"
+            f"  WHEN TRIM({column}) ~ '^[0-9]{{2}}/[0-9]{{2}}/[0-9]{{4}}$' THEN TO_DATE(TRIM({column}), 'DD/MM/YYYY')"
+            f"  WHEN TRIM({column}) ~ '^[0-9]{{2}}-[0-9]{{2}}-[0-9]{{4}}$' THEN TO_DATE(TRIM({column}), 'DD-MM-YYYY')"
+            f"  WHEN TRIM({column}) ~ '^[0-9]{{2}}\\.[0-9]{{2}}\\.[0-9]{{4}}$' THEN TO_DATE(TRIM({column}), 'DD.MM.YYYY')"
+            f"  ELSE NULL"
+            f" END"
+        )
+    visita_part = _to_date_sql("fecha_visita")
+    recepcion_part = _to_date_sql("fecha_recepcion")
+    return f"COALESCE({visita_part}, {recepcion_part}, created_at::date)"
+
+
 def _build_claim_filters(
     *,
     mes: str | None = None,
@@ -161,7 +183,7 @@ def _build_claim_filters(
             key = f"filter_{column}"
             filters.append(f"LOWER(TRIM({column})) = LOWER(:{key})")
             values[key] = cleaned
-    claim_date = "COALESCE(fecha_visita, fecha_recepcion, created_at)"
+    claim_date = _safe_date_coalesce()
     if fecha_inicio:
         filters.append(f"{claim_date} >= :fecha_inicio")
         values["fecha_inicio"] = fecha_inicio.isoformat()

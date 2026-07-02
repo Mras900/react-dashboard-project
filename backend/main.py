@@ -50,6 +50,14 @@ async def lifespan(_: FastAPI):
         print(f'[startup] {var}={ "OK" if val else "no configurada (opcional)" }')
     create_database_tables()
     ensure_initial_admin()
+
+    # Confirm historical module loaded
+    try:
+        from models.historical_visit import HistoricalVisit  # noqa: F401
+        print('[startup] HistoricalVisit model loaded - tabla historical_visits disponible')
+    except Exception as exc:
+        print(f'[startup] WARNING: HistoricalVisit model no cargado: {exc}')
+
     yield
 
 
