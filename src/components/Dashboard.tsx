@@ -91,6 +91,7 @@ const ReportsView = lazy(() => import('../features/reports/ReportsView').then((m
 const RutaVisitadorView = lazy(() => import('../features/ruta/RutaVisitadorView').then((module) => ({ default: module.RutaVisitadorView })));
 const MapView = lazy(() => import('../features/mapa/MapView').then((module) => ({ default: module.MapView })));
 const UserManagementView = lazy(() => import('../features/users/UserManagementView').then((module) => ({ default: module.UserManagementView })));
+const HistoricalAnalysisView = lazy(() => import('../features/historico/HistoricalAnalysisView'));
 function LazyFallback({ label = 'Cargando vista...' }: { label?: string }) {
   return (
     <div className="flex min-h-[220px] items-center justify-center rounded-xl border border-[var(--border-main)] bg-[var(--bg-card)] p-6 text-center text-sm font-bold text-[var(--cc-muted)]">
@@ -99,7 +100,7 @@ function LazyFallback({ label = 'Cargando vista...' }: { label?: string }) {
   );
 }
 
-type ActiveTab = 'dashboard' | 'ruta' | 'reports' | 'billing' | 'settings' | 'arqueo' | 'alerts' | 'map' | 'users' | 'help';
+type ActiveTab = 'dashboard' | 'ruta' | 'reports' | 'historico' | 'billing' | 'settings' | 'arqueo' | 'alerts' | 'map' | 'users' | 'help';
 type PriorityFilter = 'todas' | 'alta' | 'media' | 'baja';
 type StatusFilter = 'todos' | ImportedVisitStatus;
 type MonthFilter = 'all' | string;
@@ -175,6 +176,7 @@ const navItems: Array<{ id: ActiveTab; label: string; icon: typeof Grid2X2; perm
   { id: 'dashboard', label: 'Dashboard', icon: Grid2X2, permission: 'dashboard' },
   { id: 'ruta', label: 'Ruta diaria', icon: Route, permission: 'ruta' },
   { id: 'reports', label: 'Reportes', icon: FileBarChart, permission: 'reportes' },
+  { id: 'historico', label: 'Histórico', icon: CalendarDays, permission: 'reportes' },
   { id: 'billing', label: 'Facturación', icon: Calculator, permission: 'dashboard' },
   { id: 'settings', label: 'Configuraciones', icon: ShieldCheck, permission: 'configuracion' },
   { id: 'arqueo', label: 'Arqueo Ruta', icon: ClipboardCheck, permission: 'ruta', visible: false },
@@ -4071,6 +4073,8 @@ const dateFilterError = useMemo(() => {
             </ProtectedView>
           ) : activeTab === 'reports' ? (
             <ProtectedView viewKey="reportes"><Suspense fallback={<LazyFallback label="Cargando reportes..." />}><ReportsView rmRows={tableRows} /></Suspense></ProtectedView>
+          ) : activeTab === 'historico' ? (
+            <ProtectedView viewKey="reportes"><Suspense fallback={<LazyFallback label="Cargando histórico..." />}><HistoricalAnalysisView /></Suspense></ProtectedView>
           ) : activeTab === 'users' ? (
             <ProtectedView viewKey="usuarios"><Suspense fallback={<LazyFallback label="Cargando usuarios..." />}><UserManagementView /></Suspense></ProtectedView>
           ) : (
