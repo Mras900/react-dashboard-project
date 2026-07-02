@@ -44,6 +44,9 @@ Thumbs.db
 vite.config.js
 vite.config.d.ts
 
+# Archivos historicos CSV (contienen PII)
+data/historical/
+
 # Capas geograficas pesadas / fuentes SHP
 data/raw/
 *.zip

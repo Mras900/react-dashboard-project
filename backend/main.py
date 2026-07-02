@@ -30,6 +30,7 @@ from services.ruta_optimizaciones_service import list_optimizations, save_optimi
 from services.ruta_visitas_service import list_daily_visits, save_daily_visits
 from auth.routes import ensure_initial_admin, router as auth_router
 from routes.ai import router as ai_router
+from routes.historical_visits import router as historical_visits_router
 from routes.reports import router as reports_router
 from routes.weather_router import router as weather_router
 
@@ -56,6 +57,7 @@ app = FastAPI(title="Ruta Backend", lifespan=lifespan)
 app.include_router(dashboard_router)
 app.include_router(auth_router)
 app.include_router(weather_router)
+app.include_router(historical_visits_router)
 app.include_router(ai_router)
 app.include_router(reports_router)
 

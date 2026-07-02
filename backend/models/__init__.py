@@ -1,11 +1,12 @@
 from models.address_correction import AddressCorrection
 from models.dashboard_config import DashboardVisualConfig
+from models.historical_visit import HistoricalVisit
 from models.red_zone import RedZone
 from models.reclamo import Reclamo
 from models.ruta_optimizacion import RutaOptimizacion
 from models.ruta_visita import RutaVisitaDiaria
 
 __all__ = [
-    "AddressCorrection", "DashboardVisualConfig", "RedZone", "Reclamo",
+    "AddressCorrection", "DashboardVisualConfig", "HistoricalVisit", "RedZone", "Reclamo",
     "RutaOptimizacion", "RutaVisitaDiaria",
 ]
